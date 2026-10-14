@@ -29,6 +29,9 @@ Tudo em formas básicas da engine, para sentir o jogo; o visual realista vem por
   - Têm desmembramento por membro (a cabeça estoura, sem perna vira rastejante) e explodem em pedaços.
 - **Explosões em cadeia:** bujões, barris, carros abandonados e os zumbis-bujão.
 - **Carro dirigível,** que atropela.
+- **Base à Night of the Dead:** sucata (caixa do drone e carro desmanchado) e **modo construção** (X) com barricada de
+  madeira, muro de sucata, estacas, arame farpado e **bujão armado**. O zumbi travado bate na barricada até quebrar; dá para
+  consertar e desmontar.
 - **Diretor da horda** no estilo Left 4 Dead (tensão, pico e respiro), noite com mais zumbis e **Noite da Horda** a cada 3
   noites.
 - **A live:**
@@ -62,7 +65,7 @@ Tools/Regras/testar.sh                 # regras puras (qualquer máquina com g++
 | Pasta | O quê |
 |---|---|
 | `Source/Zombie/Rules/` | Regras puras em C++ sem Unreal (testadas em qualquer lugar) |
-| `Source/Zombie/{Game,Player,Zombies,Combat,Vehicles,Stream,UI}/` | O jogo no Unreal |
+| `Source/Zombie/{Game,Player,Zombies,Combat,Base,Vehicles,Stream,UI}/` | O jogo no Unreal |
 | `Data/` | Tabelas de ajuste em CSV ([`docs/dados.md`](docs/dados.md)) |
 | `Config/` | Renderização (Lumen, sombras virtuais, TSR), entrada e colisão |
 | `Tools/` | Testes das regras, scripts do PC e scripts Python do editor |

@@ -1,5 +1,6 @@
 #include "Player/ZMBCharacter.h"
 #include "Zombie.h"
+#include "Base/ZMBBuildPiece.h"
 #include "Combat/ZMBExplosive.h"
 #include "Combat/ZMBFx.h"
 #include "Combat/ZMBTypes.h"
@@ -29,6 +30,7 @@
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
 #include "Kismet/GameplayStatics.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "UObject/ConstructorHelpers.h"
@@ -110,6 +112,21 @@ AZMBCharacter::AZMBCharacter()
 		Part->SetCastHiddenShadow(true);
 		Parts.Add(Part);
 	}
+
+	// peça fantasma do modo construção: 12 arestas soltas no mundo (posição absoluta), sem colisão nem sombra
+	for (int32 i = 0; i < 12; ++i)
+	{
+		UStaticMeshComponent* Edge = CreateDefaultSubobject<UStaticMeshComponent>(*FString::Printf(TEXT("GhostEdge%d"), i));
+		Edge->SetupAttachment(Capsule);
+		Edge->SetStaticMesh(CubeMesh.Object);
+		Edge->SetUsingAbsoluteLocation(true);
+		Edge->SetUsingAbsoluteRotation(true);
+		Edge->SetUsingAbsoluteScale(true);
+		Edge->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		Edge->SetCastShadow(false);
+		Edge->SetVisibility(false);
+		GhostEdges.Add(Edge);
+	}
 }
 
 void AZMBCharacter::BeginPlay()
@@ -124,6 +141,7 @@ void AZMBCharacter::BeginPlay()
 		Focus = Tuning.Player.FocusMax;
 		Grenades = Tuning.Player.StartGrenades;
 		Bombs = Tuning.Player.StartBombs;
+		Scrap = Tuning.Base.StartScrap;
 		CameraMode = FMath::Clamp(Tuning.Camera.StartMode, 0, 3);
 		LastThirdPersonMode = CameraMode == 3 ? 2 : CameraMode;
 		for (const ZR::FWeaponType& Weapon : Data->Weapons())
@@ -264,6 +282,7 @@ void AZMBCharacter::CreateInput()
 		{TEXT("ZMB_Horde"), EKeys::N, EKeys::Invalid},
 		{TEXT("ZMB_Time"), EKeys::T, EKeys::Invalid},
 		{TEXT("ZMB_Help"), EKeys::F1, EKeys::Gamepad_Special_Right},
+		{TEXT("ZMB_Build"), EKeys::X, EKeys::Gamepad_RightThumbstick},
 	};
 	for (const FButton& Button : Buttons)
 	{
@@ -297,7 +316,7 @@ void AZMBCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		}
 	}
 	UEnhancedInputComponent* Input = Cast<UEnhancedInputComponent>(PlayerInputComponent);
-	if (!Input || Actions.Num() < 19)
+	if (!Input || Actions.Num() < 20)
 	{
 		UE_LOG(LogZombie, Error, TEXT("AZMBCharacter: precisa do Enhanced Input Component (Config/DefaultInput.ini)."));
 		return;
@@ -320,6 +339,7 @@ void AZMBCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	Input->BindAction(Actions[9], ETriggerEvent::Started, this, &AZMBCharacter::BombKey);
 	Input->BindAction(Actions[10], ETriggerEvent::Started, this, &AZMBCharacter::SlowMoKey);
 	Input->BindAction(Actions[11], ETriggerEvent::Started, this, &AZMBCharacter::InteractKey);
+	Input->BindAction(Actions[11], ETriggerEvent::Completed, this, &AZMBCharacter::InteractOff);
 	Input->BindAction(Actions[12], ETriggerEvent::Started, this, &AZMBCharacter::CameraKey);
 	Input->BindAction(Actions[13], ETriggerEvent::Started, this, &AZMBCharacter::FirstPersonKey);
 	Input->BindAction(Actions[14], ETriggerEvent::Started, this, &AZMBCharacter::ClipKey);
@@ -327,6 +347,7 @@ void AZMBCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	Input->BindAction(Actions[16], ETriggerEvent::Started, this, &AZMBCharacter::HordeKey);
 	Input->BindAction(Actions[17], ETriggerEvent::Started, this, &AZMBCharacter::TimeKey);
 	Input->BindAction(Actions[18], ETriggerEvent::Started, this, &AZMBCharacter::HelpKey);
+	Input->BindAction(Actions[19], ETriggerEvent::Started, this, &AZMBCharacter::BuildKey);
 	for (int32 i = 0; i < SlotActions.Num(); ++i)
 	{
 		Input->BindAction(SlotActions[i], ETriggerEvent::Started, this, &AZMBCharacter::WeaponKey, i + 1);
@@ -393,6 +414,11 @@ void AZMBCharacter::SprintOff(const FInputActionValue& Value)
 
 void AZMBCharacter::FireOn(const FInputActionValue& Value)
 {
+	if (bBuildMode)
+	{
+		PlaceOrRepair();
+		return;
+	}
 	bFireHeld = true;
 	bShotThisPress = false;
 }
@@ -414,6 +440,11 @@ void AZMBCharacter::AimOff(const FInputActionValue& Value)
 
 void AZMBCharacter::ReloadKey(const FInputActionValue& Value)
 {
+	if (bBuildMode)
+	{
+		BuildRot90 = (BuildRot90 + 1) % 4;
+		return;
+	}
 	const ZR::FWeaponType* Weapon = CurrentWeaponType();
 	if (bDead || !Weapon || ReloadLeft > 0.0f || !WeaponStates.IsValidIndex(CurrentWeapon))
 	{
@@ -433,6 +464,19 @@ void AZMBCharacter::WeaponKey(const FInputActionValue& Value, int32 Slot)
 	{
 		return;
 	}
+	if (bBuildMode)
+	{
+		// no modo construção os números escolhem a peça pela coluna tecla de Data/Construcoes.csv
+		const std::vector<ZR::FBuildPieceType>& Pieces = Data->BuildPieces();
+		for (size_t i = 0; i < Pieces.size(); ++i)
+		{
+			if (Pieces[i].Slot == Slot)
+			{
+				BuildIndex = static_cast<int32>(i);
+			}
+		}
+		return;
+	}
 	const std::vector<ZR::FWeaponType>& Weapons = Data->Weapons();
 	for (size_t i = 0; i < Weapons.size(); ++i)
 	{
@@ -448,6 +492,11 @@ void AZMBCharacter::WeaponKey(const FInputActionValue& Value, int32 Slot)
 
 void AZMBCharacter::NextWeaponKey(const FInputActionValue& Value)
 {
+	if (bBuildMode)
+	{
+		CycleBuildPiece(1);
+		return;
+	}
 	if (WeaponStates.Num() > 0 && !bDead)
 	{
 		CurrentWeapon = (CurrentWeapon + 1) % WeaponStates.Num();
@@ -461,6 +510,11 @@ void AZMBCharacter::KickKey(const FInputActionValue& Value)
 	const UZMBGameData* Data = UZMBGameData::Get(this);
 	if (!Data || bDead || KickCooldown > 0.0f)
 	{
+		return;
+	}
+	if (bBuildMode)
+	{
+		DismantleAimed();
 		return;
 	}
 	KickCooldown = 0.6f;
@@ -590,8 +644,22 @@ void AZMBCharacter::InteractKey(const FInputActionValue& Value)
 	}
 	if (Nearest)
 	{
+		CancelDismantle();
 		Nearest->Enter(this);
+		return;
 	}
+	// sem carro para dirigir perto: segurar E ao lado de um carro batido desmancha ele em sucata
+	if (AZMBExplosive* Wreck = FindDismantleTarget())
+	{
+		const UZMBGameData* Data = UZMBGameData::Get(this);
+		DismantleTarget = Wreck;
+		DismantleLeft = Data ? Data->Tuning().Base.DismantleSeconds : 2.5f;
+	}
+}
+
+void AZMBCharacter::InteractOff(const FInputActionValue& Value)
+{
+	CancelDismantle();
 }
 
 void AZMBCharacter::SetDriving(AZMBCar* Car)
@@ -601,6 +669,8 @@ void AZMBCharacter::SetDriving(AZMBCar* Car)
 	bAiming = false;
 	if (Car)
 	{
+		SetBuildMode(false);
+		CancelDismantle();
 		SetSlowMo(false);
 		GetCharacterMovement()->DisableMovement();
 		SetActorEnableCollision(false);
@@ -697,6 +767,8 @@ float AZMBCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 	}
 	Health = FMath::Max(0.0f, Health - Applied);
 	SinceDamage = 0.0f;
+	// apanhou, soltou o carro que estava desmanchando
+	CancelDismantle();
 	AddTrauma(0.2f + Applied / 60.0f);
 	if (AZMBHordeDirector* Director = AZMBHordeDirector::Find(this))
 	{
@@ -724,6 +796,8 @@ void AZMBCharacter::Die()
 	bDead = true;
 	bCloseCallPending = false;
 	SetSlowMo(false);
+	SetBuildMode(false);
+	CancelDismantle();
 	RespawnLeft = 6.0f;
 	GetCharacterMovement()->DisableMovement();
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_ZMBZombie, ECR_Ignore);
@@ -853,6 +927,11 @@ void AZMBCharacter::HandleBulletHit(const FHitResult& Hit, const FVector& Direct
 		Explosive->TakeExplosiveDamage(Weapon.Damage, GetController(), 0);
 		HitMarkerAge = 0.0f;
 	}
+	else if (AZMBBuildPiece* Piece = Cast<AZMBBuildPiece>(Actor))
+	{
+		// barricada é cobertura (a bala para nela); o bujão armado acende
+		Piece->TakeBullet(GetController());
+	}
 	if (Component && Component->IsSimulatingPhysics())
 	{
 		Component->AddImpulseAtLocation(Direction * Weapon.Impulse * Component->GetMass(), Hit.ImpactPoint);
@@ -914,6 +993,11 @@ void AZMBCharacter::Tick(float DeltaSeconds)
 	{
 		bShotThisPress = true;
 		FireOnce();
+	}
+	UpdateDismantle(DeltaSeconds);
+	if (bBuildMode)
+	{
+		UpdateBuild();
 	}
 
 	// mira lenta gasta foco em tempo real; fora dela o foco volta devagar
@@ -1067,6 +1151,340 @@ void AZMBCharacter::Animate(float DeltaSeconds)
 	Parts[4]->SetRelativeRotation(PartRest[4].Rotator() + FRotator(Swing, 0.0f, 0.0f));
 	Parts[5]->SetRelativeRotation(PartRest[5].Rotator() + FRotator(-Swing, 0.0f, 0.0f));
 	Parts[2]->SetRelativeRotation(PartRest[2].Rotator() + FRotator(-Swing * 0.7f, 0.0f, 0.0f));
+}
+
+// --- base (à Night of the Dead) -----------------------------------------------------------------------------------------
+
+void AZMBCharacter::AddScrap(int32 Amount)
+{
+	if (Amount <= 0)
+	{
+		return;
+	}
+	Scrap += Amount;
+	if (UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this))
+	{
+		Stream->ShowToast(FText::Format(LOCTEXT("ScrapGained", "+{0} DE SUCATA (TOTAL {1})"), FText::AsNumber(Amount), FText::AsNumber(Scrap)).ToString());
+	}
+}
+
+AZMBBuildPiece* AZMBCharacter::GetAimedPiece() const
+{
+	return AimedPiece.Get();
+}
+
+float AZMBCharacter::GetDismantle01() const
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	if (!DismantleTarget.IsValid() || !Data)
+	{
+		return -1.0f;
+	}
+	const float Total = FMath::Max(Data->Tuning().Base.DismantleSeconds, 0.01f);
+	return FMath::Clamp(1.0f - DismantleLeft / Total, 0.0f, 1.0f);
+}
+
+void AZMBCharacter::BuildKey(const FInputActionValue& Value)
+{
+	if (bDead || bDriving)
+	{
+		return;
+	}
+	SetBuildMode(!bBuildMode);
+}
+
+void AZMBCharacter::SetBuildMode(bool bOn)
+{
+	bBuildMode = bOn;
+	bFireHeld = false;
+	AimedPiece = nullptr;
+	bGhostValid = false;
+	if (!bOn)
+	{
+		DrawGhost(false, FVector::ZeroVector, FVector::ZeroVector, 0.0f, FLinearColor::White);
+	}
+}
+
+const ZR::FBuildPieceType* AZMBCharacter::CurrentPieceType() const
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	if (!Data)
+	{
+		return nullptr;
+	}
+	const std::vector<ZR::FBuildPieceType>& Pieces = Data->BuildPieces();
+	return BuildIndex >= 0 && BuildIndex < static_cast<int32>(Pieces.size()) ? &Pieces[static_cast<size_t>(BuildIndex)] : nullptr;
+}
+
+void AZMBCharacter::CycleBuildPiece(int32 Step)
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	const int32 Count = Data ? static_cast<int32>(Data->BuildPieces().size()) : 0;
+	if (Count > 0)
+	{
+		BuildIndex = ((BuildIndex + Step) % Count + Count) % Count;
+	}
+}
+
+void AZMBCharacter::UpdateBuild()
+{
+	UZMBGameData* Data = UZMBGameData::Get(this);
+	AZMBGameMode* GameMode = AZMBGameMode::Get(this);
+	AZMBWorldBuilder* Builder = GameMode ? GameMode->GetBuilder() : nullptr;
+	const ZR::FBuildPieceType* Type = CurrentPieceType();
+	bGhostValid = false;
+	if (!Data || !Builder || !Type)
+	{
+		DrawGhost(false, FVector::ZeroVector, FVector::ZeroVector, 0.0f, FLinearColor::White);
+		return;
+	}
+	const ZR::FBaseConfig& BaseConfig = Data->Tuning().Base;
+	const FVector ViewLocation = Camera->GetComponentLocation();
+	const FVector ViewDirection = Camera->GetForwardVector();
+	const float Reach = static_cast<float>(FVector::Dist(ViewLocation, GetActorLocation())) + BaseConfig.BuildRangeCm;
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(ZMBBuild), false, this);
+
+	// 1) uma peça na mira: o clique conserta e o chute desmonta (o traço por objeto acha também a armadilha, que deixa a
+	//    bala passar)
+	AimedPiece = nullptr;
+	FHitResult PieceHit;
+	if (GetWorld()->LineTraceSingleByObjectType(PieceHit, ViewLocation, ViewLocation + ViewDirection * Reach,
+			FCollisionObjectQueryParams(ECC_WorldDynamic), Params))
+	{
+		AZMBBuildPiece* Piece = Cast<AZMBBuildPiece>(PieceHit.GetActor());
+		if (Piece && !Piece->IsGone() && FVector::Dist2D(Piece->GetActorLocation(), GetActorLocation()) <= BaseConfig.BuildRangeCm + 200.0f)
+		{
+			AimedPiece = Piece;
+		}
+	}
+	if (AimedPiece.IsValid())
+	{
+		DrawGhost(false, FVector::ZeroVector, FVector::ZeroVector, 0.0f, FLinearColor::White);
+		return;
+	}
+
+	// 2) o ponto do chão para onde a mira aponta, preso ao alcance e encaixado na grade
+	FVector Point = ViewLocation + ViewDirection * Reach;
+	FHitResult Ground;
+	if (GetWorld()->LineTraceSingleByChannel(Ground, ViewLocation, Point, ECC_Visibility, Params))
+	{
+		Point = Ground.ImpactPoint;
+	}
+	FVector Flat = Point - GetActorLocation();
+	Flat.Z = 0.0f;
+	const float MaxReach = FMath::Max(BaseConfig.BuildRangeCm - BaseConfig.SnapCm, 100.0f);
+	if (Flat.Size() > MaxReach)
+	{
+		Flat = Flat.GetSafeNormal() * MaxReach;
+	}
+	const FVector Origin = Builder->GetOrigin();
+	const FVector Local = GetActorLocation() + Flat - Origin;
+	const float X = ZR::SnapToGrid(static_cast<float>(Local.X), BaseConfig.SnapCm);
+	const float Y = ZR::SnapToGrid(static_cast<float>(Local.Y), BaseConfig.SnapCm);
+
+	ZR::FPlaceQuery Query;
+	Query.Piece = ZR::MakeFootprint(*Type, X, Y, BuildRot90);
+	Query.Cost = Type->Cost;
+	Query.Scrap = Scrap;
+	const FVector PlayerLocal = GetActorLocation() - Origin;
+	Query.PlayerX = static_cast<float>(PlayerLocal.X);
+	Query.PlayerY = static_cast<float>(PlayerLocal.Y);
+	std::vector<ZR::FFootprint> Existing;
+	for (TActorIterator<AZMBBuildPiece> It(GetWorld()); It; ++It)
+	{
+		if (!It->IsGone())
+		{
+			Existing.push_back(It->Footprint(Origin));
+		}
+	}
+	Query.PieceCount = static_cast<int>(Existing.size());
+	PlaceResult = ZR::CheckPlacement(Builder->GetPlan(), Builder->GetCellSize(), BaseConfig, Query, Existing);
+	GhostCenter = Origin + FVector(X, Y, Builder->GroundHeight() + Type->HeightCm * 0.5f);
+	bGhostValid = true;
+	const bool bOk = PlaceResult == ZR::EPlaceResult::Ok;
+	DrawGhost(true, GhostCenter, FVector(Type->WidthCm, Type->DepthCm, Type->HeightCm), BuildRot90 * 90.0f,
+		bOk ? FLinearColor(0.1f, 1.0f, 0.25f) : FLinearColor(1.0f, 0.12f, 0.05f));
+}
+
+void AZMBCharacter::DrawGhost(bool bShow, const FVector& Center, const FVector& SizeCm, float YawDeg, const FLinearColor& Color)
+{
+	for (UStaticMeshComponent* Edge : GhostEdges)
+	{
+		Edge->SetVisibility(bShow);
+	}
+	if (!bShow || GhostEdges.Num() != 12)
+	{
+		return;
+	}
+	UZMBGameData* Data = UZMBGameData::Get(this);
+	UMaterialInterface* Material = Data ? Data->GlowMaterial(Color, 4.0f) : nullptr;
+	const FQuat Turn(FRotator(0.0f, YawDeg, 0.0f));
+	const FVector Half = SizeCm * 0.5f;
+	constexpr float Thick = 4.0f;
+	int32 Index = 0;
+	// 4 arestas ao longo de X, 4 ao longo de Y e 4 em pé: uma caixa de arame
+	for (int32 Axis = 0; Axis < 3; ++Axis)
+	{
+		for (int32 A = -1; A <= 1; A += 2)
+		{
+			for (int32 B = -1; B <= 1; B += 2)
+			{
+				FVector Offset;
+				FVector Size;
+				if (Axis == 0)
+				{
+					Offset = FVector(0.0f, A * Half.Y, B * Half.Z);
+					Size = FVector(SizeCm.X, Thick, Thick);
+				}
+				else if (Axis == 1)
+				{
+					Offset = FVector(A * Half.X, 0.0f, B * Half.Z);
+					Size = FVector(Thick, SizeCm.Y, Thick);
+				}
+				else
+				{
+					Offset = FVector(A * Half.X, B * Half.Y, 0.0f);
+					Size = FVector(Thick, Thick, SizeCm.Z);
+				}
+				UStaticMeshComponent* Edge = GhostEdges[Index++];
+				Edge->SetWorldLocationAndRotation(Center + Turn.RotateVector(Offset), Turn);
+				Edge->SetWorldScale3D(Size / 100.0f);
+				if (Material)
+				{
+					Edge->SetMaterial(0, Material);
+				}
+			}
+		}
+	}
+}
+
+void AZMBCharacter::PlaceOrRepair()
+{
+	UZMBGameData* Data = UZMBGameData::Get(this);
+	if (!Data || bDead)
+	{
+		return;
+	}
+	UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this);
+	if (AZMBBuildPiece* Piece = AimedPiece.Get())
+	{
+		const int32 Spent = Piece->Repair(Scrap);
+		Scrap -= Spent;
+		if (Stream)
+		{
+			if (Spent > 0)
+			{
+				Stream->ShowToast(FText::Format(LOCTEXT("Repaired", "CONSERTOU: -{0} DE SUCATA"), FText::AsNumber(Spent)).ToString());
+			}
+			else
+			{
+				Stream->ShowToast(Piece->FullRepairCost() > 0 ? LOCTEXT("NoScrapRepair", "SEM SUCATA PARA CONSERTAR").ToString()
+					: LOCTEXT("Intact", "A PEÇA ESTÁ INTEIRA").ToString());
+			}
+		}
+		return;
+	}
+	const ZR::FBuildPieceType* Type = CurrentPieceType();
+	// o motivo de não poder (longe, sem sucata, fora da rua) já aparece no HUD
+	if (!Type || !bGhostValid || PlaceResult != ZR::EPlaceResult::Ok)
+	{
+		return;
+	}
+	FActorSpawnParameters SpawnParams;
+	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AZMBBuildPiece* Built = GetWorld()->SpawnActor<AZMBBuildPiece>(AZMBBuildPiece::StaticClass(), GhostCenter,
+		FRotator(0.0f, BuildRot90 * 90.0f, 0.0f), SpawnParams);
+	if (!Built)
+	{
+		return;
+	}
+	Built->Setup(*Type, BuildRot90);
+	Scrap -= Type->Cost;
+	// a martelada faz barulho: construir chama zumbi
+	if (AZMBHordeDirector* Director = AZMBHordeDirector::Find(this))
+	{
+		Director->ReportNoise(Data->Tuning().Base.BuildNoise);
+	}
+}
+
+void AZMBCharacter::DismantleAimed()
+{
+	AZMBBuildPiece* Piece = AimedPiece.Get();
+	if (!Piece)
+	{
+		return;
+	}
+	const int32 Refund = Piece->Dismantle();
+	AimedPiece = nullptr;
+	Scrap += Refund;
+	if (UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this))
+	{
+		Stream->ShowToast(FText::Format(LOCTEXT("Dismantled", "DESMONTOU: +{0} DE SUCATA"), FText::AsNumber(Refund)).ToString());
+	}
+}
+
+AZMBExplosive* AZMBCharacter::FindDismantleTarget() const
+{
+	AZMBExplosive* Best = nullptr;
+	// o carro tem 4,4 m: de lado, colado nele, o centro fica a ~1,3 m; pela frente, a ~2,5 m
+	float BestDistance = 380.0f;
+	for (TActorIterator<AZMBExplosive> It(GetWorld()); It; ++It)
+	{
+		if (!It->CanDismantle())
+		{
+			continue;
+		}
+		const float Distance = static_cast<float>(FVector::Dist2D(It->GetActorLocation(), GetActorLocation()));
+		if (Distance < BestDistance)
+		{
+			BestDistance = Distance;
+			Best = *It;
+		}
+	}
+	return Best;
+}
+
+void AZMBCharacter::UpdateDismantle(float DeltaSeconds)
+{
+	WreckScanTimer -= DeltaSeconds;
+	if (WreckScanTimer <= 0.0f)
+	{
+		WreckScanTimer = 0.3f;
+		bWreckNearby = FindDismantleTarget() != nullptr;
+	}
+	AZMBExplosive* Wreck = DismantleTarget.Get();
+	if (!Wreck)
+	{
+		CancelDismantle();
+		return;
+	}
+	// solta se o carro pegar fogo, se afastar ou se o jogador sair andando
+	if (!Wreck->CanDismantle() || FVector::Dist2D(Wreck->GetActorLocation(), GetActorLocation()) > 450.0f || GetVelocity().Size2D() > 150.0f)
+	{
+		CancelDismantle();
+		return;
+	}
+	DismantleLeft -= DeltaSeconds;
+	if (DismantleLeft > 0.0f)
+	{
+		return;
+	}
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	AZMBFx::Debris(GetWorld(), Wreck->GetActorLocation(), 8, FLinearColor(0.2f, 0.2f, 0.21f), 350.0f);
+	Wreck->Destroy();
+	CancelDismantle();
+	AddScrap(Data ? Data->Tuning().Base.ScrapPerWreck : 25);
+	// lata batendo faz barulho
+	if (AZMBHordeDirector* Director = AZMBHordeDirector::Find(this))
+	{
+		Director->ReportNoise(Data ? Data->Tuning().Base.BuildNoise * 2.0f : 6.0f);
+	}
+}
+
+void AZMBCharacter::CancelDismantle()
+{
+	DismantleTarget = nullptr;
+	DismantleLeft = 0.0f;
 }
 
 #undef LOCTEXT_NAMESPACE

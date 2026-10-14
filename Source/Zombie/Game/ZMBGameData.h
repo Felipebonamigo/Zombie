@@ -45,6 +45,8 @@ public:
 	const std::vector<ZR::FHypeEventDef>& HypeEvents() const { return LoadedHypeEvents; }
 	const std::vector<ZR::FChatLine>& ChatLines() const { return LoadedChatLines; }
 	const std::vector<ZR::FChallengeDef>& Challenges() const { return LoadedChallenges; }
+	/** Peças do modo construção, na ordem da tabela (Data/Construcoes.csv). */
+	const std::vector<ZR::FBuildPieceType>& BuildPieces() const { return LoadedBuildPieces; }
 
 	const ZR::FZombieType* FindZombie(const char* Id) const;
 	const ZR::FExplosiveType* FindExplosive(const char* Id) const;
@@ -77,6 +79,7 @@ private:
 	std::vector<ZR::FHypeEventDef> LoadedHypeEvents;
 	std::vector<ZR::FChatLine> LoadedChatLines;
 	std::vector<ZR::FChallengeDef> LoadedChallenges;
+	std::vector<ZR::FBuildPieceType> LoadedBuildPieces;
 	TArray<FString> Errors;
 
 	UPROPERTY(Transient)

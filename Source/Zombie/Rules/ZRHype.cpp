@@ -22,6 +22,7 @@ namespace ZR
 		case EHypeEvent::LongShot: return "tiro_de_longe";
 		case EHypeEvent::TookHit: return "apanhou";
 		case EHypeEvent::Silenced: return "calou_gritador";
+		case EHypeEvent::TrapKill: return "abate_armadilha";
 		case EHypeEvent::Count: break;
 		}
 		return "";

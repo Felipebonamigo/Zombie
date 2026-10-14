@@ -359,7 +359,7 @@ namespace ZR
 	{
 		static const std::vector<const char*> Categories = {
 			"abate", "cabeca", "explosao", "cadeia", "atropelo", "desmembrou", "dano", "quase_morte", "calmo",
-			"doacao", "horda", "noite", "mira_lenta", "zumbi_do_chat", "inicio",
+			"doacao", "horda", "noite", "mira_lenta", "zumbi_do_chat", "inicio", "barricada", "armadilha",
 		};
 		return Categories;
 	}

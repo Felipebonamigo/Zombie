@@ -446,6 +446,100 @@ namespace ZR
 		}
 	}
 
+	void LoadBuildPieces(const std::string& Csv, const std::vector<FExplosiveType>& Explosives, std::vector<FBuildPieceType>& Out,
+		std::vector<std::string>& Errors)
+	{
+		Out.clear();
+		FCsvTable Table;
+		if (!ParseOrReport(Csv, "Construcoes.csv", Table, Errors))
+		{
+			return;
+		}
+		FRowReader Reader(Table, "Construcoes.csv", Errors);
+		if (!Reader.Require({"id", "nome_pt", "nome_en", "tipo", "tecla", "custo_sucata", "vida", "largura_cm", "profundidade_cm",
+				"altura_cm", "dano_por_s", "alvo", "lentidao", "desgaste", "explosivo", "cor"}))
+		{
+			return;
+		}
+		for (std::size_t Row = 0; Row < Table.Rows.size(); ++Row)
+		{
+			// uma linha com erro sai inteira: peça pela metade no modo construção confunde mais que peça faltando
+			const std::size_t ErrorsBefore = Errors.size();
+			FBuildPieceType Piece;
+			Piece.Id = Reader.Text(Row, "id");
+			if (!AcceptId(Reader, Row, Piece.Id, Out))
+			{
+				continue;
+			}
+			const std::string Kind = Reader.Text(Row, "tipo");
+			if (Kind == "barricada")
+			{
+				Piece.Kind = EPieceKind::Barricade;
+			}
+			else if (Kind == "armadilha")
+			{
+				Piece.Kind = EPieceKind::Trap;
+			}
+			else
+			{
+				Reader.Report(Row, "tipo", "'" + Kind + "' não é barricada ou armadilha");
+				continue;
+			}
+			Piece.Slot = Reader.Int(Row, "tecla", 1, 9, 1);
+			if (Errors.size() != ErrorsBefore)
+			{
+				continue;
+			}
+			bool bSlotTaken = false;
+			for (const FBuildPieceType& Other : Out)
+			{
+				bSlotTaken = bSlotTaken || Other.Slot == Piece.Slot;
+			}
+			if (bSlotTaken)
+			{
+				Reader.Report(Row, "tecla", std::to_string(Piece.Slot) + " já é de outra peça");
+				continue;
+			}
+			const std::string Target = Reader.Text(Row, "alvo");
+			if (Target == "corpo")
+			{
+				Piece.Target = ETrapTarget::Body;
+			}
+			else if (Target != "pernas" && !Target.empty())
+			{
+				Reader.Report(Row, "alvo", "'" + Target + "' não é pernas ou corpo");
+				continue;
+			}
+			Piece.ExplosiveId = Reader.Text(Row, "explosivo");
+			if (Piece.IsExplosive() && FindById(Explosives, Piece.ExplosiveId) == nullptr)
+			{
+				Reader.Report(Row, "explosivo", "'" + Piece.ExplosiveId + "' não é um id de Explosivos.csv");
+				continue;
+			}
+			Piece.NamePt = Reader.Text(Row, "nome_pt");
+			Piece.NameEn = Reader.Text(Row, "nome_en");
+			Piece.Cost = Reader.Int(Row, "custo_sucata", 0, 10000, 20);
+			Piece.Health = Reader.Float(Row, "vida", 1.0f, 1.0e6f, 400.0f);
+			Piece.WidthCm = Reader.Float(Row, "largura_cm", 10.0f, 2000.0f, 300.0f);
+			Piece.DepthCm = Reader.Float(Row, "profundidade_cm", 10.0f, 2000.0f, 30.0f);
+			Piece.HeightCm = Reader.Float(Row, "altura_cm", 1.0f, 1000.0f, 110.0f);
+			Piece.DamagePerSecond = Reader.Float(Row, "dano_por_s", 0.0f, 1.0e5f, 0.0f);
+			Piece.SlowFactor = Reader.Float(Row, "lentidao", 0.05f, 1.0f, 1.0f);
+			Piece.Durability = Reader.Float(Row, "desgaste", 0.0f, 1.0e6f, 0.0f);
+			Piece.ColorRgb = Reader.Color(Row, "cor", 0x7A5230);
+			if (Errors.size() != ErrorsBefore)
+			{
+				continue;
+			}
+			if (Piece.Kind == EPieceKind::Trap && !Piece.IsExplosive() && Piece.DamagePerSecond <= 0.0f && Piece.SlowFactor >= 1.0f)
+			{
+				Reader.ReportRow(Row, "armadilha sem efeito: precisa de dano_por_s, lentidao abaixo de 1 ou explosivo");
+				continue;
+			}
+			Out.push_back(Piece);
+		}
+	}
+
 	namespace
 	{
 		struct FTuningKey
@@ -521,6 +615,20 @@ namespace ZR
 			F("pauta.primeira_espera_s", T.Challenge.FirstDelaySeconds, 0.0f, 3600.0f);
 			F("pauta.intervalo_s", T.Challenge.CooldownSeconds, 0.0f, 3600.0f);
 			F("pauta.espectadores_min", T.Challenge.MinViewers, 0.0f, 1.0e9f);
+
+			I("base.sucata_inicio", T.Base.StartScrap, 0.0f, 100000.0f);
+			I("base.sucata_por_caixa", T.Base.ScrapPerCrate, 0.0f, 100000.0f);
+			I("base.sucata_por_carro", T.Base.ScrapPerWreck, 0.0f, 100000.0f);
+			F("base.desmanchar_s", T.Base.DismantleSeconds, 0.1f, 60.0f);
+			F("base.devolve_fracao", T.Base.RefundFraction, 0.0f, 1.0f);
+			F("base.conserto_custo_fracao", T.Base.RepairCostFraction, 0.0f, 10.0f);
+			F("base.alcance_cm", T.Base.BuildRangeCm, 100.0f, 5000.0f);
+			F("base.grade_cm", T.Base.SnapCm, 0.0f, 1000.0f);
+			I("base.pecas_max", T.Base.MaxPieces, 0.0f, 1000.0f);
+			F("base.folga_jogador_cm", T.Base.PlayerClearanceCm, 0.0f, 500.0f);
+			F("base.dano_zumbi_multiplicador", T.Base.ZombieDamageMultiplier, 0.0f, 100.0f);
+			F("base.dano_explosao_multiplicador", T.Base.BlastDamageMultiplier, 0.0f, 100.0f);
+			F("base.barulho_construir", T.Base.BuildNoise, 0.0f, 1000.0f);
 
 			F("dia.duracao_s", T.Day.DayLengthSeconds, 10.0f, 86400.0f);
 			F("dia.hora_inicio", T.Day.StartHour, 0.0f, 23.99f);

@@ -23,6 +23,7 @@ que falta usa o padrão do código e aparece como aviso no log. Grupos:
 | `cidade.` | Tamanho da cidade, quarteirões, praia e mar, praças, andares e tamanho da célula (seção 2) |
 | `chat.` | Rodada de votação, votos mínimos, espera do `!zumbi` e zumbis com nome ao mesmo tempo (seção 9) |
 | `pauta.` | Espera da primeira pauta, intervalo entre pautas e audiência mínima (seção 11) |
+| `base.` | Sucata (começo, caixa, carro), desmanche, conserto, desmonte, alcance, grade, teto de peças, dano nas peças e barulho (seção 12) |
 | `dia.` | Duração do dia, hora inicial, noite e Noite da Horda (seção 7) |
 | `camera.` | As três distâncias da terceira pessoa, a mira, a primeira pessoa e o modo inicial |
 | `jogador.` | Vida, velocidades, fôlego, chute, mira lenta (foco), arremesso, sobra de vida e cura sozinha |
@@ -62,8 +63,8 @@ entre 25% e 60% do normal, para a sequência "pipocar".
 `id,pontos,rotulo_pt,rotulo_en`
 
 Uma linha por evento de `ZR::EHypeEvent`: `abate`, `tiro_na_cabeca`, `desmembrou`, `despedacou`, `abate_multiplo`,
-`explosao_em_cadeia`, `atropelou`, `abate_mira_lenta`, `zumbi_do_chat`, `escapou_por_pouco`, `tiro_de_longe`, `apanhou` e
-`calou_gritador` (matou o gritador antes do grito).
+`explosao_em_cadeia`, `atropelou`, `abate_mira_lenta`, `zumbi_do_chat`, `escapou_por_pouco`, `tiro_de_longe`, `apanhou`,
+`calou_gritador` (matou o gritador antes do grito) e `abate_armadilha` (zumbi morto por armadilha da base).
 O rótulo é o texto que salta na tela.
 
 ## `Pautas.csv`
@@ -74,13 +75,27 @@ O rótulo é o texto que salta na tela.
 - `so_de_noite` = 1: a pauta só aparece à noite.
 - O texto aparece no anúncio e na caixa da pauta no HUD.
 
+## `Construcoes.csv`
+
+`id,nome_pt,nome_en,tipo,tecla,custo_sucata,vida,largura_cm,profundidade_cm,altura_cm,dano_por_s,alvo,lentidao,desgaste,explosivo,cor`
+
+- `tipo`: `barricada` (bloqueia) ou `armadilha` (o zumbi pisa).
+- `tecla` (1 a 9) é única por peça e escolhe a peça no modo construção.
+- `largura_cm` fica no eixo X sem girar; `profundidade_cm` no Y. A barricada até 1,2 m de altura dá para pular.
+- Só armadilha: `dano_por_s` em cada zumbi em cima, no `alvo` `pernas` ou `corpo`; `lentidao` é a fração da velocidade em
+  cima dela (1 = não segura); `desgaste` é o dano total que ela causa antes de gastar (0 = não gasta); `explosivo` é um id
+  de `Explosivos.csv` e faz a armadilha explodir no primeiro zumbi. Armadilha sem nenhum dos três efeitos é erro.
+- O código reconhece os ids `barricada`, `muro`, `estacas`, `arame` e as armadilhas com `explosivo` para o visual; id novo
+  aparece como um bloco da cor da peça.
+- Linha com erro sai inteira (não aparece no modo construção) e o erro vai para o log.
+
 ## `ChatFalso.csv`
 
 `categoria,texto_pt,texto_en`
 
 Falas do chat simulado. As categorias (`ZR::FakeChatCategories()`) são `inicio`, `abate`, `cabeca`, `explosao`, `cadeia`,
-`atropelo`, `desmembrou`, `dano`, `quase_morte`, `calmo`, `doacao`, `horda`, `noite`, `mira_lenta` e `zumbi_do_chat`, com
-pelo menos 2 falas cada. Sem emoji: o HUD de protótipo não desenha emoji.
+`atropelo`, `desmembrou`, `dano`, `quase_morte`, `calmo`, `doacao`, `horda`, `noite`, `mira_lenta`, `zumbi_do_chat`,
+`barricada` (uma barricada caiu) e `armadilha` (abate por armadilha), com pelo menos 2 falas cada. Sem emoji: o HUD de protótipo não desenha emoji.
 
 ## Jogo empacotado
 

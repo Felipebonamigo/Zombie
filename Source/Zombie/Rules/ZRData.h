@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "Rules/ZRBase.h"
 #include "Rules/ZRBody.h"
 #include "Rules/ZRChallenges.h"
 #include "Rules/ZRChat.h"
@@ -161,6 +162,7 @@ namespace ZR
 		FPlayerConfig Player;
 		FCarConfig Car;
 		FChallengeConfig Challenge;
+		FBaseConfig Base;
 		/** Zumbis com o nome de espectadores vivos ao mesmo tempo. */
 		int MaxNamedZombies = 12;
 		/** Pedaços soltos (membros e entulho) no mundo ao mesmo tempo. */
@@ -185,6 +187,9 @@ namespace ZR
 	void LoadChatLines(const std::string& Csv, std::vector<FChatLine>& Out, std::vector<std::string>& Errors);
 	/** Data/Pautas.csv: o evento tem que ser um id de EHypeEvent e a quantidade, pelo menos 1. */
 	void LoadChallenges(const std::string& Csv, std::vector<FChallengeDef>& Out, std::vector<std::string>& Errors);
+	/** Data/Construcoes.csv: o explosivo da armadilha tem que ser um id de Explosives (Explosivos.csv). */
+	void LoadBuildPieces(const std::string& Csv, const std::vector<FExplosiveType>& Explosives, std::vector<FBuildPieceType>& Out,
+		std::vector<std::string>& Errors);
 
 	/**
 	 * Data/Ajustes.csv (chave,valor,unidade,descricao). Chave desconhecida, repetida ou valor ruim viram Errors (o valor

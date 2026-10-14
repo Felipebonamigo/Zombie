@@ -1,6 +1,7 @@
 // HUD da live, desenhado no Canvas (sem UMG, que é binário): selo AO VIVO, espectadores e seguidores, barra de hype com o
 // combo, o chat à direita, a votação do chat, os lances que saltam no meio, mira com marcador de acerto, vida, fôlego,
-// foco da mira lenta, arma e munição, relógio e noite, e no "modo celular" (primeira pessoa) a moldura do app gravando.
+// foco da mira lenta, arma e munição, relógio e noite, sucata e o modo construção da base, e no "modo celular" (primeira
+// pessoa) a moldura do app gravando.
 // Provisório: o HUD final vem em CommonUI (menus por controle, Steam Deck), com o mesmo conteúdo.
 
 #pragma once
@@ -29,6 +30,7 @@ private:
 	void DrawClock(float Scale);
 	void DrawPhoneFrame(float Scale);
 	void DrawHelp(float Scale);
+	void DrawBuild(float Scale);
 	void DrawShadowedText(const FString& Text, const FLinearColor& Color, float X, float Y, UFont* Font, float TextScale);
 	void DrawBar(float X, float Y, float Width, float Height, float Fill, const FLinearColor& Color);
 

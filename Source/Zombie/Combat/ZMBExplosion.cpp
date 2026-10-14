@@ -1,5 +1,6 @@
 #include "Combat/ZMBExplosion.h"
 #include "Zombie.h"
+#include "Base/ZMBBuildPiece.h"
 #include "Combat/ZMBExplosive.h"
 #include "Combat/ZMBFx.h"
 #include "Player/ZMBCharacter.h"
@@ -63,6 +64,11 @@ namespace ZMBExplosion
 				else if (AZMBExplosive* Explosive = Cast<AZMBExplosive>(Actor))
 				{
 					Explosive->TakeExplosiveDamage(Damage, Instigator, ChainDepth + 1);
+				}
+				else if (AZMBBuildPiece* Piece = Cast<AZMBBuildPiece>(Actor))
+				{
+					// barricada e armadilha apanham da explosão; o bujão armado acende e entra na cadeia
+					Piece->TakeBlast(Damage, Instigator, ChainDepth + 1);
 				}
 				else if (AZMBCharacter* Character = Cast<AZMBCharacter>(Actor))
 				{

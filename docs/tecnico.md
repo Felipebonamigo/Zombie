@@ -39,6 +39,7 @@ Versão 0.1, 14 out 2026. Base: Unreal Engine 5.8, C++, um módulo (`Zombie`), W
 | `Player/` | `AZMBCharacter` | Câmeras, armas, chute, arremesso, mira lenta, carro e clipe |
 | `Zombies/` | `AZMBZombie`, `AZMBHordeDirector` | Corpo por membros; onde e quando nascem; fluxo; pedidos do chat |
 | `Combat/` | `AZMBExplosive`, `ZMBExplosion`, `AZMBFx`, `AZMBPickup` | Explosivos, explosão, efeitos provisórios, caixa do drone |
+| `Base/` | `AZMBBuildPiece` | Barricada e armadilha construídas: colisão, golpes, conserto, desmonte e o bujão armado |
 | `Vehicles/` | `AZMBCar` | Carro de suspensão por raios (protótipo) |
 | `Stream/` | `UZMBStreamSubsystem`, `UZMBTwitchChat` | A live e o chat da Twitch por WebSocket |
 | `UI/` | `AZMBHUD` | HUD da live no Canvas |
@@ -59,6 +60,7 @@ Versão 0.1, 14 out 2026. Base: Unreal Engine 5.8, C++, um módulo (`Zombie`), W
 | Pedaços com física (sangue e entulho) | até 220 | `mundo.pedacos_max`; os novos não nascem acima disso |
 | Luzes pontuais | 64 postes (só à noite) + efeitos curtos | Sem sombra |
 | Cidade | ~25 x 30 células; componentes instanciados (uma chamada por cor) | `cidade.*` |
+| Peças da base | até 40 | `base.pecas_max`; armadilha olha quem está em cima 10 vezes por segundo; zumbi procura barricada na frente 4 vezes por segundo (varredura curta) |
 
 Meta de quadro: 16,7 ms (60 fps) no perfil alvo. A primeira medição fica para a sessão do PC (skill `achar-gargalo`).
 
@@ -71,6 +73,7 @@ Meta de quadro: 16,7 ms (60 fps) no perfil alvo. A primeira medição fica para 
 | Horda grande | Até 140 atores | **Mass Entity** (o mesmo da multidão do City Sample) para centenas ou milhares longe; perto, vira ator completo |
 | Cidade | Grade de blocos gerada | **World Partition** + City Sample Buildings + **PCG** para espalhar quarteirões, lixo e carros |
 | Explosões | Formas básicas e luz | Niagara (fogo, fumaça e faíscas), decalques e **Chaos Destruction** em vidros, muros e carros |
+| Base | Peças de blocos (barricada, muro, estacas, arame, bujão armado) | Peças modulares do acervo-3d (skill `modelo-3d`), barricada que lasca com Chaos Destruction, portas e janelas de prédio para trancar |
 | Carro | Caixa com suspensão por raios | **Chaos Vehicles**, com o que o Detonauto já aprendeu (presets e amassado) |
 | Clipe | Print + janela no log | **Steam Timeline** (marcadores na Gravação de Jogo da Steam) e exportação 9:16 |
 | Replay | — | Sistema de replay do Unreal (DemoNetDriver) para o replay de 10 s do clipe |

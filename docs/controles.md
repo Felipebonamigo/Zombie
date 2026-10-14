@@ -22,10 +22,25 @@ Teclado e mouse, e controle (Xbox ou Steam Deck). Todos são criados em código 
 | Entrar no carro | E (perto do carro) | Y |
 | Distância da câmera (longe e alta, média, perto) | C | Direcional para cima |
 | Primeira pessoa, "modo celular" | V | Direcional para baixo |
+| Modo construção (liga e desliga) | X | Clique no analógico direito |
+| Desmanchar carro batido em sucata | E (segurar ao lado dele) | Y (segurar) |
 | Clipar o melhor lance (print com o HUD) | B | Botão View |
 | Mostrar ou esconder a ajuda | F1 | Botão Menu |
 | Teste: chamar a horda | N | — |
 | Teste: avançar 3 horas | T | — |
+
+## No modo construção
+
+A peça aparece como uma caixa de arame na mira: verde pode, vermelha não (o motivo aparece embaixo). Mirando numa peça já
+construída, o clique conserta e o chute desmonta.
+
+| Ação | Teclado e mouse | Controle |
+|---|---|---|
+| Construir a peça / consertar a peça na mira | Botão esquerdo | Gatilho direito |
+| Girar 90 graus | R | X |
+| Escolher a peça | 1 a 5 / roda do mouse | Direcional para a direita |
+| Desmontar a peça na mira (devolve sucata) | F | B |
+| Sair do modo construção | X | Clique no analógico direito |
 
 ## No carro
 

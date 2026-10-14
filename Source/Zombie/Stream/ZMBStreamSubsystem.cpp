@@ -180,6 +180,10 @@ void UZMBStreamSubsystem::ReportKill(const FZMBKillInfo& Kill)
 	{
 		ReportHype(ZR::EHypeEvent::VehicleKill, 1, Kill.Location);
 	}
+	if (Kill.Cause == EZMBKillCause::Trap)
+	{
+		ReportHype(ZR::EHypeEvent::TrapKill, 1, Kill.Location);
+	}
 	if (Kill.bSlowMo)
 	{
 		ReportHype(ZR::EHypeEvent::SlowMoKill, 1, Kill.Location);
@@ -198,6 +202,10 @@ void UZMBStreamSubsystem::ReportKill(const FZMBKillInfo& Kill)
 	if (Kill.Cause == EZMBKillCause::Vehicle)
 	{
 		React("atropelo");
+	}
+	else if (Kill.Cause == EZMBKillCause::Trap)
+	{
+		React("armadilha");
 	}
 	else if (Kill.bHeadshot)
 	{
@@ -268,6 +276,12 @@ void UZMBStreamSubsystem::Announce(const FText& Text)
 {
 	Announcement = Text;
 	AnnouncementAge = 0.0f;
+}
+
+void UZMBStreamSubsystem::ShowToast(const FString& Text)
+{
+	Toast = Text;
+	ToastAge = 0.0f;
 }
 
 void UZMBStreamSubsystem::Clip()

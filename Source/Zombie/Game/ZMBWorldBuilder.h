@@ -43,6 +43,9 @@ public:
 	FVector CellCenter(int32 X, int32 Y) const;
 	bool WorldToCell(const FVector& Location, int32& OutX, int32& OutY) const;
 	float GroundHeight() const { return 0.0f; }
+	/** Canto da célula (0, 0) no mundo e o lado de uma célula [cm]: o plano da cidade é o mundo menos a origem. */
+	FVector GetOrigin() const { return Origin; }
+	float GetCellSize() const { return CellSize; }
 	FVector GetStartLocation() const { return StartLocation; }
 	FRotator GetStartRotation() const { return StartRotation; }
 

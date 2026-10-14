@@ -3,6 +3,7 @@
 #include "Game/ZMBGameData.h"
 #include "Game/ZMBGameMode.h"
 #include "Game/ZMBWorldBuilder.h"
+#include "Base/ZMBBuildPiece.h"
 #include "Player/ZMBCharacter.h"
 #include "Rules/ZRChat.h"
 #include "Stream/ZMBStreamSubsystem.h"
@@ -67,6 +68,7 @@ void AZMBHUD::DrawHUD()
 	if (Player && !Player->IsDead())
 	{
 		DrawCrosshair(Scale);
+		DrawBuild(Scale);
 	}
 	if (Player && Player->IsHelpVisible())
 	{
@@ -366,7 +368,8 @@ void AZMBHUD::DrawPlayer(float Scale)
 	const FString Weapon = Player->GetWeaponName();
 	GetTextSize(Weapon, Width, Height, Medium, 1.2f * Scale);
 	DrawShadowedText(Weapon, Soft, Right - Width, Bottom - 124.0f * Scale, Medium, 1.2f * Scale);
-	const FString Throwables = FText::Format(LOCTEXT("Throwables", "G granadas {0}    H bujões {1}"), FText::AsNumber(Player->GetGrenades()), FText::AsNumber(Player->GetBombs())).ToString();
+	const FString Throwables = FText::Format(LOCTEXT("Throwables", "G granadas {0}    H bujões {1}    X sucata {2}"), FText::AsNumber(Player->GetGrenades()),
+		FText::AsNumber(Player->GetBombs()), FText::AsNumber(Player->GetScrap())).ToString();
 	GetTextSize(Throwables, Width, Height, Small, 1.1f * Scale);
 	DrawShadowedText(Throwables, Soft, Right - Width, Bottom - 22.0f * Scale, Small, 1.1f * Scale);
 }
@@ -412,10 +415,11 @@ void AZMBHUD::DrawHelp(float Scale)
 		TEXT("Botão esq. atirar   Botão dir. mirar   R recarregar   1 2 3 armas"),
 		TEXT("F chute   G granada   H joga bujão (atire nele no ar!)   Q mira lenta"),
 		TEXT("E entrar/sair do carro   C distância da câmera   V primeira pessoa (celular)"),
+		TEXT("X construir (clique constrói ou conserta, R gira, 1 a 5 peça, F desmonta)   segurar E desmancha carro"),
 		TEXT("B clipar o melhor lance   N horda (teste)   T +3 horas (teste)   F1 esconde"),
 	};
 	const float LineHeight = 22.0f * Scale;
-	const float Width = 760.0f * Scale;
+	const float Width = 860.0f * Scale;
 	const float X = (Canvas->ClipX - Width) * 0.5f;
 	const float Count = static_cast<float>(UE_ARRAY_COUNT(Lines));
 	const float Y = Canvas->ClipY - 24.0f * Scale - Count * LineHeight - 16.0f * Scale;
@@ -424,6 +428,104 @@ void AZMBHUD::DrawHelp(float Scale)
 	{
 		DrawShadowedText(Lines[i], Soft, X, Y + i * LineHeight, Small, 1.05f * Scale);
 	}
+}
+
+void AZMBHUD::DrawBuild(float Scale)
+{
+	const AZMBCharacter* Player = Cast<AZMBCharacter>(GetOwningPawn());
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	if (!Player || !Data || Player->IsDriving())
+	{
+		return;
+	}
+	UFont* Medium = GEngine->GetMediumFont();
+	UFont* Small = GEngine->GetSmallFont();
+	const bool bPortuguese = UZMBGameData::IsPortuguese();
+	float Width = 0.0f;
+	float Height = 0.0f;
+	auto Centered = [this, &Width, &Height](const FString& Text, const FLinearColor& Color, float Y, UFont* Font, float TextScale)
+	{
+		GetTextSize(Text, Width, Height, Font, TextScale);
+		DrawShadowedText(Text, Color, (Canvas->ClipX - Width) * 0.5f, Y, Font, TextScale);
+	};
+
+	// desmanchando um carro (segurando E): barra no meio da tela; perto de um, a dica
+	const float Dismantle = Player->GetDismantle01();
+	if (Dismantle >= 0.0f)
+	{
+		const float BarWidth = 260.0f * Scale;
+		Centered(LOCTEXT("Dismantling", "DESMANCHANDO O CARRO").ToString(), FLinearColor::White, Canvas->ClipY * 0.58f, Medium, 1.1f * Scale);
+		DrawBar((Canvas->ClipX - BarWidth) * 0.5f, Canvas->ClipY * 0.58f + 30.0f * Scale, BarWidth, 14.0f * Scale, Dismantle, Gold);
+	}
+	else if (Player->IsWreckNearby() && !Player->IsBuildMode())
+	{
+		Centered(FText::Format(LOCTEXT("DismantleHint", "segure E: desmanchar o carro (+{0} sucata)"),
+			FText::AsNumber(Data->Tuning().Base.ScrapPerWreck)).ToString(), Soft, Canvas->ClipY * 0.6f, Small, 1.1f * Scale);
+	}
+
+	if (!Player->IsBuildMode())
+	{
+		return;
+	}
+	const std::vector<ZR::FBuildPieceType>& Pieces = Data->BuildPieces();
+	float Y = Canvas->ClipY * 0.64f;
+	Centered(FText::Format(LOCTEXT("BuildTitle", "MODO CONSTRUÇÃO    SUCATA {0}"), FText::AsNumber(Player->GetScrap())).ToString(), Gold, Y, Medium, 1.2f * Scale);
+	Y += 32.0f * Scale;
+
+	// a fileira de peças: a escolhida em dourado, a que não dá para pagar apagada
+	TArray<TPair<FString, FLinearColor>> Items;
+	for (size_t i = 0; i < Pieces.size(); ++i)
+	{
+		const ZR::FBuildPieceType& Piece = Pieces[i];
+		const FString Name = UZMBGameData::ToFString(bPortuguese || Piece.NameEn.empty() ? Piece.NamePt : Piece.NameEn);
+		const bool bChosen = static_cast<int32>(i) == Player->GetBuildIndex();
+		const FLinearColor Color = bChosen ? Gold : (Piece.Cost > Player->GetScrap() ? FLinearColor(0.5f, 0.5f, 0.5f) : Soft);
+		Items.Add(TPair<FString, FLinearColor>(FString::Printf(TEXT("[%d] %s %d"), Piece.Slot, *Name, Piece.Cost), Color));
+	}
+	const float Gap = 22.0f * Scale;
+	float Total = 0.0f;
+	for (const TPair<FString, FLinearColor>& Item : Items)
+	{
+		GetTextSize(Item.Key, Width, Height, Small, 1.05f * Scale);
+		Total += Width + Gap;
+	}
+	float X = (Canvas->ClipX - Total + Gap) * 0.5f;
+	DrawRect(Panel, X - 10.0f * Scale, Y - 4.0f * Scale, Total - Gap + 20.0f * Scale, 26.0f * Scale);
+	for (const TPair<FString, FLinearColor>& Item : Items)
+	{
+		GetTextSize(Item.Key, Width, Height, Small, 1.05f * Scale);
+		DrawShadowedText(Item.Key, Item.Value, X, Y, Small, 1.05f * Scale);
+		X += Width + Gap;
+	}
+	Y += 34.0f * Scale;
+
+	// peça na mira: consertar ou desmontar; senão, o motivo de não poder construir (ou as teclas)
+	if (const AZMBBuildPiece* Aimed = Player->GetAimedPiece())
+	{
+		const ZR::FBuildPieceType& Piece = Aimed->GetPieceType();
+		const FString Name = UZMBGameData::ToFString(bPortuguese || Piece.NameEn.empty() ? Piece.NamePt : Piece.NameEn);
+		const int32 Cost = Aimed->FullRepairCost();
+		const FString Repair = Cost > 0 ? FText::Format(LOCTEXT("RepairCost", "clique conserta ({0})"), FText::AsNumber(Cost)).ToString()
+			: LOCTEXT("IsIntact", "inteira").ToString();
+		Centered(FText::Format(LOCTEXT("AimedPiece", "{0} {1}%    {2}    F desmonta (+{3})"), FText::FromString(Name),
+			FText::AsNumber(FMath::RoundToInt(Aimed->GetHealth01() * 100.0f)), FText::FromString(Repair),
+			FText::AsNumber(Aimed->RefundNow())).ToString(), FLinearColor::White, Y, Small, 1.1f * Scale);
+		return;
+	}
+	FText Status;
+	switch (Player->GetPlaceResult())
+	{
+	case ZR::EPlaceResult::NoScrap: Status = LOCTEXT("NoScrap", "SEM SUCATA: desmanche carros (E) ou espere a caixa do drone"); break;
+	case ZR::EPlaceResult::TooMany: Status = LOCTEXT("TooMany", "LIMITE DE PEÇAS: desmonte alguma (F)"); break;
+	case ZR::EPlaceResult::TooFar: Status = LOCTEXT("TooFar", "LONGE DEMAIS"); break;
+	case ZR::EPlaceResult::OffStreet: Status = LOCTEXT("OffStreet", "SÓ NA RUA, NA PRAÇA OU NA PRAIA"); break;
+	case ZR::EPlaceResult::OnPlayer: Status = LOCTEXT("OnPlayer", "SAIA DA FRENTE: a peça cai em cima de você"); break;
+	case ZR::EPlaceResult::Blocked: Status = LOCTEXT("Blocked", "JÁ TEM UMA PEÇA AÍ"); break;
+	case ZR::EPlaceResult::Ok:
+	default: Status = LOCTEXT("BuildKeys", "clique constrói    R gira    1 a 5 ou roda troca    F desmonta    X sai"); break;
+	}
+	const bool bOk = Player->GetPlaceResult() == ZR::EPlaceResult::Ok;
+	Centered(Status.ToString(), bOk ? Soft : FLinearColor(1.0f, 0.35f, 0.25f), Y, Small, 1.1f * Scale);
 }
 
 #undef LOCTEXT_NAMESPACE

@@ -64,6 +64,8 @@ public:
 	void React(const char* Category);
 	/** Faixa grande no meio da tela (Noite da Horda, entrega por drone...). */
 	void Announce(const FText& Text);
+	/** Aviso curto embaixo (clipe salvo, sucata ganha, peça consertada). */
+	void ShowToast(const FString& Text);
 	/** Botão Clipar: marca a melhor janela dos últimos 20 s e tira um print com o HUD da live. */
 	void Clip();
 

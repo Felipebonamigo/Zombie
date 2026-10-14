@@ -126,6 +126,19 @@ void UZMBGameData::Reload()
 			LoadedExplosives.push_back(Fallback);
 		}
 	}
+	// as peças da base dependem dos explosivos (o bujão armado): lê depois deles, já com os padrões
+	if (LoadText(TEXT("Construcoes.csv"), Text))
+	{
+		ZR::LoadBuildPieces(Text, LoadedExplosives, LoadedBuildPieces, RuleErrors);
+	}
+	if (LoadedBuildPieces.empty())
+	{
+		ZR::FBuildPieceType Fallback;
+		Fallback.Id = "barricada";
+		Fallback.NamePt = "Barricada";
+		Fallback.NameEn = "Barricade";
+		LoadedBuildPieces.push_back(Fallback);
+	}
 	if (LoadedHypeEvents.size() != static_cast<size_t>(ZR::EHypeEvent::Count))
 	{
 		LoadedHypeEvents.assign(static_cast<size_t>(ZR::EHypeEvent::Count), ZR::FHypeEventDef());
@@ -143,9 +156,10 @@ void UZMBGameData::Reload()
 	{
 		UE_LOG(LogZombie, Warning, TEXT("Dados: Ajustes.csv sem '%s' (vale o padrão do código)"), *ToFString(Key));
 	}
-	UE_LOG(LogZombie, Display, TEXT("Dados: %d tipos de zumbi, %d armas, %d explosivos, %d falas de chat, %d pautas, %d erros"),
+	UE_LOG(LogZombie, Display, TEXT("Dados: %d tipos de zumbi, %d armas, %d explosivos, %d falas de chat, %d pautas, %d peças da base, %d erros"),
 		static_cast<int32>(LoadedZombies.size()), static_cast<int32>(LoadedWeapons.size()), static_cast<int32>(LoadedExplosives.size()),
-		static_cast<int32>(LoadedChatLines.size()), static_cast<int32>(LoadedChallenges.size()), Errors.Num());
+		static_cast<int32>(LoadedChatLines.size()), static_cast<int32>(LoadedChallenges.size()), static_cast<int32>(LoadedBuildPieces.size()),
+		Errors.Num());
 }
 
 const ZR::FZombieType* UZMBGameData::FindZombie(const char* Id) const

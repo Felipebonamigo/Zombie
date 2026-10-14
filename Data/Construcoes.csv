@@ -1,0 +1,6 @@
+id,nome_pt,nome_en,tipo,tecla,custo_sucata,vida,largura_cm,profundidade_cm,altura_cm,dano_por_s,alvo,lentidao,desgaste,explosivo,cor,descricao
+barricada,Barricada de madeira,Wooden barricade,barricada,1,20,400,400,40,110,0,,1,0,,#7A5230,"Tábuas e cavaletes; o jogador pula, o zumbi não"
+muro,Muro de sucata,Scrap wall,barricada,2,45,1200,400,30,210,0,,1,0,,#5E5A52,"Chapa de lata e porta de carro; ninguém pula"
+estacas,Estacas,Spikes,armadilha,3,15,150,240,90,40,60,pernas,0.6,400,,#6B4A2B,"Pontas de madeira no chão: pegam nas pernas e derrubam (zumbi sem perna rasteja)"
+arame,Arame farpado,Barbed wire,armadilha,4,20,250,300,80,70,15,corpo,0.3,900,,#8A8A80,"Rolos de arame: seguram a horda no lugar para o tiro ou o bujão"
+bujao_armado,Bujão armado,Rigged gas tank,armadilha,5,25,30,80,80,90,0,,1,0,bujao,#B03A2E,"Bujão com arame de tropeço: explode no primeiro que pisa, ou no tiro"

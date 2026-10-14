@@ -1,5 +1,5 @@
 // Caixa de suprimentos da "entrega por drone": cai do céu com um sinalizador aceso (doação dos espectadores ou voto do
-// chat em !caixa). Encostou, pegou: munição, granadas, bujões e um pouco de vida.
+// chat em !caixa). Encostou, pegou: munição, granadas, bujões, um pouco de vida e sucata para a base.
 
 #pragma once
 

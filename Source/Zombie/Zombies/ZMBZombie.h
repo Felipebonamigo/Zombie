@@ -4,7 +4,8 @@
 // pedaços caem com física e somem depois de Tuning.CorpseSeconds. Contrato: docs/regras-de-jogo.md, seção 4.
 //
 // Comportamento (à Left 4 Dead / Days Gone): sempre vai atrás do jogador; longe anda pelo campo de fluxo da cidade
-// (AZMBHordeDirector::FlowDirection), perto vai direto; corre quando está perto, à noite ou na horda.
+// (AZMBHordeDirector::FlowDirection), perto vai direto; corre quando está perto, à noite ou na horda. Travado numa barricada
+// (Base/ZMBBuildPiece.h) com o jogador fora do alcance, para e bate nela até quebrar (à Night of the Dead).
 // Arte final: malha esquelética com ossos que se soltam (docs/plano-visual.md); este corpo de blocos é só o protótipo.
 
 #pragma once
@@ -18,6 +19,7 @@
 class UStaticMeshComponent;
 class UTextRenderComponent;
 class UPrimitiveComponent;
+class AZMBBuildPiece;
 
 UCLASS()
 class ZOMBIE_API AZMBZombie : public ACharacter
@@ -42,6 +44,12 @@ public:
 	/** Atropelado. */
 	ZR::FHitOutcome TakeVehicleHit(float Damage, const FVector& Velocity, const FZMBHitContext& Context);
 
+	/** Armadilha: bLegs acerta uma perna que ainda está presa (sempre a mesma até sair); senão, o tronco. */
+	ZR::FHitOutcome TakeTrapHit(float Damage, bool bLegs, const FZMBHitContext& Context);
+
+	/** Armadilha segurando: a velocidade cai para esta fração por um instante (duas armadilhas: vale a menor). */
+	void ApplyTrapSlow(float Factor);
+
 	bool IsDead() const { return Body.bDead; }
 	bool IsNamed() const { return !ViewerName.IsEmpty(); }
 	const FString& GetViewerName() const { return ViewerName; }
@@ -62,6 +70,8 @@ private:
 	void UpdateLabel();
 	void Animate(float DeltaSeconds, float Speed);
 	void Scream();
+	/** Barricada logo à frente na direção Heading (varredura curta pelos objetos WorldDynamic). */
+	AZMBBuildPiece* FindBlockingBarricade(const FVector& Heading) const;
 
 	/** Cabeça, tronco, braço esquerdo, braço direito, perna esquerda, perna direita (ordem de ZR::ELimb). */
 	UPROPERTY(VisibleAnywhere, Category="Zombie")
@@ -96,5 +106,11 @@ private:
 	bool bScreamed = false;
 	float ScreamLeft = 0.0f;
 	FZMBHitContext LastHit;
+	/** Barricada travando o caminho (vista quatro vezes por segundo) e se ele já está batendo nela. */
+	TWeakObjectPtr<AZMBBuildPiece> BlockingPiece;
+	float BlockCheckTimer = 0.0f;
+	bool bBashing = false;
+	float TrapSlowFactor = 1.0f;
+	float TrapSlowLeft = 0.0f;
 	TArray<FTransform> RestTransforms;
 };

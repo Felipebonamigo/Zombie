@@ -36,6 +36,9 @@ public:
 
 	bool IsWreck() const { return bWreck; }
 
+	/** Carro (inteiro ou carcaça) que dá para desmanchar em sucata: sem o pavio aceso. */
+	bool CanDismantle() const { return bIsCar && FuseLeft < 0.0f; }
+
 	virtual void Tick(float DeltaSeconds) override;
 
 private:

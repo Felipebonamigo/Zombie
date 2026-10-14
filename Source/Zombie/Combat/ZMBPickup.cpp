@@ -71,5 +71,9 @@ void AZMBPickup::HandleOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 	}
 	bTaken = true;
 	Player->Resupply(2, 2, 2, 35.0f);
+	if (const UZMBGameData* Data = UZMBGameData::Get(this))
+	{
+		Player->AddScrap(Data->Tuning().Base.ScrapPerCrate);
+	}
 	Destroy();
 }

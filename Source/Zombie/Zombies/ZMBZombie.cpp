@@ -1,5 +1,6 @@
 #include "Zombies/ZMBZombie.h"
 #include "Zombie.h"
+#include "Base/ZMBBuildPiece.h"
 #include "Combat/ZMBExplosion.h"
 #include "Combat/ZMBFx.h"
 #include "Game/ZMBGameData.h"
@@ -259,6 +260,11 @@ void AZMBZombie::Tick(float DeltaSeconds)
 	{
 		Speed *= 0.3f;
 	}
+	TrapSlowLeft -= DeltaSeconds;
+	if (TrapSlowLeft > 0.0f)
+	{
+		Speed *= TrapSlowFactor;
+	}
 	GetCharacterMovement()->MaxWalkSpeed = Speed;
 
 	// longe: segue a rua pelo campo de fluxo; perto (ou fora da grade, num beco): direto no jogador
@@ -266,6 +272,13 @@ void AZMBZombie::Tick(float DeltaSeconds)
 	if (Distance < 1500.0f || !Director || !Director->FlowDirection(Me, Direction))
 	{
 		Direction = ToTarget.GetSafeNormal();
+	}
+	const FVector Heading = Direction;
+	BlockCheckTimer -= DeltaSeconds;
+	if (BlockCheckTimer <= 0.0f)
+	{
+		BlockCheckTimer = 0.25f;
+		BlockingPiece = Distance < 4000.0f ? FindBlockingBarricade(Heading) : nullptr;
 	}
 	WobblePhase += DeltaSeconds;
 	Direction = Direction.RotateAngleAxis(FMath::Sin(WobblePhase * 1.7f) * 14.0f, FVector::UpVector);
@@ -285,15 +298,34 @@ void AZMBZombie::Tick(float DeltaSeconds)
 		UpdateLabel();
 		return;
 	}
+	AttackCooldown -= DeltaSeconds;
+	LungeTimer -= DeltaSeconds;
+	const float HeightGap = FMath::Abs(Target->GetActorLocation().Z - Me.Z);
+	const bool bPlayerInReach = Distance < Type.AttackRangeCm && HeightGap < 220.0f;
+
+	// barricada na frente e o jogador fora do alcance: para e bate nela até quebrar. Só começa travado (parado contra
+	// ela); quem vem de lado escorrega pela parede e dá a volta. Depois de começar, continua até ela cair ou sair da frente.
+	AZMBBuildPiece* Barricade = BlockingPiece.Get();
+	bBashing = Barricade && !Barricade->IsGone() && !bPlayerInReach && (bBashing || GetVelocity().Size2D() < 40.0f);
+	if (bBashing)
+	{
+		SetActorRotation(FRotator(0.0f, Heading.Rotation().Yaw, 0.0f));
+		if (AttackCooldown <= 0.0f)
+		{
+			AttackCooldown = Type.AttackIntervalSeconds;
+			LungeTimer = 0.3f;
+			Barricade->TakeZombieHit(Type.AttackDamage * (Body.ArmsLeft() > 0 ? 1.0f : 0.5f), Me);
+		}
+		Animate(DeltaSeconds, 0.0f);
+		UpdateLabel();
+		return;
+	}
+
 	if (Distance > Type.AttackRangeCm * 0.6f)
 	{
 		AddMovementInput(Direction, 1.0f);
 	}
-
-	AttackCooldown -= DeltaSeconds;
-	LungeTimer -= DeltaSeconds;
-	const float HeightGap = FMath::Abs(Target->GetActorLocation().Z - Me.Z);
-	if (Distance < Type.AttackRangeCm && HeightGap < 220.0f && AttackCooldown <= 0.0f)
+	if (bPlayerInReach && AttackCooldown <= 0.0f)
 	{
 		AttackCooldown = Type.AttackIntervalSeconds;
 		LungeTimer = 0.3f;
@@ -304,6 +336,59 @@ void AZMBZombie::Tick(float DeltaSeconds)
 
 	Animate(DeltaSeconds, GetVelocity().Size2D());
 	UpdateLabel();
+}
+
+AZMBBuildPiece* AZMBZombie::FindBlockingBarricade(const FVector& Heading) const
+{
+	UWorld* World = GetWorld();
+	const FVector Flat = Heading.GetSafeNormal2D();
+	if (!World || Flat.IsNearlyZero())
+	{
+		return nullptr;
+	}
+	const FVector Start = GetActorLocation();
+	const FVector End = Start + Flat * (GetCapsuleComponent()->GetScaledCapsuleRadius() + 70.0f);
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(ZMBBarricade), false, this);
+	FHitResult Hit;
+	if (!World->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, FCollisionObjectQueryParams(ECC_WorldDynamic),
+			FCollisionShape::MakeSphere(20.0f), Params))
+	{
+		return nullptr;
+	}
+	AZMBBuildPiece* Piece = Cast<AZMBBuildPiece>(Hit.GetActor());
+	return Piece && Piece->IsBarricade() && !Piece->IsGone() ? Piece : nullptr;
+}
+
+void AZMBZombie::ApplyTrapSlow(float Factor)
+{
+	TrapSlowFactor = TrapSlowLeft > 0.0f ? FMath::Min(TrapSlowFactor, Factor) : Factor;
+	TrapSlowLeft = 0.25f;
+}
+
+ZR::FHitOutcome AZMBZombie::TakeTrapHit(float Damage, bool bLegs, const FZMBHitContext& Context)
+{
+	ZR::FHitOutcome None;
+	if (Body.bGibbed || Body.bDead || Damage <= 0.0f)
+	{
+		return None;
+	}
+	int32 Limb = TorsoIndex;
+	if (bLegs)
+	{
+		// sempre a mesma perna (pelo id do ator) até ela sair: a estaca "come" uma perna e o zumbi vira rastejante
+		const int32 First = (GetUniqueID() % 2) == 0 ? LegLIndex : LegRIndex;
+		const int32 Second = First == LegLIndex ? LegRIndex : LegLIndex;
+		Limb = !Body.Severed[First] ? First : (!Body.Severed[Second] ? Second : TorsoIndex);
+	}
+	LastHit = Context;
+	const ZR::FHitOutcome Outcome = ZR::ApplyHit(Type.Body, Body, static_cast<ZR::ELimb>(Limb), Damage);
+	const FVector Where = Limbs.IsValidIndex(Limb) && Limbs[Limb] ? Limbs[Limb]->GetComponentLocation() : GetActorLocation();
+	if (FMath::FRand() < 0.3f)
+	{
+		AZMBFx::Blood(GetWorld(), Where, FVector(0.0f, 0.0f, 120.0f), 1);
+	}
+	ApplyOutcome(Outcome, Where, FVector(0.0f, 0.0f, 150.0f), false, Context);
+	return Outcome;
 }
 
 void AZMBZombie::Animate(float DeltaSeconds, float Speed)

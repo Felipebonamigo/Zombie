@@ -34,6 +34,7 @@ namespace ZR
 		LongShot,         // tiro_de_longe
 		TookHit,          // apanhou
 		Silenced,         // calou_gritador (matou o gritador antes do grito)
+		TrapKill,         // abate_armadilha (zumbi morto por armadilha da base)
 		Count
 	};
 

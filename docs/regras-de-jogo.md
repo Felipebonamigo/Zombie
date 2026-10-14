@@ -135,3 +135,30 @@ Desafios de patrocinador com prazo, em `Data/Pautas.csv` (por exemplo "explosão
 - **Estourou o prazo:** só passa a vez.
 
 Testes: `Pauta.*`, `Dados.PautaComEventoDesconhecidoEhErro` e `Deriva.PautasCarregam`.
+
+## 12. Base: sucata, barricadas e armadilhas (`ZRBase.h`)
+
+O "dia constrói, noite sobrevive" do Night of the Dead. Peças em `Data/Construcoes.csv`; números soltos em `base.*` de
+`Data/Ajustes.csv`.
+
+- **Sucata:** 60 no começo, 40 em cada caixa do drone e 25 por carro desmanchado (segurar E ao lado dele por 2,5 s; tomar
+  dano, sair andando ou o carro pegar fogo cancela).
+- **Onde dá para construir** (o primeiro motivo que falha é o que aparece): ter a sucata; ter vaga (até 40 peças); o centro
+  a até 7 m do jogador; a pegada inteira em rua, praça ou praia (encostar na parede do prédio pode); a pelo menos 50 cm do
+  jogador; sem sobrepor outra peça (encostar pode, para fazer muro). A peça encaixa numa grade de 50 cm e gira de 90 em
+  90 graus.
+- **Barricada:** segura zumbi e jogador. A de madeira tem 1,1 m e o jogador pula; o zumbi não pula. O zumbi travado na
+  frente dela, com o jogador fora do alcance, para e bate (o ataque dele vezes `base.dano_zumbi_multiplicador`) até ela
+  cair; quem chega de lado escorrega e dá a volta. Explosão tira o dano dela vezes `base.dano_explosao_multiplicador`.
+  Estágios para o visual: inteira (acima de 2/3 da vida), avariada (acima de 1/3), quase caindo, quebrada.
+- **Armadilha:** o jogador e a bala passam. Cada zumbi em cima leva `dano_por_s` (nas pernas ou no corpo) e anda na fração
+  `lentidao` da velocidade. A armadilha gasta com o dano que causa (`desgaste`; 0 = não gasta). O abate conta para a live
+  (`abate_armadilha`). O bujão armado explode no primeiro zumbi que pisa, no tiro ou na explosão vizinha, com pavio curto
+  (entra na cadeia).
+- **Consertar:** custa `preço x base.conserto_custo_fracao x vida que falta / vida cheia`, arredondado para cima; com pouca
+  sucata, gasta toda e conserta a parte proporcional. Peça quebrada não conserta.
+- **Desmontar:** devolve `preço x base.devolve_fracao x vida / vida cheia`, arredondado para baixo.
+- **Barulho:** construir uma peça faz barulho (`base.barulho_construir`) e desmanchar carro, o dobro: chama zumbi pelo
+  Diretor.
+
+Testes: `Base.*`, `Dados.ConstrucaoComErroEhApontada` e `Deriva.ConstrucoesCarregamEFazemSentido`.

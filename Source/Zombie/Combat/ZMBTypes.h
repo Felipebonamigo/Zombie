@@ -13,6 +13,8 @@ enum class EZMBKillCause : uint8
 	Blast,
 	Vehicle,
 	Kick,
+	/** Armadilha da base (estacas, arame; o bujão armado conta como explosão). */
+	Trap,
 };
 
 /** Quem e como atingiu: viaja do tiro, do chute, do carro ou da explosão até a morte do zumbi. */
