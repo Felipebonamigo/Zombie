@@ -275,11 +275,12 @@ void AZMBZombie::Tick(float DeltaSeconds)
 	{
 		Scream();
 	}
-	ScreamLeft -= DeltaSeconds;
+	ScreamLeft = FMath::Max(0.0f, ScreamLeft - DeltaSeconds);
 	if (ScreamLeft > 0.0f)
 	{
 		SetActorRotation(FRotator(0.0f, ToTarget.Rotation().Yaw, 0.0f));
-		LungeTimer = 0.3f;
+		// 0,15 s é o meio da estocada (seno = 1): braços para cima o grito inteiro, e descem suave no fim
+		LungeTimer = 0.15f;
 		Animate(DeltaSeconds, 0.0f);
 		UpdateLabel();
 		return;
@@ -346,11 +347,11 @@ void AZMBZombie::Scream()
 {
 	bScreamed = true;
 	ScreamLeft = 1.6f;
-	if (AZMBHordeDirector* Director = AZMBHordeDirector::Find(this))
-	{
-		Director->CallHorde(GetActorLocation(), 5);
-	}
-	if (UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this))
+	AZMBHordeDirector* Director = AZMBHordeDirector::Find(this);
+	const int32 Called = Director ? Director->CallHorde(GetActorLocation(), 5) : 0;
+	// sem ninguém para chamar (teto de vivos cheio), o grito não vira anúncio
+	UZMBStreamSubsystem* Stream = Called > 0 ? UZMBStreamSubsystem::Get(this) : nullptr;
+	if (Stream)
 	{
 		Stream->Announce(NSLOCTEXT("ZombieZombie", "Scream", "UM GRITADOR CHAMOU A HORDA"));
 		Stream->React("horda");

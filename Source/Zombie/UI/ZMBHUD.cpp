@@ -130,6 +130,8 @@ void AZMBHUD::DrawLiveBadge(float Scale)
 		DrawBar(X, Y + 28.0f * Scale, 330.0f * Scale, 16.0f * Scale, Fill, Gold);
 		DrawShadowedText(FString::Printf(TEXT("%d/%d   %d:%02d"), Stream->GetChallengeProgress(), Stream->GetChallengeTarget(), Seconds / 60, Seconds % 60),
 			Seconds <= 10 ? LiveRed : FLinearColor::White, X + 342.0f * Scale, Y + 24.0f * Scale, Small, 1.1f * Scale);
+		// o que vem embaixo (aviso de erro nos dados) fica abaixo da caixa
+		Y += 40.0f * Scale;
 	}
 
 	if (const UZMBGameData* Data = UZMBGameData::Get(this))

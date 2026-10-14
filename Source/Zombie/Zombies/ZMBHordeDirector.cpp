@@ -358,13 +358,14 @@ void AZMBHordeDirector::SpawnBombSquad(int32 Count)
 	}
 }
 
-void AZMBHordeDirector::CallHorde(const FVector& Where, int32 Count)
+int32 AZMBHordeDirector::CallHorde(const FVector& Where, int32 Count)
 {
 	const UZMBGameData* Data = UZMBGameData::Get(this);
 	if (!Data || !Builder)
 	{
-		return;
+		return 0;
 	}
+	int32 Spawned = 0;
 	PendingNoise += 100.0f;
 	const int32 Cap = bNight ? Data->Tuning().Director.MaxAliveNight : Data->Tuning().Director.MaxAlive;
 	for (int32 i = 0; i < Count && AliveCount() < Cap; ++i)
@@ -379,11 +380,12 @@ void AZMBHordeDirector::CallHorde(const FVector& Where, int32 Count)
 			const ZR::FZombieType* Type = PickType(bNight);
 			if (Type && Type->Id != "gritador" && Builder->WorldToCell(Spot, CellX, CellY) && Builder->GetPlan().IsWalkable(CellX, CellY))
 			{
-				SpawnZombie(*Type, FVector(Spot.X, Spot.Y, Builder->GroundHeight()), FString(), true);
+				Spawned += SpawnZombie(*Type, FVector(Spot.X, Spot.Y, Builder->GroundHeight()), FString(), true) ? 1 : 0;
 				break;
 			}
 		}
 	}
+	return Spawned;
 }
 
 void AZMBHordeDirector::DropSupplyCrate()
