@@ -1,0 +1,12 @@
+// Todos os testes das regras puras. Incluído por um único arquivo em cada executor:
+// Tools/Regras/executor.cpp (nuvem, g++/clang++) e Rules/Tests/ZRRules.test.cpp (Unreal, Automation).
+
+#pragma once
+
+#include "Rules/Tests/ZRTestKit.h"
+
+#include "Rules/Tests/ZRTestsCity.inl"
+#include "Rules/Tests/ZRTestsCombat.inl"
+#include "Rules/Tests/ZRTestsDirector.inl"
+#include "Rules/Tests/ZRTestsChat.inl"
+#include "Rules/Tests/ZRTestsData.inl"

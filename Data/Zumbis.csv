@@ -1,0 +1,7 @@
+id,nome_pt,vida_cabeca,vida_tronco,vida_braco,vida_perna,dano_para_despedacar,velocidade_andar,velocidade_correr,dano_ataque,intervalo_ataque_s,alcance_ataque_cm,explode,explosao_raio_interno_cm,explosao_raio_externo_cm,explosao_dano,explosao_impulso,peso_dia,peso_noite,escala,cor,descricao
+comum,Comum,40,150,50,70,220,110,260,8,1.3,140,0,0,0,0,0,10,10,1,#6B7A5A,O zumbi de toda esquina: lento de dia e em bando à noite
+foliao,Folião,35,130,45,60,200,120,300,7,1.2,140,0,0,0,0,0,6,8,1,#C2408F,Zumbi de bloco de Carnaval com fantasia colorida; vem em grupo e corre atrás de som
+corredor,Corredor,30,110,40,55,180,180,560,6,0.9,140,0,0,0,0,0,2,5,0.95,#8E5A3C,Rápido e frágil; chega antes dos outros (à Left 4 Dead)
+bujao,Bujão,40,150,50,70,220,100,230,10,1.4,140,1,250,750,450,2200,2,3,1.05,#C0392B,Carrega um bujão de gás nas costas: morto ou baleado no bujão vira uma bomba e começa reações em cadeia
+inchado,Inchado,60,260,60,80,260,80,160,14,1.6,160,1,300,900,320,3000,1,2,1.35,#9AAE3C,Lento e cheio de gás; explode ao morrer e joga tudo longe
+brutamontes,Brutamontes,180,900,220,260,700,140,420,32,1.8,190,0,0,0,0,0,0.3,1,1.6,#3E4A5C,Ex-policial do choque com armadura; aguenta muito e derruba quem estiver perto

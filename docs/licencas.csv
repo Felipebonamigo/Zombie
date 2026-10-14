@@ -1,0 +1,3 @@
+arquivo_ou_pacote,origem,url,licenca,credito_obrigatorio,texto_do_credito,gerado_por_ia,usado_em,data_entrada,observacoes
+Formas básicas da engine (/Engine/BasicShapes: Cube, Sphere, Cylinder, Cone e BasicShapeMaterial),Epic Games (Unreal Engine 5.8),,"Conteúdo da engine: uso comercial permitido em produtos feitos com Unreal Engine",não,,não,"Protótipo inteiro (cidade, personagens, efeitos)",2026-10,"Vem com a engine; nada copiado para o repositório."
+Falas do chat simulado (Data/ChatFalso.csv),Escritas pelo Claude com o Felipe,,Conteúdo próprio do projeto,não,,sim,HUD da live (chat simulado),2026-10,"Texto gerado por IA que o jogador lê: entra na declaração de IA da Steam (skill declaracao-ia)."

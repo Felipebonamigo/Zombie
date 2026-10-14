@@ -1,0 +1,5 @@
+id,nome_pt,vida,pavio_s,raio_interno_cm,raio_externo_cm,dano,impulso,barulho,cor,descricao
+bujao,Bujão de gás,25,0.9,250,800,480,2400,45,#C0392B,O bujão de 13 kg; baleado chia e explode; o símbolo do jogo
+barril,Barril de combustível,40,0.4,300,900,520,2600,50,#D35400,Barril de combustível largado na rua
+granada,Granada,1,2.2,220,700,420,2000,40,#556B2F,Arremessada com G; o pavio começa no arremesso
+carro,Tanque de carro,120,1.6,350,1100,600,3200,60,#7F8C8D,Carro abandonado; muito tiro faz o tanque explodir

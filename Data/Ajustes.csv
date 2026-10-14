@@ -1,0 +1,114 @@
+chave,valor,unidade,descricao
+hype.combo_janela_s,4,s,Tempo entre dois lances para o combo continuar
+hype.combo_passo,0.25,x,Quanto cada lance do combo soma ao multiplicador
+hype.combo_multiplicador_max,4,x,Teto do multiplicador do combo
+hype.variedade_queda,0.75,x,Repetir o mesmo lance seguido rende isto elevado ao número de repetições
+hype.variedade_min,0.3,x,O lance repetido nunca rende menos que esta fração
+hype.carencia_s,5,s,Segundos sem lance antes de o hype começar a cair
+hype.queda_por_s,4,pontos/s,Queda do hype depois da carência (hype vai de 0 a 100)
+hype.espectadores_piso,0.05,fração,Fração dos seguidores assistindo com hype zero
+hype.espectadores_expoente,1.5,,Curva entre hype e espectadores (maior = só hype alto segura gente)
+hype.viral_inicio,80,hype,Acima deste hype a live viraliza e passa do número de seguidores
+hype.viral_bonus,2,x,Com hype 100 os espectadores são os seguidores vezes (1 + isto)
+hype.espectadores_subida_s,3,s,Tempo para os espectadores subirem até o alvo
+hype.espectadores_descida_s,12,s,Tempo para os espectadores caírem até o alvo
+hype.seguidores_taxa_por_s,0.01,1/s,Seguidores ganhos por espectador por segundo com hype 100
+hype.seguidores_teto,10000000,seguidores,Teto do crescimento de seguidores
+hype.seguidores_inicio,37,seguidores,Seguidores no começo (um canal pequeno)
+hype.doacao_rearme,20,hype,O limiar de doação rearma quando o hype cai isto abaixo dele
+hype.doacao_por_espectador,0.02,R$,Doação por espectador no primeiro limiar (o n-ésimo doa n vezes)
+diretor.intensidade_pico,70,0-100,Intensidade que abre o pico
+diretor.intensidade_descanso,25,0-100,O descanso só acaba com a intensidade abaixo disto
+diretor.tensao_max_s,90,s,Tempo máximo em tensão antes de o pico vir de qualquer jeito
+diretor.pico_s,25,s,Duração do pico
+diretor.descanso_s,20,s,Duração mínima do descanso
+diretor.intensidade_queda_por_s,3,1/s,Queda da intensidade por segundo
+diretor.intensidade_por_dano,0.6,por ponto de vida,Intensidade por ponto de vida que o jogador perde
+diretor.intensidade_por_abate,1.5,por abate,Intensidade por zumbi abatido perto do jogador
+diretor.intensidade_por_explosao,4,por explosão,Intensidade por explosão perto do jogador
+diretor.nascer_tensao_por_s,0.6,zumbis/s,Ritmo de nascimento na tensão
+diretor.nascer_pico_por_s,2.5,zumbis/s,Ritmo de nascimento no pico
+diretor.nascer_descanso_por_s,0.05,zumbis/s,Ritmo de nascimento no descanso
+diretor.multiplicador_noite,2.5,x,A noite multiplica o ritmo
+diretor.multiplicador_horda,4,x,A horda multiplica o ritmo do pico
+diretor.vivos_max,80,zumbis,Teto de zumbis vivos de dia
+diretor.vivos_max_noite,140,zumbis,Teto de zumbis vivos à noite
+diretor.barulho_queda_por_s,10,1/s,Queda do barulho por segundo
+diretor.barulho_para_nascer,0.02,zumbis/s por ponto,Zumbis extras por segundo por ponto de barulho
+cidade.largura_celulas,25,células,Largura da cidade de leste a oeste
+cidade.altura_celulas,30,células,Altura da cidade de norte a sul (com praia e mar)
+cidade.quarteirao_celulas,3,células,Células de prédio entre duas ruas
+cidade.praia_linhas,2,células,Linhas de praia no sul
+cidade.mar_linhas,3,células,Linhas de mar no sul
+cidade.chance_praca,0.08,fração,Chance de uma célula de quarteirão virar praça
+cidade.andares_min,2,andares,Andares dos prédios na borda
+cidade.andares_max,16,andares,Andares máximos no centro
+cidade.celula_cm,2000,cm,Tamanho de uma célula (20 m)
+chat.rodada_s,30,s,Duração de cada rodada de votação do chat
+chat.votos_min,3,votos,Votos mínimos para uma opção do chat vencer
+chat.zumbi_espera_s,60,s,Espera de cada espectador entre dois !zumbi
+chat.zumbis_com_nome_max,12,zumbis,Zumbis com nome de espectador vivos ao mesmo tempo
+dia.duracao_s,1440,s,Um dia inteiro de 24 h em tempo real (24 min)
+dia.hora_inicio,17,h,Hora em que o jogo começa (luz dourada de fim de tarde)
+dia.noite_comeca,19.5,h,Hora em que a noite começa
+dia.noite_termina,5.5,h,Hora em que a noite termina
+dia.noite_da_horda_a_cada,3,noites,A cada quantas noites vem a Noite da Horda (0 = nunca)
+dia.sol_altura_max_graus,72,graus,Altura do sol ao meio-dia
+camera.perto_distancia_cm,260,cm,Terceira pessoa perto: distância atrás do personagem
+camera.perto_altura_cm,70,cm,Terceira pessoa perto: altura acima do ombro
+camera.perto_lado_cm,55,cm,Terceira pessoa perto: deslocamento para a direita (por cima do ombro)
+camera.perto_inclinacao_graus,-4,graus,Terceira pessoa perto: inclinação para baixo
+camera.media_distancia_cm,520,cm,Terceira pessoa média: distância
+camera.media_altura_cm,170,cm,Terceira pessoa média: altura
+camera.media_lado_cm,35,cm,Terceira pessoa média: deslocamento lateral
+camera.media_inclinacao_graus,-10,graus,Terceira pessoa média: inclinação
+camera.longe_distancia_cm,900,cm,Terceira pessoa longe e do alto (a padrão): distância
+camera.longe_altura_cm,380,cm,Terceira pessoa longe e do alto: altura
+camera.longe_lado_cm,0,cm,Terceira pessoa longe e do alto: deslocamento lateral
+camera.longe_inclinacao_graus,-18,graus,Terceira pessoa longe e do alto: inclinação para baixo
+camera.mira_distancia_cm,170,cm,Mirando (botão direito): distância
+camera.mira_lado_cm,70,cm,Mirando: deslocamento por cima do ombro
+camera.mira_fov,55,graus,Mirando: campo de visão
+camera.fov,80,graus,Campo de visão normal
+camera.primeira_pessoa_fov,88,graus,Campo de visão da primeira pessoa (modo celular)
+camera.atraso_velocidade,10,,Suavidade com que a câmera segue (maior = mais presa)
+camera.modo_inicial,2,0-3,0 perto; 1 média; 2 longe e do alto; 3 primeira pessoa
+jogador.vida,100,pontos,Vida do jogador
+jogador.velocidade_andar,400,cm/s,Velocidade andando
+jogador.velocidade_correr,680,cm/s,Velocidade correndo (Shift)
+jogador.folego,100,pontos,Fôlego para correr
+jogador.folego_gasto_por_s,16,pontos/s,Fôlego gasto correndo
+jogador.folego_volta_por_s,12,pontos/s,Fôlego recuperado sem correr
+jogador.chute_dano,40,pontos,Dano do chute (F)
+jogador.chute_impulso,900,cm/s,Empurrão do chute
+jogador.chute_alcance_cm,190,cm,Alcance do chute
+jogador.mira_lenta_tempo,0.3,x,Mira lenta (Q): o mundo anda nesta fração da velocidade
+jogador.foco_max,100,pontos,Barra de foco da mira lenta
+jogador.foco_gasto_por_s,22,pontos/s real,Gasto do foco na mira lenta
+jogador.foco_por_tiro_na_cabeca,12,pontos,Foco ganho por tiro na cabeça
+jogador.foco_volta_por_s,2,pontos/s,Foco recuperado sozinho
+jogador.arremesso_velocidade,1700,cm/s,Velocidade do arremesso (G granada; H bujão)
+jogador.granadas_inicio,5,unidades,Granadas no começo
+jogador.bujoes_inicio,3,unidades,Bujões de gás para arremessar no começo
+jogador.escapou_por_pouco_vida,20,pontos,Sobreviver abaixo desta vida rende hype de escapou por pouco
+jogador.cura_por_s,3,pontos/s,Vida recuperada sozinha depois de um tempo sem apanhar
+jogador.cura_espera_s,6,s,Tempo sem apanhar para começar a recuperar
+jogador.cura_teto,60,pontos,A recuperação sozinha só vai até aqui
+carro.massa_kg,1300,kg,Massa do carro de protótipo
+carro.suspensao_cm,55,cm,Comprimento da suspensão (raio de cada roda)
+carro.mola_por_cm,16000,kg/s² por roda,Força da mola por cm comprimido (unidade do Unreal: kg·cm/s²); ~20 cm de compressão parado
+carro.amortecedor,2300,kg/s por roda,Amortecimento por cm/s de velocidade da suspensão (metade do crítico)
+carro.motor_forca,900000,kg·cm/s²,Força do motor (unidade do Unreal; 0 a 100 km/h em ~4 s)
+carro.freio_forca,1600000,kg·cm/s²,Força do freio (S andando para a frente)
+carro.velocidade_max_kmh,150,km/h,Velocidade máxima
+carro.esterco_graus,32,graus,Esterço máximo das rodas da frente
+carro.aderencia_lateral,4.5,1/s,Quanto o pneu segura o carro de lado (maior = menos derrapagem)
+carro.atropelo_dano_por_kmh,6,pontos por km/h,Dano no zumbi atropelado
+carro.atropelo_min_kmh,18,km/h,Abaixo disso o carro só empurra
+mundo.cadaver_s,12,s,Tempo que um cadáver fica no chão
+mundo.pedacos_max,220,pedaços,Pedaços soltos no mundo ao mesmo tempo (os mais velhos somem)
+mundo.sumir_distancia_cm,9000,cm,Zumbi mais longe que isso some e volta para o Diretor
+mundo.nascer_min_cm,2800,cm,Distância mínima do jogador onde um zumbi nasce
+mundo.nascer_max_cm,6500,cm,Distância máxima do jogador onde um zumbi nasce
+mundo.explosivos_na_rua,70,unidades,Bujões e barris espalhados pelas ruas
+mundo.carros_na_rua,40,unidades,Carros abandonados nas ruas
