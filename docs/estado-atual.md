@@ -19,7 +19,7 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 | Design, estratégia viral, roteiro | `docs/design.md`, `docs/viralizar.md`, `docs/roadmap.md` | Versão 0.1, para o Felipe ler e decidir |
 | Regras puras: cidade, fluxo, corpo, explosão, hype, Diretor, dia e noite, chat, clipes, CSV | `Source/Zombie/Rules/` | **68 testes passando** na nuvem (g++ 13 e clang++, `-Wall -Wextra -Wshadow -Wconversion -Werror`, ASan e UBSan) |
 | Tabelas de ajuste | `Data/*.csv` | Carregam sem erro (testes `Deriva.*`) |
-| Projeto Unreal 5.8 | `Zombie.uproject`, `Config/`, `Source/` | Escrito na nuvem; **ainda não compilado**. Conferidor de C++ sem erros; revisão independente feita (ver abaixo) |
+| Projeto Unreal 5.8 | `Zombie.uproject`, `Config/`, `Source/` | Escrito na nuvem; **ainda não compilado**. Conferidor de C++ sem erros. Uma revisão independente das assinaturas da API achou 1 erro de compilação (include do material dinâmico) e 1 defeito (o carro não viraria: o `APawn` segue o yaw do controle por padrão); os dois foram corrigidos |
 | Jogo de protótipo | `Source/Zombie/{Game,Player,Zombies,Combat,Vehicles,Stream,UI}` | Cidade gerada, jogador, zumbis, explosões, carro, Diretor, live, Twitch e HUD (lista no README) |
 | Scripts do PC | `Tools/Unreal/*.ps1`, `criar_materiais.py` | Copiados e adaptados do Detonauto; `jogar.ps1` e `criar_materiais` são novos e nunca rodaram |
 | Rotinas do Claude | `.claude/skills/` | `verificar`, `revisar-sem-compilar`, `jogar-e-capturar`, `modelo-3d`, `triar-playtest` |
@@ -47,8 +47,18 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 Estão em `docs/roadmap.md`, "Decisões que são do Felipe": nome, repositório público ou privado, horas por semana, preço e
 nível de gore.
 
+## Pendências conhecidas
+
+- Jogo empacotado: `Data/` ainda não é copiada no pacote (`DirectoriesToAlwaysStageAsNonUFS`); sem ela, valem os padrões do
+  código. No editor e no `-game` não afeta.
+- Manchas de sangue e poeira de impacto não contam no orçamento de pedaços (`mundo.pedacos_max`). A mancha não tem Tick e
+  só 30% dos acertos deixam uma; medir com horda grande.
+
 ## Armadilhas já descobertas
 
+- **`APawn` segue o yaw do controle por padrão:** todo pawn com física própria (o carro) precisa desligar
+  `bUseControllerRotationYaw`, senão a rotação é teleportada todo quadro.
+- `FMath::FloorToInt(double)` devolve `int64` no UE5: para `int32`, use `FloorToInt32`.
 - **Praça cercada de prédios ficava inalcançável** para a horda. O teste `Cidade.TodoChaoAndavelEhAlcancavel` pegou; a praça
   passou a ser o quarteirão inteiro.
 - Herdadas do Detonauto (`docs/tecnico.md`): `bUseUnity = false`; sombra de nome é erro no Unreal; material com Nanite

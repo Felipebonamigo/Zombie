@@ -32,6 +32,10 @@ AZMBCar::AZMBCar()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	AutoPossessAI = EAutoPossessAI::Disabled;
+	// o APawn segue o yaw do controle por padrão; no carro isso teleportaria a rotação todo quadro e desfaria o esterço
+	bUseControllerRotationPitch = false;
+	bUseControllerRotationYaw = false;
+	bUseControllerRotationRoll = false;
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
@@ -156,9 +160,21 @@ void AZMBCar::ExitCar()
 	ThrottleInput = 0.0f;
 	SteerInput = 0.0f;
 	bHandbrake = false;
-	const FVector Door = GetActorLocation() - GetActorRightVector() * 230.0f + FVector(0.0f, 0.0f, 80.0f);
+	const FRotator Facing(0.0f, GetActorRotation().Yaw, 0.0f);
+	const FVector Exits[] = {
+		GetActorLocation() - GetActorRightVector() * 230.0f + FVector(0.0f, 0.0f, 80.0f),
+		GetActorLocation() + GetActorRightVector() * 230.0f + FVector(0.0f, 0.0f, 80.0f),
+		GetActorLocation() + FVector(0.0f, 0.0f, 230.0f),
+	};
 	Character->SetDriving(nullptr);
-	Character->TeleportTo(Door, FRotator(0.0f, GetActorRotation().Yaw, 0.0f));
+	// porta encostada num muro ou noutro carro: tenta o outro lado e, por fim, o teto
+	for (const FVector& Exit : Exits)
+	{
+		if (Character->TeleportTo(Exit, Facing))
+		{
+			break;
+		}
+	}
 	DriverController->Possess(Character);
 }
 

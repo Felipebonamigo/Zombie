@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Engine/EngineTypes.h"
 
 /** Categoria de log principal do jogo. */
 DECLARE_LOG_CATEGORY_EXTERN(LogZombie, Log, All);

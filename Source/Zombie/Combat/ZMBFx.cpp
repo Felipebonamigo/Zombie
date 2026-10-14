@@ -4,6 +4,7 @@
 #include "Components/PointLightComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include "Materials/MaterialInterface.h"
 
 int32 AZMBFx::PhysicsPieces = 0;
@@ -210,7 +211,11 @@ void AZMBFx::Blood(UWorld* World, const FVector& Location, const FVector& Direct
 			Chunk->MakePhysicsPiece(Velocity);
 		}
 	}
-	Splat(World, Location, FMath::FRandRange(40.0f, 90.0f), BloodColor);
+	// nem todo tiro deixa mancha: um tiro de escopeta acerta até 9 vezes
+	if (FMath::FRand() < 0.3f)
+	{
+		Splat(World, Location, FMath::FRandRange(40.0f, 90.0f), BloodColor);
+	}
 }
 
 void AZMBFx::Splat(UWorld* World, const FVector& Location, float RadiusCm, const FLinearColor& Color)
@@ -233,6 +238,8 @@ void AZMBFx::Splat(UWorld* World, const FVector& Location, float RadiusCm, const
 	{
 		const FVector Scale(RadiusCm / 50.0f, RadiusCm / 50.0f * FMath::FRandRange(0.6f, 1.0f), 0.01f);
 		Mark->SetShape(static_cast<int32>(EZMBShape::Cylinder), Data->ColorMaterial(Color, 0.35f), Scale, Scale);
+		// mancha parada: sem Tick (podem ser centenas numa horda)
+		Mark->SetActorTickEnabled(false);
 	}
 }
 

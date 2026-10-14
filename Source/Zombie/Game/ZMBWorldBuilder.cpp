@@ -117,8 +117,8 @@ bool AZMBWorldBuilder::WorldToCell(const FVector& Location, int32& OutX, int32& 
 	{
 		return false;
 	}
-	OutX = FMath::FloorToInt((Location.X - Origin.X) / CellSize);
-	OutY = FMath::FloorToInt((Location.Y - Origin.Y) / CellSize);
+	OutX = FMath::FloorToInt32((Location.X - Origin.X) / CellSize);
+	OutY = FMath::FloorToInt32((Location.Y - Origin.Y) / CellSize);
 	return Plan.InBounds(OutX, OutY);
 }
 
