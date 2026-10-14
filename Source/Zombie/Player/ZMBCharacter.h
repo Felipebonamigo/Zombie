@@ -132,6 +132,8 @@ private:
 	void CycleBuildPiece(int32 Step);
 	const ZR::FBuildPieceType* CurrentPieceType() const;
 	AZMBExplosive* FindDismantleTarget() const;
+	/** Carro dirigível a até 4,5 m (o E entra nele). */
+	AZMBCar* FindNearbyCar() const;
 	void UpdateDismantle(float DeltaSeconds);
 	void CancelDismantle();
 
@@ -216,9 +218,12 @@ private:
 	int32 BuildIndex = 0;
 	int32 BuildRot90 = 0;
 	ZR::EPlaceResult PlaceResult = ZR::EPlaceResult::Ok;
-	/** Onde a peça fantasma está (centro, na metade da altura) e a pegada dela no plano da cidade. */
+	/** Onde a peça fantasma está (centro, na metade da altura, sobre o chão de verdade). */
 	FVector GhostCenter = FVector::ZeroVector;
 	bool bGhostValid = false;
+	/** Peça e giro com que o fantasma foi validado (o clique só constrói se forem os mesmos). */
+	int32 GhostIndex = -1;
+	int32 GhostRot90 = 0;
 	TWeakObjectPtr<AZMBBuildPiece> AimedPiece;
 	TWeakObjectPtr<AZMBExplosive> DismantleTarget;
 	float DismantleLeft = 0.0f;

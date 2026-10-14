@@ -520,7 +520,7 @@ void AZMBHUD::DrawBuild(float Scale)
 	case ZR::EPlaceResult::TooFar: Status = LOCTEXT("TooFar", "LONGE DEMAIS"); break;
 	case ZR::EPlaceResult::OffStreet: Status = LOCTEXT("OffStreet", "SÓ NA RUA, NA PRAÇA OU NA PRAIA"); break;
 	case ZR::EPlaceResult::OnPlayer: Status = LOCTEXT("OnPlayer", "SAIA DA FRENTE: a peça cai em cima de você"); break;
-	case ZR::EPlaceResult::Blocked: Status = LOCTEXT("Blocked", "JÁ TEM UMA PEÇA AÍ"); break;
+	case ZR::EPlaceResult::Blocked: Status = LOCTEXT("Blocked", "TEM ALGO NO CAMINHO (peça, poste, árvore, carro ou zumbi)"); break;
 	case ZR::EPlaceResult::Ok:
 	default: Status = LOCTEXT("BuildKeys", "clique constrói    R gira    1 a 5 ou roda troca    F desmonta    X sai"); break;
 	}

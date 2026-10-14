@@ -302,6 +302,30 @@ ZR_TEST(BaseDesmontar, "Base.DesmontarDevolveMetadePelaVida")
 	ZR_EQ(ZR::DismantleRefund(Type, State, Config), 7);
 }
 
+ZR_TEST(BaseCondicao, "Base.ArmadilhaGastaValeMenosAoDesmontar")
+{
+	// a condição é o pior entre a vida e o que sobra do desgaste
+	const ZR::FBuildPieceType Type = Estacas();
+	const ZR::FBaseConfig Config;
+	ZR::FPieceState State;
+	State.Reset(Type);
+	ZR_NEAR(ZR::PieceCondition(Type, State), 1.0f, 1e-4);
+	State.Wear = 75.0f;
+	ZR_NEAR(ZR::PieceCondition(Type, State), 0.25f, 1e-4);
+	// preço 15, devolve metade pela condição: 15 x 0,5 x 0,25 = 1,875
+	ZR_EQ(ZR::DismantleRefund(Type, State, Config), 1);
+	State.Health = 15.0f;
+	ZR_NEAR(ZR::PieceCondition(Type, State), 0.1f, 1e-4);
+	// barricada não gasta: só a vida conta
+	const ZR::FBuildPieceType Wall = Barricada();
+	ZR::FPieceState WallState;
+	WallState.Reset(Wall);
+	WallState.Health = 100.0f;
+	ZR_NEAR(ZR::PieceCondition(Wall, WallState), 0.25f, 1e-4);
+	WallState.bBroken = true;
+	ZR_NEAR(ZR::PieceCondition(Wall, WallState), 0.0f, 1e-4);
+}
+
 ZR_TEST(BaseEstacas, "Base.EstacasMachucamAsPernasSeguramEGastam")
 {
 	const ZR::FBuildPieceType Type = Estacas();

@@ -301,12 +301,14 @@ void AZMBZombie::Tick(float DeltaSeconds)
 	AttackCooldown -= DeltaSeconds;
 	LungeTimer -= DeltaSeconds;
 	const float HeightGap = FMath::Abs(Target->GetActorLocation().Z - Me.Z);
-	const bool bPlayerInReach = Distance < Type.AttackRangeCm && HeightGap < 220.0f;
-
-	// barricada na frente e o jogador fora do alcance: para e bate nela até quebrar. Só começa travado (parado contra
-	// ela); quem vem de lado escorrega pela parede e dá a volta. Depois de começar, continua até ela cair ou sair da frente.
+	// barricada colada na frente, na direção do jogador: ele está do outro lado e não é mordido por cima dela
 	AZMBBuildPiece* Barricade = BlockingPiece.Get();
-	bBashing = Barricade && !Barricade->IsGone() && !bPlayerInReach && (bBashing || GetVelocity().Size2D() < 40.0f);
+	const bool bBehindBarricade = Barricade && !Barricade->IsGone();
+	const bool bPlayerInReach = !bBehindBarricade && Distance < Type.AttackRangeCm && HeightGap < 220.0f;
+
+	// barricada na frente: para e bate nela até quebrar. Só começa travado (quase parado contra ela); quem vem de lado
+	// escorrega pela parede e dá a volta. Depois de começar, continua até ela cair ou sair da frente.
+	bBashing = bBehindBarricade && (bBashing || GetVelocity().Size2D() < Speed * 0.3f);
 	if (bBashing)
 	{
 		SetActorRotation(FRotator(0.0f, Heading.Rotation().Yaw, 0.0f));
@@ -346,22 +348,37 @@ AZMBBuildPiece* AZMBZombie::FindBlockingBarricade(const FVector& Heading) const
 	{
 		return nullptr;
 	}
+	// a própria cápsula (já na escala do tipo: o brutamontes é alto) andando 30 cm à frente: só conta barricada colada nele.
+	// Varre todos os WorldDynamic do caminho, porque o primeiro pode ser uma armadilha, um membro de outro zumbi ou a caixa
+	// do drone
 	const FVector Start = GetActorLocation();
-	const FVector End = Start + Flat * (GetCapsuleComponent()->GetScaledCapsuleRadius() + 70.0f);
+	const FVector End = Start + Flat * 30.0f;
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(ZMBBarricade), false, this);
-	FHitResult Hit;
-	if (!World->SweepSingleByObjectType(Hit, Start, End, FQuat::Identity, FCollisionObjectQueryParams(ECC_WorldDynamic),
-			FCollisionShape::MakeSphere(20.0f), Params))
+	TArray<FHitResult> Hits;
+	World->SweepMultiByObjectType(Hits, Start, End, FQuat::Identity, FCollisionObjectQueryParams(ECC_WorldDynamic),
+		GetCapsuleComponent()->GetCollisionShape(-5.0f), Params);
+	AZMBBuildPiece* Nearest = nullptr;
+	float NearestDistance = TNumericLimits<float>::Max();
+	for (const FHitResult& Hit : Hits)
 	{
-		return nullptr;
+		AZMBBuildPiece* Piece = Cast<AZMBBuildPiece>(Hit.GetActor());
+		if (Piece && Piece->IsBarricade() && !Piece->IsGone() && Hit.Distance < NearestDistance)
+		{
+			Nearest = Piece;
+			NearestDistance = static_cast<float>(Hit.Distance);
+		}
 	}
-	AZMBBuildPiece* Piece = Cast<AZMBBuildPiece>(Hit.GetActor());
-	return Piece && Piece->IsBarricade() && !Piece->IsGone() ? Piece : nullptr;
+	return Nearest;
 }
 
 void AZMBZombie::ApplyTrapSlow(float Factor)
 {
-	TrapSlowFactor = TrapSlowLeft > 0.0f ? FMath::Min(TrapSlowFactor, Factor) : Factor;
+	// cada armadilha renova a cada 0,1 s. Com uma só renovando, sobram ~0,15 s quando ela volta: troca pelo valor dela. Com
+	// duas, a outra renovou há pouco (sobra mais): fica o menor. Saiu do arame e ficou nas estacas: em 0,1 s vale a das estacas
+	if (TrapSlowLeft <= 0.18f || Factor <= TrapSlowFactor)
+	{
+		TrapSlowFactor = Factor;
+	}
 	TrapSlowLeft = 0.25f;
 }
 

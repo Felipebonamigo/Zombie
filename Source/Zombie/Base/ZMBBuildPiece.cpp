@@ -148,11 +148,11 @@ void AZMBBuildPiece::BuildLook()
 			const float X = Half * W * 0.25f;
 			for (const float Height : {0.25f, 0.55f, 0.85f})
 			{
-				AddPart(EZMBShape::Cube, FVector(X, 0.0f, Floor + H * Height), FRotator::ZeroRotator, FVector(W * 0.5f, 1.5f, 1.5f), Color, 0.4f, 0.9f);
+				AddPart(EZMBShape::Cube, FVector(X, 0.0f, Floor + H * Height), FRotator::ZeroRotator, FVector(W * 0.5f, 3.5f, 3.5f), Color, 0.4f, 0.9f);
 			}
 			const float Length = FMath::Sqrt(FMath::Square(W * 0.5f) + FMath::Square(H * 0.7f));
-			AddPart(EZMBShape::Cube, FVector(X, 0.0f, Floor + H * 0.55f), FRotator(Diagonal, 0.0f, 0.0f), FVector(Length, 1.5f, 1.5f), Color, 0.4f, 0.9f);
-			AddPart(EZMBShape::Cube, FVector(X, 0.0f, Floor + H * 0.55f), FRotator(-Diagonal, 0.0f, 0.0f), FVector(Length, 1.5f, 1.5f), Color, 0.4f, 0.9f);
+			AddPart(EZMBShape::Cube, FVector(X, 0.0f, Floor + H * 0.55f), FRotator(Diagonal, 0.0f, 0.0f), FVector(Length, 3.5f, 3.5f), Color, 0.4f, 0.9f);
+			AddPart(EZMBShape::Cube, FVector(X, 0.0f, Floor + H * 0.55f), FRotator(-Diagonal, 0.0f, 0.0f), FVector(Length, 3.5f, 3.5f), Color, 0.4f, 0.9f);
 		}
 	}
 	else if (Type.IsExplosive())
@@ -166,7 +166,7 @@ void AZMBBuildPiece::BuildLook()
 		Tank->SetCollisionResponseToAllChannels(ECR_Ignore);
 		Tank->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 		AddPart(EZMBShape::Cylinder, FVector(0.0f, 0.0f, Floor + 56.0f), FRotator::ZeroRotator, FVector(11.0f, 11.0f, 12.0f), Steel, 0.4f, 0.8f);
-		AddPart(EZMBShape::Cube, FVector(0.0f, 0.0f, Floor + 12.0f), FRotator::ZeroRotator, FVector(W, 1.2f, 1.2f), FLinearColor(0.6f, 0.6f, 0.6f), 0.4f, 0.9f);
+		AddPart(EZMBShape::Cube, FVector(0.0f, 0.0f, Floor + 12.0f), FRotator::ZeroRotator, FVector(W, 3.0f, 3.0f), FLinearColor(0.6f, 0.6f, 0.6f), 0.4f, 0.9f);
 		for (int32 Side = -1; Side <= 1; Side += 2)
 		{
 			AddPart(EZMBShape::Cube, FVector(Side * W * 0.5f, 0.0f, Floor + 8.0f), FRotator::ZeroRotator, FVector(4.0f, 4.0f, 16.0f), Wood, 0.9f, 0.0f);
@@ -398,7 +398,8 @@ int32 AZMBBuildPiece::Dismantle()
 
 float AZMBBuildPiece::GetHealth01() const
 {
-	return Type.Health > 0.0f ? FMath::Clamp(State.Health / Type.Health, 0.0f, 1.0f) : 0.0f;
+	// armadilha gasta conta como avariada: o HUD mostra o pior entre a vida e o desgaste
+	return ZR::PieceCondition(Type, State);
 }
 
 int32 AZMBBuildPiece::FullRepairCost() const

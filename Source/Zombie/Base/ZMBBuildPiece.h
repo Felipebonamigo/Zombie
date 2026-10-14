@@ -51,6 +51,7 @@ public:
 	bool IsBarricade() const { return Type.Kind == ZR::EPieceKind::Barricade; }
 	/** Quebrou, explodiu ou foi desmontada (some no fim do quadro). */
 	bool IsGone() const { return bGone; }
+	/** Estado de 0 a 1: o pior entre a vida e o desgaste (ZR::PieceCondition). */
 	float GetHealth01() const;
 	/** Sucata para consertar tudo agora (0 se inteira). */
 	int32 FullRepairCost() const;

@@ -145,6 +145,9 @@ namespace ZR
 	/** Golpe ou explosão na peça. Verdadeiro se quebrou com este golpe. */
 	bool DamagePiece(FPieceState& State, float Amount);
 
+	/** Estado de 0 a 1: o pior entre a vida e o que sobra do desgaste (armadilha). Quebrada: 0. */
+	float PieceCondition(const FBuildPieceType& Type, const FPieceState& State);
+
 	/** 0 inteira (acima de 2/3 da vida), 1 avariada (acima de 1/3), 2 quase caindo, 3 quebrada. */
 	int DamageStage(const FBuildPieceType& Type, const FPieceState& State);
 
@@ -161,7 +164,7 @@ namespace ZR
 	 */
 	FRepairResult RepairPiece(const FBuildPieceType& Type, const FPieceState& State, int Scrap, const FBaseConfig& Config);
 
-	/** Sucata devolvida ao desmontar: Cost x RefundFraction x (vida / vida cheia), arredondado para baixo. Quebrada: 0. */
+	/** Sucata devolvida ao desmontar: Cost x RefundFraction x PieceCondition, arredondado para baixo. Quebrada: 0. */
 	int DismantleRefund(const FBuildPieceType& Type, const FPieceState& State, const FBaseConfig& Config);
 
 	struct FTrapContact

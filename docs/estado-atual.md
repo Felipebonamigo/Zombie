@@ -17,9 +17,9 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 | Área | Onde | Estado |
 |---|---|---|
 | Design, estratégia viral, roteiro | `docs/design.md`, `docs/viralizar.md`, `docs/roadmap.md` | Versão 0.1, para o Felipe ler e decidir |
-| Regras puras: cidade, fluxo, corpo, explosão, hype, Diretor, dia e noite, chat, clipes, pautas, base, CSV | `Source/Zombie/Rules/` | **90 testes passando** na nuvem (g++ 13 e clang++, `-Wall -Wextra -Wshadow -Wconversion -Werror`, ASan e UBSan) |
+| Regras puras: cidade, fluxo, corpo, explosão, hype, Diretor, dia e noite, chat, clipes, pautas, base, CSV | `Source/Zombie/Rules/` | **91 testes passando** na nuvem (g++ 13 e clang++, `-Wall -Wextra -Wshadow -Wconversion -Werror`, ASan e UBSan) |
 | Tabelas de ajuste | `Data/*.csv` | Carregam sem erro (testes `Deriva.*`) |
-| Projeto Unreal 5.8 | `Zombie.uproject`, `Config/`, `Source/` | Escrito na nuvem; **ainda não compilado**. Conferidor de C++ sem erros. Uma revisão independente das assinaturas da API achou 1 erro de compilação (include do material dinâmico) e 1 defeito (o carro não viraria: o `APawn` segue o yaw do controle por padrão); os dois foram corrigidos |
+| Projeto Unreal 5.8 | `Zombie.uproject`, `Config/`, `Source/` | Escrito na nuvem; **ainda não compilado**. Conferidor de C++ sem erros. Uma revisão independente das assinaturas da API achou 1 erro de compilação (include do material dinâmico) e 1 defeito (o carro não viraria: o `APawn` segue o yaw do controle por padrão); os dois foram corrigidos. A revisão do bloco 3 (base) não achou erro de compilação; achou 10 defeitos de comportamento (zumbi alto não via a barricada, mordida por cima dela, peça afundando na praça, mira do modo construção pegando o que estava atrás do jogador, entre outros), todos corrigidos |
 | Jogo de protótipo | `Source/Zombie/{Game,Player,Zombies,Combat,Base,Vehicles,Stream,UI}` | Cidade gerada, jogador, 7 tipos de zumbi (com o gritador), explosões, carro, Diretor, live com pautas do patrocinador, base com barricadas e armadilhas (modo construção, X), Twitch e HUD (lista no README) |
 | Branches | `main` e `claude/inspiring-einstein-idxmpu` | O `main` foi criado em 14/10 a partir do branch do Claude, a pedido do Felipe; os dois andam juntos |
 | Scripts do PC | `Tools/Unreal/*.ps1`, `criar_materiais.py` | Copiados e adaptados do Detonauto; `jogar.ps1` e `criar_materiais` são novos e nunca rodaram |
@@ -29,7 +29,7 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 
 1. `Tools\Unreal\build.ps1 -Uproject Zombie.uproject`. O C++ nunca foi compilado: espere alguns erros e corrija um por um.
    Cada erro que o conferidor deveria ter pego vira regra nova nele (skill `revisar-sem-compilar`, passo 6).
-2. `Tools\Unreal\test.ps1 -Uproject Zombie.uproject -Filter Zombie.Regras`: os mesmos 90 testes da nuvem.
+2. `Tools\Unreal\test.ps1 -Uproject Zombie.uproject -Filter Zombie.Regras`: os mesmos 91 testes da nuvem.
 3. `Tools\Unreal\criar_materiais.ps1`: materiais com aspereza e brilho; sem eles, o jogo usa o material básico da engine.
 4. Capturas: `jogar.ps1 -Shot 8`, `-Shot 8 -Hour 21` e `-Shot 8 -Cam 3`, em `docs/img/prototipo/`.
 5. O Felipe joga 15 minutos (`jogar.ps1`) e manda os problemas como Issues "[Playtest]".
@@ -65,6 +65,13 @@ nível de gore.
   só 30% dos acertos deixam uma; medir com horda grande.
 
 ## Armadilhas já descobertas
+
+- **Consulta por tipo de objeto devolve o primeiro que achar:** para achar uma classe (a barricada), use a varredura
+  múltipla e filtre; armadilha, membro de outro zumbi e a caixa do drone também são WorldDynamic.
+- **Zumbi nasce escalado** (`escala` de `Zumbis.csv`, até 1,6): varredura "na altura do zumbi" tem que usar a cápsula
+  dele, não uma altura fixa.
+- **O chão não é plano:** a praça tem a laje da calçada (15 cm) e a grama. Peça colocada no mundo procura o chão com um
+  traço para baixo.
 
 - **`APawn` segue o yaw do controle por padrão:** todo pawn com física própria (o carro) precisa desligar
   `bUseControllerRotationYaw`, senão a rotação é teleportada todo quadro.

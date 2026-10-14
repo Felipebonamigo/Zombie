@@ -128,6 +128,20 @@ namespace ZR
 		return true;
 	}
 
+	float PieceCondition(const FBuildPieceType& Type, const FPieceState& State)
+	{
+		if (State.bBroken || Type.Health <= 0.0f)
+		{
+			return 0.0f;
+		}
+		float Condition = std::clamp(State.Health / Type.Health, 0.0f, 1.0f);
+		if (Type.Durability > 0.0f)
+		{
+			Condition = std::min(Condition, std::clamp(1.0f - State.Wear / Type.Durability, 0.0f, 1.0f));
+		}
+		return Condition;
+	}
+
 	int DamageStage(const FBuildPieceType& Type, const FPieceState& State)
 	{
 		if (State.bBroken)
@@ -175,12 +189,7 @@ namespace ZR
 
 	int DismantleRefund(const FBuildPieceType& Type, const FPieceState& State, const FBaseConfig& Config)
 	{
-		if (State.bBroken || Type.Health <= 0.0f)
-		{
-			return 0;
-		}
-		const float Fraction = std::clamp(State.Health / Type.Health, 0.0f, 1.0f);
-		const float Refund = static_cast<float>(Type.Cost) * std::max(Config.RefundFraction, 0.0f) * Fraction;
+		const float Refund = static_cast<float>(Type.Cost) * std::max(Config.RefundFraction, 0.0f) * PieceCondition(Type, State);
 		return static_cast<int>(std::floor(Refund + ScrapRoundSlack));
 	}
 

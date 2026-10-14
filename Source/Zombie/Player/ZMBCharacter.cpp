@@ -631,18 +631,7 @@ void AZMBCharacter::InteractKey(const FInputActionValue& Value)
 	{
 		return;
 	}
-	AZMBCar* Nearest = nullptr;
-	float Best = 450.0f;
-	for (TActorIterator<AZMBCar> It(GetWorld()); It; ++It)
-	{
-		const float Distance = FVector::Dist(It->GetActorLocation(), GetActorLocation());
-		if (Distance < Best)
-		{
-			Best = Distance;
-			Nearest = *It;
-		}
-	}
-	if (Nearest)
+	if (AZMBCar* Nearest = FindNearbyCar())
 	{
 		CancelDismantle();
 		Nearest->Enter(this);
@@ -1233,22 +1222,35 @@ void AZMBCharacter::UpdateBuild()
 	AZMBWorldBuilder* Builder = GameMode ? GameMode->GetBuilder() : nullptr;
 	const ZR::FBuildPieceType* Type = CurrentPieceType();
 	bGhostValid = false;
+	AimedPiece = nullptr;
 	if (!Data || !Builder || !Type)
 	{
 		DrawGhost(false, FVector::ZeroVector, FVector::ZeroVector, 0.0f, FLinearColor::White);
 		return;
 	}
 	const ZR::FBaseConfig& BaseConfig = Data->Tuning().Base;
-	const FVector ViewLocation = Camera->GetComponentLocation();
+	// como no tiro: o raio da mira começa na altura do jogador, para nada entre a câmera e ele (zumbi, muro atrás) pegar
 	const FVector ViewDirection = Camera->GetForwardVector();
-	const float Reach = static_cast<float>(FVector::Dist(ViewLocation, GetActorLocation())) + BaseConfig.BuildRangeCm;
+	const FVector CameraLocation = Camera->GetComponentLocation();
+	const float Along = static_cast<float>(FVector::DotProduct(GetActorLocation() - CameraLocation, ViewDirection));
+	const FVector TraceStart = CameraLocation + ViewDirection * FMath::Max(Along, 0.0f);
+	const float Reach = BaseConfig.BuildRangeCm + 300.0f;
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(ZMBBuild), false, this);
 
-	// 1) uma peça na mira: o clique conserta e o chute desmonta (o traço por objeto acha também a armadilha, que deixa a
-	//    bala passar)
-	AimedPiece = nullptr;
+	// o ponto da mira: chão, parede, zumbi ou a barricada (que segura o tiro)
+	FVector Point = TraceStart + ViewDirection * Reach;
+	float SightCm = Reach;
+	FHitResult Sight;
+	if (GetWorld()->LineTraceSingleByChannel(Sight, TraceStart, Point, ECC_Visibility, Params))
+	{
+		Point = Sight.ImpactPoint;
+		SightCm = static_cast<float>(Sight.Distance);
+	}
+
+	// 1) uma peça na mira, sem parede no meio: o clique conserta e o chute desmonta (o traço por objeto acha também a
+	//    armadilha, que deixa a bala passar)
 	FHitResult PieceHit;
-	if (GetWorld()->LineTraceSingleByObjectType(PieceHit, ViewLocation, ViewLocation + ViewDirection * Reach,
+	if (GetWorld()->LineTraceSingleByObjectType(PieceHit, TraceStart, TraceStart + ViewDirection * (SightCm + 10.0f),
 			FCollisionObjectQueryParams(ECC_WorldDynamic), Params))
 	{
 		AZMBBuildPiece* Piece = Cast<AZMBBuildPiece>(PieceHit.GetActor());
@@ -1263,13 +1265,7 @@ void AZMBCharacter::UpdateBuild()
 		return;
 	}
 
-	// 2) o ponto do chão para onde a mira aponta, preso ao alcance e encaixado na grade
-	FVector Point = ViewLocation + ViewDirection * Reach;
-	FHitResult Ground;
-	if (GetWorld()->LineTraceSingleByChannel(Ground, ViewLocation, Point, ECC_Visibility, Params))
-	{
-		Point = Ground.ImpactPoint;
-	}
+	// 2) o ponto do chão preso ao alcance e encaixado na grade
 	FVector Flat = Point - GetActorLocation();
 	Flat.Z = 0.0f;
 	const float MaxReach = FMath::Max(BaseConfig.BuildRangeCm - BaseConfig.SnapCm, 100.0f);
@@ -1299,8 +1295,49 @@ void AZMBCharacter::UpdateBuild()
 	}
 	Query.PieceCount = static_cast<int>(Existing.size());
 	PlaceResult = ZR::CheckPlacement(Builder->GetPlan(), Builder->GetCellSize(), BaseConfig, Query, Existing);
-	GhostCenter = Origin + FVector(X, Y, Builder->GroundHeight() + Type->HeightCm * 0.5f);
+
+	// o chão de verdade no centro da peça: a praça tem a laje da calçada (15 cm) e a grama por cima
+	float Floor = Builder->GroundHeight();
+	const FVector Column = Origin + FVector(X, Y, Builder->GroundHeight());
+	FHitResult FloorHit;
+	if (GetWorld()->LineTraceSingleByObjectType(FloorHit, Column + FVector(0.0f, 0.0f, 100.0f), Column - FVector(0.0f, 0.0f, 100.0f),
+			FCollisionObjectQueryParams(ECC_WorldStatic), Params))
+	{
+		Floor = static_cast<float>(FloorHit.ImpactPoint.Z);
+	}
+	GhostCenter = Origin + FVector(X, Y, 0.0f);
+	GhostCenter.Z = Floor + Type->HeightCm * 0.5f;
+	GhostRot90 = BuildRot90;
+	GhostIndex = BuildIndex;
 	bGhostValid = true;
+
+	// a regra não vê o mundo: poste, árvore, carro, bujão de rua ou zumbi dentro da pegada também impedem (a barricada
+	// nasceria dentro deles e a física os lançaria longe). Pedaço solto de zumbi e entulho não contam
+	if (PlaceResult == ZR::EPlaceResult::Ok)
+	{
+		const FVector HalfSize = FVector(Type->WidthCm, Type->DepthCm, Type->HeightCm) * 0.5f - FVector(5.0f);
+		FCollisionObjectQueryParams Obstacles;
+		Obstacles.AddObjectTypesToQuery(ECC_WorldStatic);
+		Obstacles.AddObjectTypesToQuery(ECC_ZMBZombie);
+		Obstacles.AddObjectTypesToQuery(ECC_Pawn);
+		Obstacles.AddObjectTypesToQuery(ECC_Vehicle);
+		Obstacles.AddObjectTypesToQuery(ECC_PhysicsBody);
+		TArray<FOverlapResult> Overlaps;
+		GetWorld()->OverlapMultiByObjectType(Overlaps, GhostCenter, FQuat(FRotator(0.0f, BuildRot90 * 90.0f, 0.0f)), Obstacles,
+			FCollisionShape::MakeBox(HalfSize.ComponentMax(FVector(1.0f))), Params);
+		for (const FOverlapResult& Overlap : Overlaps)
+		{
+			const UPrimitiveComponent* Component = Overlap.GetComponent();
+			const AActor* Actor = Overlap.GetActor();
+			const ECollisionChannel Kind = Component ? Component->GetCollisionObjectType() : ECC_WorldStatic;
+			const bool bLoosePiece = Kind == ECC_PhysicsBody && !Cast<AZMBExplosive>(Actor) && !Cast<AZMBCar>(Actor);
+			if (!bLoosePiece)
+			{
+				PlaceResult = ZR::EPlaceResult::Blocked;
+				break;
+			}
+		}
+	}
 	const bool bOk = PlaceResult == ZR::EPlaceResult::Ok;
 	DrawGhost(true, GhostCenter, FVector(Type->WidthCm, Type->DepthCm, Type->HeightCm), BuildRot90 * 90.0f,
 		bOk ? FLinearColor(0.1f, 1.0f, 0.25f) : FLinearColor(1.0f, 0.12f, 0.05f));
@@ -1365,6 +1402,8 @@ void AZMBCharacter::PlaceOrRepair()
 	{
 		return;
 	}
+	// valida de novo agora: a peça, o giro ou a mira podem ter mudado no mesmo quadro do clique
+	UpdateBuild();
 	UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this);
 	if (AZMBBuildPiece* Piece = AimedPiece.Get())
 	{
@@ -1386,7 +1425,7 @@ void AZMBCharacter::PlaceOrRepair()
 	}
 	const ZR::FBuildPieceType* Type = CurrentPieceType();
 	// o motivo de não poder (longe, sem sucata, fora da rua) já aparece no HUD
-	if (!Type || !bGhostValid || PlaceResult != ZR::EPlaceResult::Ok)
+	if (!Type || !bGhostValid || PlaceResult != ZR::EPlaceResult::Ok || GhostIndex != BuildIndex || GhostRot90 != BuildRot90)
 	{
 		return;
 	}
@@ -1415,12 +1454,33 @@ void AZMBCharacter::DismantleAimed()
 		return;
 	}
 	const int32 Refund = Piece->Dismantle();
+	if (!Piece->IsGone())
+	{
+		// bujão armado com o pavio aceso não se desmonta
+		return;
+	}
 	AimedPiece = nullptr;
 	Scrap += Refund;
 	if (UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this))
 	{
 		Stream->ShowToast(FText::Format(LOCTEXT("Dismantled", "DESMONTOU: +{0} DE SUCATA"), FText::AsNumber(Refund)).ToString());
 	}
+}
+
+AZMBCar* AZMBCharacter::FindNearbyCar() const
+{
+	AZMBCar* Nearest = nullptr;
+	float Best = 450.0f;
+	for (TActorIterator<AZMBCar> It(GetWorld()); It; ++It)
+	{
+		const float Distance = static_cast<float>(FVector::Dist(It->GetActorLocation(), GetActorLocation()));
+		if (Distance < Best)
+		{
+			Best = Distance;
+			Nearest = *It;
+		}
+	}
+	return Nearest;
 }
 
 AZMBExplosive* AZMBCharacter::FindDismantleTarget() const
@@ -1450,7 +1510,8 @@ void AZMBCharacter::UpdateDismantle(float DeltaSeconds)
 	if (WreckScanTimer <= 0.0f)
 	{
 		WreckScanTimer = 0.3f;
-		bWreckNearby = FindDismantleTarget() != nullptr;
+		// com um carro dirigível perto, o E entra nele: aí a dica do desmanche mentiria
+		bWreckNearby = FindDismantleTarget() != nullptr && FindNearbyCar() == nullptr;
 	}
 	AZMBExplosive* Wreck = DismantleTarget.Get();
 	if (!Wreck)

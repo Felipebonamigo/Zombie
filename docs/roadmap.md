@@ -6,7 +6,7 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
 ## Fase 0 — Protótipo jogável (agora)
 
 - [x] Design, estratégia viral e contrato das regras (`design.md`, `viralizar.md`, `regras-de-jogo.md`)
-- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2, 90 com o bloco 3) (g++ e clang++, avisos como erro,
+- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2, 91 com o bloco 3) (g++ e clang++, avisos como erro,
   sanitizers)
 - [x] Projeto Unreal 5.8 em C++ escrito:
   - cidade gerada, jogador com 4 câmeras, 3 armas, granada, bujão, chute e mira lenta;
