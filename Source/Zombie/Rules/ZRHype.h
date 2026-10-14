@@ -33,6 +33,7 @@ namespace ZR
 		CloseCall,        // escapou_por_pouco
 		LongShot,         // tiro_de_longe
 		TookHit,          // apanhou
+		Silenced,         // calou_gritador (matou o gritador antes do grito)
 		Count
 	};
 

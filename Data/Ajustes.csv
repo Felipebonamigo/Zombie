@@ -48,6 +48,9 @@ chat.rodada_s,30,s,Duração de cada rodada de votação do chat
 chat.votos_min,3,votos,Votos mínimos para uma opção do chat vencer
 chat.zumbi_espera_s,60,s,Espera de cada espectador entre dois !zumbi
 chat.zumbis_com_nome_max,12,zumbis,Zumbis com nome de espectador vivos ao mesmo tempo
+pauta.primeira_espera_s,45,s,Tempo até a primeira pauta de patrocinador
+pauta.intervalo_s,40,s,Intervalo entre o fim de uma pauta e o começo da próxima
+pauta.espectadores_min,10,espectadores,Patrocinador só manda pauta com pelo menos esta audiência
 dia.duracao_s,1440,s,Um dia inteiro de 24 h em tempo real (24 min)
 dia.hora_inicio,17,h,Hora em que o jogo começa (luz dourada de fim de tarde)
 dia.noite_comeca,19.5,h,Hora em que a noite começa

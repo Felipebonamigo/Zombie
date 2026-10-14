@@ -269,6 +269,21 @@ void AZMBZombie::Tick(float DeltaSeconds)
 	}
 	WobblePhase += DeltaSeconds;
 	Direction = Direction.RotateAngleAxis(FMath::Sin(WobblePhase * 1.7f) * 14.0f, FVector::UpVector);
+
+	// gritador: ao chegar a 25 m do jogador, para e grita uma vez, chamando a horda
+	if (Type.Id == "gritador" && !bScreamed && Distance < 2500.0f)
+	{
+		Scream();
+	}
+	ScreamLeft -= DeltaSeconds;
+	if (ScreamLeft > 0.0f)
+	{
+		SetActorRotation(FRotator(0.0f, ToTarget.Rotation().Yaw, 0.0f));
+		LungeTimer = 0.3f;
+		Animate(DeltaSeconds, 0.0f);
+		UpdateLabel();
+		return;
+	}
 	if (Distance > Type.AttackRangeCm * 0.6f)
 	{
 		AddMovementInput(Direction, 1.0f);
@@ -324,6 +339,21 @@ void AZMBZombie::Animate(float DeltaSeconds, float Speed)
 			Delta.Roll = FMath::Sin(WobblePhase * 1.1f) * 12.0f;
 		}
 		Part->SetRelativeRotation(RestTransforms[i].Rotator() + Delta);
+	}
+}
+
+void AZMBZombie::Scream()
+{
+	bScreamed = true;
+	ScreamLeft = 1.6f;
+	if (AZMBHordeDirector* Director = AZMBHordeDirector::Find(this))
+	{
+		Director->CallHorde(GetActorLocation(), 5);
+	}
+	if (UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this))
+	{
+		Stream->Announce(NSLOCTEXT("ZombieZombie", "Scream", "UM GRITADOR CHAMOU A HORDA"));
+		Stream->React("horda");
 	}
 }
 
@@ -568,6 +598,10 @@ void AZMBZombie::Die(const ZR::FHitOutcome& Outcome, const FZMBHitContext& Conte
 			Info.SeveredLimbs += (i != HeadIndex && i != TorsoIndex && (Outcome.SeveredMask & (1 << i)) != 0) ? 1 : 0;
 		}
 		Stream->ReportKill(Info);
+		if (Type.Id == "gritador" && !bScreamed)
+		{
+			Stream->ReportHype(ZR::EHypeEvent::Silenced, 1, Info.Location);
+		}
 	}
 }
 

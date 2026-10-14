@@ -2,6 +2,7 @@
 #include "Zombie.h"
 #include "Game/ZMBGameData.h"
 #include "Stream/ZMBTwitchChat.h"
+#include "Zombies/ZMBHordeDirector.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
 #include "Misc/DateTime.h"
@@ -43,6 +44,7 @@ void UZMBStreamSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 	{
 		Config = Data->Tuning().Hype;
 		Voting.Configure(Data->Tuning().Vote);
+		Challenges = ZR::FChallengeTracker(Data->Tuning().Challenge, static_cast<std::uint64_t>(FDateTime::Now().GetTicks()) ^ 0xC0FFEEull);
 		FakeChat = std::make_unique<ZR::FFakeChat>(Data->ChatLines(), static_cast<std::uint64_t>(FDateTime::Now().GetTicks()));
 	}
 	State.Reset(Config);
@@ -147,6 +149,10 @@ void UZMBStreamSubsystem::ReportHype(ZR::EHypeEvent Event, int32 Count, const FV
 		Label = UZMBGameData::ToFString(Def->Id);
 	}
 	Highlights.Add(LiveSeconds, Gain.Points, std::string(TCHAR_TO_UTF8(*Label)));
+	if (const UZMBGameData* Data = UZMBGameData::Get(this))
+	{
+		HandleChallenge(Challenges.OnEvent(Data->Challenges(), static_cast<int>(Event), Count));
+	}
 	if (Gain.Points >= 0.5f)
 	{
 		const FString Times = Count > 1 ? FString::Printf(TEXT(" x%d"), Count) : FString();
@@ -284,6 +290,61 @@ void UZMBStreamSubsystem::Clip()
 		*UZMBGameData::ToFString(Window.Label));
 }
 
+FString UZMBStreamSubsystem::GetChallengeText() const
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	const int32 Index = Challenges.ActiveIndex();
+	if (!Data || Index < 0 || Index >= static_cast<int32>(Data->Challenges().size()))
+	{
+		return FString();
+	}
+	const ZR::FChallengeDef& Def = Data->Challenges()[static_cast<size_t>(Index)];
+	return UZMBGameData::ToFString(bPortuguese || Def.TextEn.empty() ? Def.TextPt : Def.TextEn);
+}
+
+int32 UZMBStreamSubsystem::GetChallengeTarget() const
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	const int32 Index = Challenges.ActiveIndex();
+	if (!Data || Index < 0 || Index >= static_cast<int32>(Data->Challenges().size()))
+	{
+		return 0;
+	}
+	return Data->Challenges()[static_cast<size_t>(Index)].Target;
+}
+
+void UZMBStreamSubsystem::HandleChallenge(const ZR::FChallengeUpdate& Update)
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	if (!Data || Update.Result == ZR::EChallengeResult::None || Update.Index < 0 || Update.Index >= static_cast<int32>(Data->Challenges().size()))
+	{
+		return;
+	}
+	const ZR::FChallengeDef& Def = Data->Challenges()[static_cast<size_t>(Update.Index)];
+	const FText Text = FText::FromString(UZMBGameData::ToFString(bPortuguese || Def.TextEn.empty() ? Def.TextPt : Def.TextEn));
+	switch (Update.Result)
+	{
+	case ZR::EChallengeResult::Started:
+		Announce(FText::Format(LOCTEXT("ChallengeStart", "PATROCÍNIO: {0} EM {1} S"), Text, FText::AsNumber(FMath::RoundToInt(Def.TimeLimitSeconds))));
+		AddChat(FString(), FText::Format(LOCTEXT("ChallengeChat", "Pauta do patrocinador: {0} (paga R$ {1})"), Text, FText::AsNumber(FMath::RoundToInt(Def.Reward))).ToString(), Gold, true);
+		break;
+	case ZR::EChallengeResult::Completed:
+		Money += Update.Reward;
+		State.Hype = FMath::Min(100.0f, State.Hype + Update.HypeBonus);
+		Highlights.Add(LiveSeconds, Update.HypeBonus, std::string(TCHAR_TO_UTF8(*Text.ToString())));
+		AddPopup(FText::Format(LOCTEXT("ChallengeDone", "PAUTA CUMPRIDA  +R$ {0}"), FText::AsNumber(FMath::RoundToInt(Update.Reward))).ToString(), Gold);
+		AddChat(FString(), FText::Format(LOCTEXT("ChallengePaid", "O patrocinador pagou R$ {0}!"), FText::AsNumber(FMath::RoundToInt(Update.Reward))).ToString(), Gold, true);
+		React("doacao");
+		break;
+	case ZR::EChallengeResult::Failed:
+		AddChat(FString(), LOCTEXT("ChallengeFailed", "O patrocinador desistiu da pauta. Fica para a próxima.").ToString(), Hot, true);
+		React("calmo");
+		break;
+	default:
+		break;
+	}
+}
+
 void UZMBStreamSubsystem::ConsumeChatActions(TArray<FZMBChatAction>& Out)
 {
 	Out = MoveTemp(PendingActions);
@@ -396,6 +457,12 @@ void UZMBStreamSubsystem::Tick(float DeltaTime)
 		Action.Kind = EZMBChatActionKind::Airdrop;
 		PendingActions.Add(Action);
 		AddChat(FString(), LOCTEXT("Sponsor", "As doações pagaram uma entrega por drone!").ToString(), Gold, true);
+	}
+
+	if (const UZMBGameData* Data = UZMBGameData::Get(this))
+	{
+		const AZMBHordeDirector* Director = AZMBHordeDirector::Find(this);
+		HandleChallenge(Challenges.Tick(Data->Challenges(), DeltaTime, State.Viewers, Director && Director->IsNight()));
 	}
 
 	const ZR::EChatCommand Winner = Voting.Tick(DeltaTime);

@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "Rules/ZRBody.h"
+#include "Rules/ZRChallenges.h"
 #include "Rules/ZRChat.h"
 #include "Rules/ZRCityPlan.h"
 #include "Rules/ZRDayNight.h"
@@ -159,6 +160,7 @@ namespace ZR
 		FCameraConfig Camera;
 		FPlayerConfig Player;
 		FCarConfig Car;
+		FChallengeConfig Challenge;
 		/** Zumbis com o nome de espectadores vivos ao mesmo tempo. */
 		int MaxNamedZombies = 12;
 		/** Pedaços soltos (membros e entulho) no mundo ao mesmo tempo. */
@@ -181,6 +183,8 @@ namespace ZR
 	/** Out sai com EHypeEvent::Count linhas, na ordem do enum (eventos faltando ficam com 0 ponto e geram erro). */
 	void LoadHypeEvents(const std::string& Csv, std::vector<FHypeEventDef>& Out, std::vector<std::string>& Errors);
 	void LoadChatLines(const std::string& Csv, std::vector<FChatLine>& Out, std::vector<std::string>& Errors);
+	/** Data/Pautas.csv: o evento tem que ser um id de EHypeEvent e a quantidade, pelo menos 1. */
+	void LoadChallenges(const std::string& Csv, std::vector<FChallengeDef>& Out, std::vector<std::string>& Errors);
 
 	/**
 	 * Data/Ajustes.csv (chave,valor,unidade,descricao). Chave desconhecida, repetida ou valor ruim viram Errors (o valor

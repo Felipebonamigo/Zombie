@@ -1,0 +1,11 @@
+id,texto_pt,texto_en,evento,quantidade,prazo_s,recompensa_reais,hype_bonus,peso,so_de_noite
+cadeia,Explosão em cadeia 3 vezes,Chain reaction 3 times,explosao_em_cadeia,3,120,60,20,1,0
+cabecas,10 tiros na cabeça,10 headshots,tiro_na_cabeca,10,90,35,12,1.2,0
+atropelos,Atropele 8 zumbis,Run over 8 zombies,atropelou,8,75,45,15,0.8,0
+despedacar,Despedace 12 zumbis,Splatter 12 zombies,despedacou,12,120,45,15,1,0
+membros,Arranque 15 membros,Tear off 15 limbs,desmembrou,15,90,30,10,1,0
+mira_lenta,5 abates na mira lenta,5 slow-mo kills,abate_mira_lenta,5,75,35,12,0.9,0
+chat,Elimine 3 zumbis do chat,Take down 3 chat zombies,zumbi_do_chat,3,180,60,20,0.6,0
+multiplo,Abate múltiplo: 8 zumbis a mais em explosões,Multi-kill: 8 extra zombies in explosions,abate_multiplo,8,120,50,15,1,0
+longe,5 tiros de longe (40 m ou mais),5 long shots (40 m or more),tiro_de_longe,5,120,40,12,0.7,0
+noite_horda,Sobreviva à noite: 40 abates,Survive the night: 40 kills,abate,40,150,70,20,1.2,1

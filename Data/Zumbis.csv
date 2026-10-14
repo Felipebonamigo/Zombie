@@ -5,3 +5,4 @@ corredor,Corredor,30,110,40,55,180,180,560,6,0.9,140,0,0,0,0,0,2,5,0.95,#8E5A3C,
 bujao,Bujão,40,150,50,70,220,100,230,10,1.4,140,1,250,750,450,2200,2,3,1.05,#C0392B,Carrega um bujão de gás nas costas: morto ou baleado no bujão vira uma bomba e começa reações em cadeia
 inchado,Inchado,60,260,60,80,260,80,160,14,1.6,160,1,300,900,320,3000,1,2,1.35,#9AAE3C,Lento e cheio de gás; explode ao morrer e joga tudo longe
 brutamontes,Brutamontes,180,900,220,260,700,140,420,32,1.8,190,0,0,0,0,0,0.3,1,1.6,#3E4A5C,Ex-policial do choque com armadura; aguenta muito e derruba quem estiver perto
+gritador,Gritador,35,120,45,60,200,140,420,6,1.0,140,0,0,0,0,0,0.6,1.5,1.05,#5E3A6E,"Grita ao ver o jogador e chama a horda (o Screamer do Days Gone); mate antes que ele grite"

@@ -22,6 +22,7 @@ que falta usa o padrão do código e aparece como aviso no log. Grupos:
 | `diretor.` | Ritmo da horda, tetos de zumbis vivos, noite, horda e barulho (seção 6) |
 | `cidade.` | Tamanho da cidade, quarteirões, praia e mar, praças, andares e tamanho da célula (seção 2) |
 | `chat.` | Rodada de votação, votos mínimos, espera do `!zumbi` e zumbis com nome ao mesmo tempo (seção 9) |
+| `pauta.` | Espera da primeira pauta, intervalo entre pautas e audiência mínima (seção 11) |
 | `dia.` | Duração do dia, hora inicial, noite e Noite da Horda (seção 7) |
 | `camera.` | As três distâncias da terceira pessoa, a mira, a primeira pessoa e o modo inicial |
 | `jogador.` | Vida, velocidades, fôlego, chute, mira lenta (foco), arremesso, sobra de vida e cura sozinha |
@@ -38,7 +39,8 @@ que falta usa o padrão do código e aparece como aviso no log. Grupos:
 - `peso_dia` e `peso_noite`: chance relativa de cada tipo nascer.
 - `escala` vai de 0,3 a 3; `cor` é `#RRGGBB` da roupa.
 - O código reconhece os ids `foliao` (vem em bloco, com fantasia), `bujao` (bujão nas costas), `inchado` e `brutamontes`
-  para o visual.
+  para o visual, e `gritador` para o comportamento: a 25 m do jogador ele para, grita uma vez e chama 5 zumbis correndo em
+  volta dele (`AZMBHordeDirector::CallHorde`).
 
 ## `Armas.csv`
 
@@ -60,8 +62,17 @@ entre 25% e 60% do normal, para a sequência "pipocar".
 `id,pontos,rotulo_pt,rotulo_en`
 
 Uma linha por evento de `ZR::EHypeEvent`: `abate`, `tiro_na_cabeca`, `desmembrou`, `despedacou`, `abate_multiplo`,
-`explosao_em_cadeia`, `atropelou`, `abate_mira_lenta`, `zumbi_do_chat`, `escapou_por_pouco`, `tiro_de_longe` e `apanhou`.
+`explosao_em_cadeia`, `atropelou`, `abate_mira_lenta`, `zumbi_do_chat`, `escapou_por_pouco`, `tiro_de_longe`, `apanhou` e
+`calou_gritador` (matou o gritador antes do grito).
 O rótulo é o texto que salta na tela.
+
+## `Pautas.csv`
+
+`id,texto_pt,texto_en,evento,quantidade,prazo_s,recompensa_reais,hype_bonus,peso,so_de_noite`
+
+- `evento` é um id de `Hype.csv`; `quantidade` vale pelo menos 1.
+- `so_de_noite` = 1: a pauta só aparece à noite.
+- O texto aparece no anúncio e na caixa da pauta no HUD.
 
 ## `ChatFalso.csv`
 

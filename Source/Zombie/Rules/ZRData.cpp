@@ -392,6 +392,60 @@ namespace ZR
 		}
 	}
 
+	void LoadChallenges(const std::string& Csv, std::vector<FChallengeDef>& Out, std::vector<std::string>& Errors)
+	{
+		Out.clear();
+		FCsvTable Table;
+		if (!ParseOrReport(Csv, "Pautas.csv", Table, Errors))
+		{
+			return;
+		}
+		FRowReader Reader(Table, "Pautas.csv", Errors);
+		if (!Reader.Require({"id", "texto_pt", "texto_en", "evento", "quantidade", "prazo_s", "recompensa_reais", "hype_bonus", "peso",
+				"so_de_noite"}))
+		{
+			return;
+		}
+		for (std::size_t Row = 0; Row < Table.Rows.size(); ++Row)
+		{
+			FChallengeDef Def;
+			Def.Id = Reader.Text(Row, "id");
+			if (!AcceptId(Reader, Row, Def.Id, Out))
+			{
+				continue;
+			}
+			const std::string Event = Reader.Text(Row, "evento");
+			Def.EventIndex = -1;
+			for (int i = 0; i < static_cast<int>(EHypeEvent::Count); ++i)
+			{
+				if (Event == HypeEventId(static_cast<EHypeEvent>(i)))
+				{
+					Def.EventIndex = i;
+				}
+			}
+			if (Def.EventIndex < 0)
+			{
+				Reader.Report(Row, "evento", "'" + Event + "' não é um evento de Hype.csv");
+				continue;
+			}
+			int Target = 0;
+			if (!ParseInt(Reader.Text(Row, "quantidade"), Target) || Target < 1)
+			{
+				Reader.Report(Row, "quantidade", "tem que ser um inteiro de pelo menos 1");
+				continue;
+			}
+			Def.Target = Target;
+			Def.TextPt = Reader.Text(Row, "texto_pt");
+			Def.TextEn = Reader.Text(Row, "texto_en");
+			Def.TimeLimitSeconds = Reader.Float(Row, "prazo_s", 5.0f, 3600.0f, 60.0f);
+			Def.Reward = Reader.Float(Row, "recompensa_reais", 0.0f, 100000.0f, 0.0f);
+			Def.HypeBonus = Reader.Float(Row, "hype_bonus", 0.0f, 100.0f, 0.0f);
+			Def.Weight = Reader.Float(Row, "peso", 0.0f, 1000.0f, 1.0f);
+			Def.bNightOnly = Reader.Bool(Row, "so_de_noite");
+			Out.push_back(Def);
+		}
+	}
+
 	namespace
 	{
 		struct FTuningKey
@@ -463,6 +517,10 @@ namespace ZR
 			I("chat.votos_min", T.Vote.MinVotes, 1.0f, 100000.0f);
 			F("chat.zumbi_espera_s", T.Vote.ZombieCooldownSeconds, 0.0f, 3600.0f);
 			I("chat.zumbis_com_nome_max", T.MaxNamedZombies, 0.0f, 500.0f);
+
+			F("pauta.primeira_espera_s", T.Challenge.FirstDelaySeconds, 0.0f, 3600.0f);
+			F("pauta.intervalo_s", T.Challenge.CooldownSeconds, 0.0f, 3600.0f);
+			F("pauta.espectadores_min", T.Challenge.MinViewers, 0.0f, 1.0e9f);
 
 			F("dia.duracao_s", T.Day.DayLengthSeconds, 10.0f, 86400.0f);
 			F("dia.hora_inicio", T.Day.StartHour, 0.0f, 23.99f);

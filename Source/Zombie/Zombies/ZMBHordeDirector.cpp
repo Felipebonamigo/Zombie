@@ -358,6 +358,34 @@ void AZMBHordeDirector::SpawnBombSquad(int32 Count)
 	}
 }
 
+void AZMBHordeDirector::CallHorde(const FVector& Where, int32 Count)
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	if (!Data || !Builder)
+	{
+		return;
+	}
+	PendingNoise += 100.0f;
+	const int32 Cap = bNight ? Data->Tuning().Director.MaxAliveNight : Data->Tuning().Director.MaxAlive;
+	for (int32 i = 0; i < Count && AliveCount() < Cap; ++i)
+	{
+		// em volta do gritador, numa rua (6 a 14 m); sem lugar andável, desiste deste
+		for (int32 Try = 0; Try < 8; ++Try)
+		{
+			const float Angle = FMath::FRandRange(0.0f, 2.0f * UE_PI);
+			const FVector Spot = Where + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.0f) * FMath::FRandRange(600.0f, 1400.0f);
+			int32 CellX = 0;
+			int32 CellY = 0;
+			const ZR::FZombieType* Type = PickType(bNight);
+			if (Type && Type->Id != "gritador" && Builder->WorldToCell(Spot, CellX, CellY) && Builder->GetPlan().IsWalkable(CellX, CellY))
+			{
+				SpawnZombie(*Type, FVector(Spot.X, Spot.Y, Builder->GroundHeight()), FString(), true);
+				break;
+			}
+		}
+	}
+}
+
 void AZMBHordeDirector::DropSupplyCrate()
 {
 	FVector Location;

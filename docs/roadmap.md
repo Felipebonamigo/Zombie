@@ -6,7 +6,7 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
 ## Fase 0 — Protótipo jogável (agora)
 
 - [x] Design, estratégia viral e contrato das regras (`design.md`, `viralizar.md`, `regras-de-jogo.md`)
-- [x] Regras puras com 68 testes passando na nuvem (g++ e clang++, avisos como erro, sanitizers)
+- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2) (g++ e clang++, avisos como erro, sanitizers)
 - [x] Projeto Unreal 5.8 em C++ escrito:
   - cidade gerada, jogador com 4 câmeras, 3 armas, granada, bujão, chute e mira lenta;
   - 6 tipos de zumbi com desmembramento;
@@ -14,8 +14,9 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
   - carro dirigível;
   - Diretor de horda com dia e noite e Noite da Horda;
   - a live (hype, chat simulado, votação, doações, drones, clipe) e o chat da Twitch.
+- [x] Bloco 2: pautas do patrocinador (desafios com prazo e recompensa) e o zumbi gritador
 - [ ] **Compilar no PC** (skill `verificar`) e corrigir o que o compilador apontar
-- [ ] `Zombie.Regras` verde no Unreal (os mesmos 68 testes)
+- [ ] `Zombie.Regras` verde no Unreal (os mesmos 76 testes)
 - [ ] Capturas de dia, de noite e no modo celular (`jogar.ps1`) em `docs/img/prototipo/`
 - [ ] **Primeiro playtest do Felipe** (15 min) e lista de problemas como Issues "[Playtest]"
 

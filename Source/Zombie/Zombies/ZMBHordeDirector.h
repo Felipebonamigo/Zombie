@@ -43,6 +43,8 @@ public:
 	void SpawnBombSquad(int32 Count);
 	/** Chat pediu !zumbi: nasce um zumbi com o nome do espectador. */
 	bool SpawnNamedZombie(const FString& Viewer);
+	/** Grito do Gritador: Count zumbis correndo nascem em volta de Where (dentro do teto de vivos) e o barulho sobe. */
+	void CallHorde(const FVector& Where, int32 Count);
 	/** Entrega por drone: uma caixa de suprimentos cai perto do jogador. */
 	void DropSupplyCrate();
 

@@ -24,7 +24,8 @@ Tudo em formas básicas da engine, para sentir o jogo; o visual realista vem por
 - **Câmera:** terceira pessoa **de longe e do alto** (padrão), média e perto; mira por cima do ombro; **primeira pessoa no
   "modo celular"**.
 - **Armas:** pistola, escopeta e fuzil, mais chute, granada, **bujão arremessável** e **mira lenta**, o Dead Eye.
-- **6 tipos de zumbi:** comum, folião de Carnaval, corredor, **bujão** (explode), inchado e brutamontes.
+- **7 tipos de zumbi:** comum, folião de Carnaval, corredor, **bujão** (explode), inchado, brutamontes e **gritador**
+  (chama a horda).
   - Têm desmembramento por membro (a cabeça estoura, sem perna vira rastejante) e explodem em pedaços.
 - **Explosões em cadeia:** bujões, barris, carros abandonados e os zumbis-bujão.
 - **Carro dirigível,** que atropela.
@@ -32,6 +33,7 @@ Tudo em formas básicas da engine, para sentir o jogo; o visual realista vem por
   noites.
 - **A live:**
   - hype, combo, espectadores, seguidores e doações que pagam drones de suprimento;
+  - **pautas do patrocinador:** desafios com prazo que pagam ("explosão em cadeia 3 vezes em 2 min");
   - chat simulado que comenta e vota;
   - **chat de verdade da Twitch** (`!zumbi`, `!horda`, `!bujao`, `!caixa`);
   - botão **Clipar**.

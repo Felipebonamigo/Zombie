@@ -61,6 +61,7 @@ private:
 	void BecomeCrawler();
 	void UpdateLabel();
 	void Animate(float DeltaSeconds, float Speed);
+	void Scream();
 
 	/** Cabeça, tronco, braço esquerdo, braço direito, perna esquerda, perna direita (ordem de ZR::ELimb). */
 	UPROPERTY(VisibleAnywhere, Category="Zombie")
@@ -91,7 +92,9 @@ private:
 	float LungeTimer = 0.0f;
 	float WalkPhase = 0.0f;
 	float WobblePhase = 0.0f;
-	float SinceDeath = 0.0f;
+	/** Gritador: já gritou (grita uma vez) e quanto falta do grito (parado, braços para cima). */
+	bool bScreamed = false;
+	float ScreamLeft = 0.0f;
 	FZMBHitContext LastHit;
 	TArray<FTransform> RestTransforms;
 };

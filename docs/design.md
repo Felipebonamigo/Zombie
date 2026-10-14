@@ -63,7 +63,8 @@ cair, e descobrir quem está por trás do surto.
 
 - **Minuto a minuto:** explorar a pé ou de carro, encontrar a horda, resolver com criatividade (explosão, atropelo, tiro na
   cabeça na mira lenta) e ver o hype subir. Mais hype traz mais espectadores e doações, e as doações pagam drones.
-- **Dia:** saque, pautas da live (o patrocinador pede "exploda 20 com bujão em 2 minutos") e reforço da base.
+- **Dia:** saque, pautas da live e reforço da base. As pautas já estão no protótipo: o patrocinador pede "explosão em
+  cadeia 3 vezes em 2 minutos" e, se der certo, paga.
 - **Noite:** defender a base ou fugir. A cada 3 noites vem a Noite da Horda.
 - **Longo prazo:** seguidores liberam bairros, equipamentos, a base (o "estúdio") e sobreviventes que se juntam ao grupo.
 
@@ -86,10 +87,10 @@ cair, e descobrir quem está por trás do surto.
 | Inchado | Lento, explode ao morrer e joga tudo longe | Kit de física: zumbis voando |
 | Brutamontes | Ex-policial do choque com armadura | O "tanque" que pede plano ou explosivo |
 | Rastejante | O zumbi que perdeu uma perna continua vindo, arrastando | Desmembramento com consequência |
+| Gritador | A 25 m do jogador para e grita, chamando 5 zumbis correndo (o Screamer do Days Gone) | Prioridade de alvo: mate antes do grito |
 
 Para depois:
 
-- **Gritador:** chama a horda, como os Screamers do Days Gone.
 - **Motoboy zumbi:** de moto.
 - **Mergulhador:** sai do mar à noite.
 - **Trio Elétrico:** chefe; o caminhão de som tomado, que atrai todas as hordas com a música.
@@ -110,6 +111,8 @@ Para depois:
 - **Seguidores** crescem com espectadores e hype; é a progressão de longo prazo.
 - **Doações** chegam quando o hype passa de 50, 75 e 90. Cada R$ 50 paga uma **entrega por drone** (munição, granadas,
   bujões e vida).
+- **Pautas do patrocinador:** desafios com prazo ("10 tiros na cabeça em 90 s") que pagam doação e dão hype. Elas empurram
+  o jogador para o lance que vira clipe.
 - **Chat:** sem Twitch, um chat simulado comenta tudo e também vota. Com Twitch (só o nome do canal, sem conta), o chat
   real manda zumbi com nome e vota a cada 30 s.
 - **Clipar (B):** guarda a melhor janela de 20 s e tira um print com o HUD da live. Depois vira marcador na Gravação de

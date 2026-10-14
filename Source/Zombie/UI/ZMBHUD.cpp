@@ -118,6 +118,20 @@ void AZMBHUD::DrawLiveBadge(float Scale)
 	Y += 22.0f * Scale;
 	DrawShadowedText(FText::Format(LOCTEXT("Kills", "Abates: {0}"), FText::AsNumber(Stream->GetKills())).ToString(), Soft, X, Y, Small, 1.0f * Scale);
 
+	// pauta do patrocinador: o que fazer, quanto falta e o tempo
+	const FString Challenge = Stream->GetChallengeText();
+	if (!Challenge.IsEmpty())
+	{
+		Y += 34.0f * Scale;
+		const int32 Seconds = FMath::Max(0, FMath::CeilToInt(Stream->GetChallengeTimeLeft()));
+		const float Fill = static_cast<float>(Stream->GetChallengeProgress()) / static_cast<float>(FMath::Max(1, Stream->GetChallengeTarget()));
+		DrawRect(Panel, X - 6.0f * Scale, Y - 6.0f * Scale, 470.0f * Scale, 62.0f * Scale);
+		DrawShadowedText(FText::Format(LOCTEXT("Challenge", "PAUTA: {0}"), FText::FromString(Challenge)).ToString(), Gold, X, Y, Small, 1.15f * Scale);
+		DrawBar(X, Y + 28.0f * Scale, 330.0f * Scale, 16.0f * Scale, Fill, Gold);
+		DrawShadowedText(FString::Printf(TEXT("%d/%d   %d:%02d"), Stream->GetChallengeProgress(), Stream->GetChallengeTarget(), Seconds / 60, Seconds % 60),
+			Seconds <= 10 ? LiveRed : FLinearColor::White, X + 342.0f * Scale, Y + 24.0f * Scale, Small, 1.1f * Scale);
+	}
+
 	if (const UZMBGameData* Data = UZMBGameData::Get(this))
 	{
 		if (Data->DataErrors().Num() > 0)

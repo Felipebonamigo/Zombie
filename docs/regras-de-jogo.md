@@ -120,3 +120,18 @@ vale o padrão do código.
 
 Os testes de deriva (`Deriva.*`) carregam as tabelas de verdade de `Data/` e falham com qualquer erro ou chave faltando.
 Testes: `Csv.*`, `Dados.*` e `Deriva.*`.
+
+## 11. Pautas da live (`ZRChallenges.h`)
+
+Desafios de patrocinador com prazo, em `Data/Pautas.csv` (por exemplo "explosão em cadeia 3 vezes em 120 s, paga R$ 60").
+
+- **Quando vêm:** a primeira chega 45 s depois do começo; as seguintes, 40 s depois de a anterior acabar, cumprida ou não.
+  Só com pelo menos 10 espectadores.
+- **Qual vem:** sorteio pelo peso entre as elegíveis (as "só de noite" só à noite), sem repetir a anterior quando há outra.
+  Sem nenhuma elegível, tenta de novo em 5 s.
+- **Progresso:** conta só o evento de hype da pauta, somando a quantidade de cada lance (um abate múltiplo de 4 conta 3).
+- **Cumpriu dentro do prazo:** a doação da pauta entra no dinheiro (R$ 50 pagam um drone), o hype ganha o bônus e o lance
+  vira momento de clipe.
+- **Estourou o prazo:** só passa a vez.
+
+Testes: `Pauta.*`, `Dados.PautaComEventoDesconhecidoEhErro` e `Deriva.PautasCarregam`.

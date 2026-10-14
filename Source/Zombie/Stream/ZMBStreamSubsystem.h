@@ -11,6 +11,7 @@
 #include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
 #include "Combat/ZMBTypes.h"
+#include "Rules/ZRChallenges.h"
 #include "Rules/ZRChat.h"
 #include "Rules/ZRHighlights.h"
 #include "Rules/ZRHype.h"
@@ -87,6 +88,11 @@ public:
 	bool IsTwitchConnected() const;
 	FString GetTwitchChannel() const;
 	double GetLiveSeconds() const { return LiveSeconds; }
+	/** Pauta de patrocinador ativa: texto (vazio = nenhuma), progresso, alvo e segundos que faltam. */
+	FString GetChallengeText() const;
+	int32 GetChallengeProgress() const { return Challenges.ProgressCount(); }
+	int32 GetChallengeTarget() const;
+	float GetChallengeTimeLeft() const { return Challenges.TimeLeft(); }
 	int32 GetKills() const { return Kills; }
 
 private:
@@ -95,11 +101,13 @@ private:
 	void AddChat(const FString& Name, const FString& Text, const FLinearColor& Color, bool bSystem);
 	void AddPopup(const FString& Text, const FLinearColor& Color);
 	void TickFakeChat(float DeltaTime);
+	void HandleChallenge(const ZR::FChallengeUpdate& Update);
 	const ZR::FHypeEventDef* EventDef(ZR::EHypeEvent Event) const;
 
 	ZR::FHypeConfig Config;
 	ZR::FHypeState State;
 	ZR::FChatVoting Voting;
+	ZR::FChallengeTracker Challenges;
 	ZR::FHighlightTracker Highlights = ZR::FHighlightTracker(60.0);
 	std::unique_ptr<ZR::FFakeChat> FakeChat;
 

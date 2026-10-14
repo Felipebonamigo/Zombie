@@ -44,6 +44,7 @@ public:
 	const std::vector<ZR::FExplosiveType>& Explosives() const { return LoadedExplosives; }
 	const std::vector<ZR::FHypeEventDef>& HypeEvents() const { return LoadedHypeEvents; }
 	const std::vector<ZR::FChatLine>& ChatLines() const { return LoadedChatLines; }
+	const std::vector<ZR::FChallengeDef>& Challenges() const { return LoadedChallenges; }
 
 	const ZR::FZombieType* FindZombie(const char* Id) const;
 	const ZR::FExplosiveType* FindExplosive(const char* Id) const;
@@ -75,6 +76,7 @@ private:
 	std::vector<ZR::FExplosiveType> LoadedExplosives;
 	std::vector<ZR::FHypeEventDef> LoadedHypeEvents;
 	std::vector<ZR::FChatLine> LoadedChatLines;
+	std::vector<ZR::FChallengeDef> LoadedChallenges;
 	TArray<FString> Errors;
 
 	UPROPERTY(Transient)

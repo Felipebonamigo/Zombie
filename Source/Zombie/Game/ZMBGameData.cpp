@@ -96,6 +96,10 @@ void UZMBGameData::Reload()
 	{
 		ZR::LoadChatLines(Text, LoadedChatLines, RuleErrors);
 	}
+	if (LoadText(TEXT("Pautas.csv"), Text))
+	{
+		ZR::LoadChallenges(Text, LoadedChallenges, RuleErrors);
+	}
 
 	// sem tabela, o jogo ainda roda: um tipo de zumbi, uma arma, os explosivos e os eventos com os padrões do código
 	if (LoadedZombies.empty())
@@ -139,9 +143,9 @@ void UZMBGameData::Reload()
 	{
 		UE_LOG(LogZombie, Warning, TEXT("Dados: Ajustes.csv sem '%s' (vale o padrão do código)"), *ToFString(Key));
 	}
-	UE_LOG(LogZombie, Display, TEXT("Dados: %d tipos de zumbi, %d armas, %d explosivos, %d falas de chat, %d erros"),
+	UE_LOG(LogZombie, Display, TEXT("Dados: %d tipos de zumbi, %d armas, %d explosivos, %d falas de chat, %d pautas, %d erros"),
 		static_cast<int32>(LoadedZombies.size()), static_cast<int32>(LoadedWeapons.size()), static_cast<int32>(LoadedExplosives.size()),
-		static_cast<int32>(LoadedChatLines.size()), Errors.Num());
+		static_cast<int32>(LoadedChatLines.size()), static_cast<int32>(LoadedChallenges.size()), Errors.Num());
 }
 
 const ZR::FZombieType* UZMBGameData::FindZombie(const char* Id) const
