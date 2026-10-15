@@ -26,7 +26,8 @@ que falta usa o padrão do código e aparece como aviso no log. Grupos:
 | `base.` | Sucata (começo, caixa, carro), desmanche, conserto, desmonte, alcance, grade, teto de peças, dano nas peças (zumbi, explosão, carro), barulho e a grade fina em que a horda contorna a base (`base.horda_*`) (seção 12) |
 | `dia.` | Duração do dia, hora inicial, noite e Noite da Horda (seção 7) |
 | `camera.` | As três distâncias da terceira pessoa, a mira, a primeira pessoa e o modo inicial |
-| `jogador.` | Vida, velocidades, fôlego, chute, mira lenta (foco), arremesso, sobra de vida e cura sozinha |
+| `jogador.` | Vida, velocidades, fôlego, chute, mira lenta (foco), arremesso, sobra de vida, cura sozinha e tempo para voltar à live |
+| `resumo.` | Pico de espectadores que dá cada nota do resumo da live (C, B, A e S; seção 14) |
 | `carro.` | Massa, suspensão, motor, freio, esterço, aderência e atropelo (unidades do Unreal) |
 | `mundo.` | Cadáver, pedaços soltos, distância de sumir e de nascer, explosivos e carros nas ruas |
 
@@ -100,6 +101,16 @@ O rótulo é o texto que salta na tela.
 - Os ids que o código toca estão em `ZR::RequiredSoundIds()`; o teste de deriva cobra uma linha para cada.
 - Som novo: skill `som-livre` (procurar, conferir a licença, tratar com `Tools/Audio/tratar_sons.py`, registrar).
 
+## `Marcos.csv`
+
+`id,seguidores,texto_pt,texto_en,sucata,granadas,bujoes,caixa,hype_bonus`
+
+- Os marcos de seguidores da live, em ordem **estritamente crescente** de `seguidores` (fora de ordem ou repetido é erro
+  e a linha sai). Cada um paga uma vez (`regras-de-jogo.md`, seção 14).
+- `texto_pt`/`texto_en`: o anúncio ("MIL SEGUIDORES"); o HUD mostra também como a próxima meta.
+- `sucata`, `granadas`, `bujoes`: o presente vai direto para o jogador. `caixa` = 1: o chat manda uma caixa por drone.
+  `hype_bonus`: soma no hype (até 100).
+
 ## `Creditos.txt`
 
 O crédito que as licenças CC BY dos sons pedem. Vai junto no jogo empacotado (Zombie.Build.cs).
@@ -110,7 +121,8 @@ O crédito que as licenças CC BY dos sons pedem. Vai junto no jogo empacotado (
 
 Falas do chat simulado. As categorias (`ZR::FakeChatCategories()`) são `inicio`, `abate`, `cabeca`, `explosao`, `cadeia`,
 `atropelo`, `desmembrou`, `dano`, `quase_morte`, `calmo`, `doacao`, `horda`, `noite`, `mira_lenta`, `zumbi_do_chat`,
-`barricada` (uma barricada caiu) e `armadilha` (abate por armadilha), com pelo menos 2 falas cada. Sem emoji: o HUD de protótipo não desenha emoji.
+`barricada` (uma barricada caiu), `armadilha` (abate por armadilha) e `marco` (meta de seguidores batida), com pelo
+menos 2 falas cada. Sem emoji: o HUD de protótipo não desenha emoji.
 
 ## Jogo empacotado
 

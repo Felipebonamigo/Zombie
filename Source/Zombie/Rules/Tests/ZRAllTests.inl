@@ -15,3 +15,4 @@
 #include "Rules/Tests/ZRTestsBase.inl"
 #include "Rules/Tests/ZRTestsLocalGrid.inl"
 #include "Rules/Tests/ZRTestsSound.inl"
+#include "Rules/Tests/ZRTestsLive.inl"

@@ -99,6 +99,16 @@ void AZMBHUD::DrawLiveBadge(float Scale)
 		Soft, X, Y, Small, 1.4f * Scale);
 	Y += 30.0f * Scale;
 
+	// próxima meta de seguidores: o que falta para o presente do chat
+	FString NextText;
+	float NextFollowers = 0.0f;
+	if (Stream->GetNextMilestone(NextText, NextFollowers))
+	{
+		DrawShadowedText(FText::Format(LOCTEXT("NextMilestone", "META: {0}"), FText::FromString(NextText)).ToString(), Soft, X, Y, Small, 1.0f * Scale);
+		DrawBar(X + 230.0f * Scale, Y + 3.0f * Scale, 130.0f * Scale, 12.0f * Scale, Stream->GetFollowers() / FMath::Max(1.0f, NextFollowers), Soft);
+		Y += 24.0f * Scale;
+	}
+
 	// hype: amarelo, laranja, vermelho
 	const float Hype = Stream->GetHype() / 100.0f;
 	const FLinearColor HypeColor = FMath::Lerp(FLinearColor(1.0f, 0.85f, 0.1f), FLinearColor(1.0f, 0.1f, 0.05f), Hype);
@@ -280,6 +290,47 @@ void AZMBHUD::DrawPopups(float Scale)
 	}
 }
 
+void AZMBHUD::DrawLiveSummary(float Scale)
+{
+	const UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this);
+	if (!Stream)
+	{
+		return;
+	}
+	UFont* Large = GEngine->GetLargeFont();
+	UFont* Small = GEngine->GetSmallFont();
+	const ZR::FLiveStats& Summary = Stream->GetLiveStats();
+	const float BoxWidth = 560.0f * Scale;
+	const float BoxX = (Canvas->ClipX - BoxWidth) * 0.5f;
+	const float BoxY = Canvas->ClipY * 0.58f;
+	DrawRect(Panel, BoxX, BoxY, BoxWidth, 250.0f * Scale);
+
+	// a nota grande à esquerda, os números em duas colunas à direita
+	const char Grade = Stream->GetLiveGrade();
+	const FLinearColor GradeColor = Grade == 'S' ? Gold : Grade == 'A' ? FLinearColor(0.4f, 0.9f, 0.4f) : Grade == 'D' ? LiveRed : FLinearColor::White;
+	DrawShadowedText(LOCTEXT("GradeLabel", "NOTA DA LIVE").ToString(), Soft, BoxX + 20.0f * Scale, BoxY + 14.0f * Scale, Small, 1.0f * Scale);
+	DrawShadowedText(FString::Chr(static_cast<TCHAR>(Grade)), GradeColor, BoxX + 34.0f * Scale, BoxY + 40.0f * Scale, Large, 5.0f * Scale);
+
+	const int32 Seconds = FMath::FloorToInt(static_cast<float>(Summary.LiveSeconds));
+	const FString Rows[] = {
+		FText::Format(LOCTEXT("SumTime", "Ao vivo: {0}"), FText::FromString(FString::Printf(TEXT("%d:%02d"), Seconds / 60, Seconds % 60))).ToString(),
+		FText::Format(LOCTEXT("SumPeak", "Pico: {0} assistindo"), FText::FromString(Thousands(Summary.PeakViewers))).ToString(),
+		FText::Format(LOCTEXT("SumFollowers", "Seguidores: +{0}"), FText::FromString(Thousands(Summary.FollowersGained()))).ToString(),
+		FText::Format(LOCTEXT("SumKills", "Abates: {0} ({1} na cabeça)"), FText::AsNumber(Summary.Kills), FText::AsNumber(Summary.Headshots)).ToString(),
+		FText::Format(LOCTEXT("SumCombo", "Maior combo: {0}"), FText::AsNumber(Summary.BestCombo)).ToString(),
+		FText::Format(LOCTEXT("SumChain", "Maior corrente de explosões: {0}"), FText::AsNumber(Summary.BestChain)).ToString(),
+		FText::Format(LOCTEXT("SumDonations", "Doações: R$ {0}"), FText::AsNumber(FMath::RoundToInt(static_cast<float>(Summary.Donations)))).ToString(),
+		FText::Format(LOCTEXT("SumChallenges", "Pautas: {0} cumpridas, {1} perdidas"), FText::AsNumber(Summary.ChallengesDone), FText::AsNumber(Summary.ChallengesFailed)).ToString(),
+		FText::Format(LOCTEXT("SumClips", "Clipes: {0}   Quedas: {1}"), FText::AsNumber(Summary.Clips), FText::AsNumber(Summary.Deaths)).ToString(),
+	};
+	float RowY = BoxY + 16.0f * Scale;
+	for (const FString& Row : Rows)
+	{
+		DrawShadowedText(Row, FLinearColor::White, BoxX + 170.0f * Scale, RowY, Small, 1.05f * Scale);
+		RowY += 25.0f * Scale;
+	}
+}
+
 void AZMBHUD::DrawCrosshair(float Scale)
 {
 	const AZMBCharacter* Player = Cast<AZMBCharacter>(GetOwningPawn());
@@ -341,6 +392,7 @@ void AZMBHUD::DrawPlayer(float Scale)
 		const FString Back = FText::Format(LOCTEXT("BackIn", "voltando em {0} s"), FText::AsNumber(FMath::CeilToInt(Player->GetRespawnSeconds()))).ToString();
 		GetTextSize(Back, Width, Height, Medium, 1.4f * Scale);
 		DrawShadowedText(Back, FLinearColor::White, (Canvas->ClipX - Width) * 0.5f, Canvas->ClipY * 0.52f, Medium, 1.4f * Scale);
+		DrawLiveSummary(Scale);
 		return;
 	}
 

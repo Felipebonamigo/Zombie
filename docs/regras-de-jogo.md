@@ -207,3 +207,30 @@ carro, a caixa do drone, e na live a doação, a pauta nova, a pauta cumprida e 
 Testes: `Som.*`, `Dados.SomComErroEhApontado` e `Deriva.SonsTemOsQueOCodigoTocaEOsArquivosSaoWavMono48k` (todo id do
 código tem linha; todo arquivo é WAV PCM 16 bits mono 48 kHz, até 6 s, ou 12 s em laço).
 
+## 14. Marcos de seguidores e resumo da live (`ZRLive.h`)
+
+**Marcos** (`Data/Marcos.csv`): 50, 100, 250, 500, 1.000, 5.000, 10.000, 100 mil e 1 milhão de seguidores. Cada um tem
+um prêmio do chat: sucata, granadas, bujões, uma caixa por drone e hype.
+
+- Paga **uma vez só**, na ordem dos seguidores. Vários cruzados no mesmo passo pagam todos, do menor para o maior.
+- Os que já estavam passados no começo da live não pagam (com 37 seguidores no começo, o primeiro é o de 50).
+- Ao bater: anúncio no meio da tela, fala do chat (`marco` em `ChatFalso.csv`), som de pauta cumprida, o hype do marco e
+  um lance para o clipe. O HUD mostra embaixo dos seguidores a próxima meta e quanto falta.
+
+**Resumo da live:** a live inteira (não zera quando o jogador cai e volta) guarda tempo ao vivo, pico de espectadores,
+seguidores ganhos, abates e tiros na cabeça, maior combo, maior cadeia de explosões (uma explosão sozinha é 1), doações
+(R$), pautas cumpridas e perdidas, clipes e quedas. Quando a live cai, a tela "A LIVE CAIU" mostra o resumo e a **nota**:
+
+| Pico de espectadores | Nota |
+|---|---|
+| `resumo.nota_s_espectadores` (2.000) ou mais | S |
+| `resumo.nota_a_espectadores` (500) | A |
+| `resumo.nota_b_espectadores` (100) | B |
+| `resumo.nota_c_espectadores` (25) | C |
+| abaixo | D |
+
+O jogador volta depois de `jogador.renascer_s` (8 s), o tempo de ler o resumo. A tela é pensada para print: é o "card"
+que o jogador posta.
+
+Testes: `Marco.*`, `Resumo.*`, `Dados.MarcoForaDeOrdemOuRepetidoEhErro` e `Deriva.MarcosCarregamEOPrimeiroEhAlcancavel`
+(a tabela carrega e o primeiro marco fica acima dos seguidores do começo).

@@ -793,7 +793,8 @@ void AZMBCharacter::Die()
 	SetSlowMo(false);
 	SetBuildMode(false);
 	CancelDismantle();
-	RespawnLeft = 6.0f;
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	RespawnLeft = Data ? Data->Tuning().Player.RespawnSeconds : 8.0f;
 	GetCharacterMovement()->DisableMovement();
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_ZMBZombie, ECR_Ignore);
 	for (UStaticMeshComponent* Part : Parts)
@@ -1168,6 +1169,12 @@ void AZMBCharacter::AddScrap(int32 Amount)
 	{
 		Stream->ShowToast(FText::Format(LOCTEXT("ScrapGained", "+{0} DE SUCATA (TOTAL {1})"), FText::AsNumber(Amount), FText::AsNumber(Scrap)).ToString());
 	}
+}
+
+void AZMBCharacter::AddThrowables(int32 InGrenades, int32 InBombs)
+{
+	Grenades += FMath::Max(InGrenades, 0);
+	Bombs += FMath::Max(InBombs, 0);
 }
 
 AZMBBuildPiece* AZMBCharacter::GetAimedPiece() const

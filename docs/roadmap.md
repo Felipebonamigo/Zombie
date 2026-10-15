@@ -6,7 +6,7 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
 ## Fase 0 — Protótipo jogável (agora)
 
 - [x] Design, estratégia viral e contrato das regras (`design.md`, `viralizar.md`, `regras-de-jogo.md`)
-- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2, 91 com o bloco 3, 105 com o bloco 4, 112 com o bloco 5) (g++ e clang++, avisos como erro,
+- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2, 91 com o bloco 3, 105 com o bloco 4, 112 com o bloco 5, 118 com o bloco 6) (g++ e clang++, avisos como erro,
   sanitizers)
 - [x] Projeto Unreal 5.8 em C++ escrito:
   - cidade gerada, jogador com 4 câmeras, 3 armas, granada, bujão, chute e mira lenta;
@@ -23,8 +23,10 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
   tabela `Data/Sons.csv`; motor do carro em laço; mira lenta grave; importação por script no PC
 - [x] Bloco 4: a horda contorna a base (campo fino de 1 m em volta do jogador, barricada cara mas passável) e entra pela
   abertura; o carro rápido arromba barricada; `Data/` vai no jogo empacotado
+- [x] Bloco 6: marcos de seguidores (`Data/Marcos.csv`, com o presente do chat) e o resumo da live com nota de S a D
+  na tela "A LIVE CAIU"
 - [ ] **Compilar no PC** (skill `verificar`) e corrigir o que o compilador apontar
-- [ ] `Zombie.Regras` verde no Unreal (os mesmos testes da nuvem; 105 hoje)
+- [ ] `Zombie.Regras` verde no Unreal (os mesmos testes da nuvem; 118 hoje)
 - [ ] Capturas de dia, de noite e no modo celular (`jogar.ps1`) em `docs/img/prototipo/`
 - [ ] **Primeiro playtest do Felipe** (15 min) e lista de problemas como Issues "[Playtest]"
 

@@ -446,6 +446,50 @@ namespace ZR
 		}
 	}
 
+	void LoadMilestones(const std::string& Csv, std::vector<FMilestoneDef>& Out, std::vector<std::string>& Errors)
+	{
+		Out.clear();
+		FCsvTable Table;
+		if (!ParseOrReport(Csv, "Marcos.csv", Table, Errors))
+		{
+			return;
+		}
+		FRowReader Reader(Table, "Marcos.csv", Errors);
+		if (!Reader.Require({"id", "seguidores", "texto_pt", "texto_en", "sucata", "granadas", "bujoes", "caixa", "hype_bonus"}))
+		{
+			return;
+		}
+		for (std::size_t Row = 0; Row < Table.Rows.size(); ++Row)
+		{
+			FMilestoneDef Def;
+			Def.Id = Reader.Text(Row, "id");
+			if (!AcceptId(Reader, Row, Def.Id, Out))
+			{
+				continue;
+			}
+			const std::size_t ErrorsBefore = Errors.size();
+			Def.Followers = Reader.Float(Row, "seguidores", 1.0f, 1.0e10f, 100.0f);
+			if (Errors.size() != ErrorsBefore)
+			{
+				continue;
+			}
+			// em ordem crescente: a tabela se lê como a escada da live
+			if (!Out.empty() && Def.Followers <= Out.back().Followers)
+			{
+				Reader.Report(Row, "seguidores", "tem que ser maior que o marco de cima (" + std::to_string(static_cast<long long>(Out.back().Followers)) + ")");
+				continue;
+			}
+			Def.TextPt = Reader.Text(Row, "texto_pt");
+			Def.TextEn = Reader.Text(Row, "texto_en");
+			Def.Scrap = Reader.Int(Row, "sucata", 0, 100000, 0);
+			Def.Grenades = Reader.Int(Row, "granadas", 0, 100, 0);
+			Def.Bombs = Reader.Int(Row, "bujoes", 0, 100, 0);
+			Def.bAirdrop = Reader.Bool(Row, "caixa");
+			Def.HypeBonus = Reader.Float(Row, "hype_bonus", 0.0f, 100.0f, 0.0f);
+			Out.push_back(Def);
+		}
+	}
+
 	void LoadSounds(const std::string& Csv, std::vector<FSoundDef>& Out, std::vector<std::string>& Errors)
 	{
 		Out.clear();
@@ -683,6 +727,11 @@ namespace ZR
 			F("pauta.intervalo_s", T.Challenge.CooldownSeconds, 0.0f, 3600.0f);
 			F("pauta.espectadores_min", T.Challenge.MinViewers, 0.0f, 1.0e9f);
 
+			F("resumo.nota_c_espectadores", T.Grade.CViewers, 0.0f, 1.0e9f);
+			F("resumo.nota_b_espectadores", T.Grade.BViewers, 0.0f, 1.0e9f);
+			F("resumo.nota_a_espectadores", T.Grade.AViewers, 0.0f, 1.0e9f);
+			F("resumo.nota_s_espectadores", T.Grade.SViewers, 0.0f, 1.0e9f);
+
 			I("base.sucata_inicio", T.Base.StartScrap, 0.0f, 100000.0f);
 			I("base.sucata_por_caixa", T.Base.ScrapPerCrate, 0.0f, 100000.0f);
 			I("base.sucata_por_carro", T.Base.ScrapPerWreck, 0.0f, 100000.0f);
@@ -751,6 +800,7 @@ namespace ZR
 			F("jogador.cura_por_s", T.Player.RegenPerSecond, 0.0f, 1000.0f);
 			F("jogador.cura_espera_s", T.Player.RegenDelaySeconds, 0.0f, 600.0f);
 			F("jogador.cura_teto", T.Player.RegenCap, 0.0f, 100000.0f);
+			F("jogador.renascer_s", T.Player.RespawnSeconds, 1.0f, 60.0f);
 
 			F("carro.massa_kg", T.Car.MassKg, 100.0f, 50000.0f);
 			F("carro.suspensao_cm", T.Car.SuspensionRestCm, 5.0f, 300.0f);

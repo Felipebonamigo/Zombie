@@ -15,6 +15,7 @@
 #include "Rules/ZRChat.h"
 #include "Rules/ZRHighlights.h"
 #include "Rules/ZRHype.h"
+#include "Rules/ZRLive.h"
 #include <memory>
 #include "ZMBStreamSubsystem.generated.h"
 
@@ -96,6 +97,11 @@ public:
 	int32 GetChallengeTarget() const;
 	float GetChallengeTimeLeft() const { return Challenges.TimeLeft(); }
 	int32 GetKills() const { return Kills; }
+	/** O resumo da live até agora (a tela da morte mostra) e a nota dela. */
+	const ZR::FLiveStats& GetLiveStats() const { return Stats; }
+	char GetLiveGrade() const;
+	/** O próximo marco de seguidores: texto e quantos seguidores ele pede (falso se todos já foram). */
+	bool GetNextMilestone(FString& OutText, float& OutFollowers) const;
 
 private:
 	void HandleTwitchMessage(const FZMBTwitchMessage& Message);
@@ -104,12 +110,15 @@ private:
 	void AddPopup(const FString& Text, const FLinearColor& Color);
 	void TickFakeChat(float DeltaTime);
 	void HandleChallenge(const ZR::FChallengeUpdate& Update);
+	void HandleMilestone(int32 Index);
 	const ZR::FHypeEventDef* EventDef(ZR::EHypeEvent Event) const;
 
 	ZR::FHypeConfig Config;
 	ZR::FHypeState State;
 	ZR::FChatVoting Voting;
 	ZR::FChallengeTracker Challenges;
+	ZR::FMilestoneTracker Milestones;
+	ZR::FLiveStats Stats;
 	ZR::FHighlightTracker Highlights = ZR::FHighlightTracker(60.0);
 	std::unique_ptr<ZR::FFakeChat> FakeChat;
 

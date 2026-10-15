@@ -2,10 +2,12 @@
 #include "Zombie.h"
 #include "Audio/ZMBAudioSubsystem.h"
 #include "Game/ZMBGameData.h"
+#include "Player/ZMBCharacter.h"
 #include "Stream/ZMBTwitchChat.h"
 #include "Zombies/ZMBHordeDirector.h"
 #include "Engine/GameInstance.h"
 #include "Engine/World.h"
+#include "Kismet/GameplayStatics.h"
 #include "Misc/DateTime.h"
 #include "UnrealClient.h"
 
@@ -49,6 +51,11 @@ void UZMBStreamSubsystem::OnWorldBeginPlay(UWorld& InWorld)
 		FakeChat = std::make_unique<ZR::FFakeChat>(Data->ChatLines(), static_cast<std::uint64_t>(FDateTime::Now().GetTicks()));
 	}
 	State.Reset(Config);
+	Stats.Reset(State.Followers);
+	if (const UZMBGameData* Data = UZMBGameData::Get(&InWorld))
+	{
+		Milestones.Reset(Data->Milestones(), State.Followers);
+	}
 	if (UGameInstance* GameInstance = InWorld.GetGameInstance())
 	{
 		if (UZMBTwitchChat* Twitch = GameInstance->GetSubsystem<UZMBTwitchChat>())
@@ -165,8 +172,10 @@ void UZMBStreamSubsystem::ReportKill(const FZMBKillInfo& Kill)
 {
 	++Kills;
 	ReportHype(ZR::EHypeEvent::Kill, 1, Kill.Location);
+	++Stats.Kills;
 	if (Kill.bHeadshot)
 	{
+		++Stats.Headshots;
 		ReportHype(ZR::EHypeEvent::Headshot, 1, Kill.Location);
 	}
 	if (Kill.bGibbed)
@@ -228,6 +237,8 @@ void UZMBStreamSubsystem::ReportExplosion(int32 ExplosionKills, int32 Gibs, int3
 	{
 		ReportHype(ZR::EHypeEvent::MultiKill, ExplosionKills - 1, Where);
 	}
+	// a cadeia conta as explosões em sequência: a primeira é a profundidade 0
+	Stats.BestChain = FMath::Max(Stats.BestChain, ChainDepth + 1);
 	if (ChainDepth >= 1)
 	{
 		ReportHype(ZR::EHypeEvent::ChainExplosion, 1, Where);
@@ -254,9 +265,58 @@ void UZMBStreamSubsystem::ReportPlayerDamage(float Amount, float HealthAfter)
 
 void UZMBStreamSubsystem::OnPlayerDied()
 {
+	++Stats.Deaths;
 	State.Hype = 0.0f;
 	Announce(LOCTEXT("Died", "VOCÊ MORREU. A LIVE CAIU..."));
 	AddChat(FString(), LOCTEXT("DiedChat", "Conexão perdida. Os espectadores estão saindo.").ToString(), Hot, true);
+}
+
+char UZMBStreamSubsystem::GetLiveGrade() const
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	return ZR::LiveGrade(Data ? Data->Tuning().Grade : ZR::FGradeConfig(), Stats);
+}
+
+bool UZMBStreamSubsystem::GetNextMilestone(FString& OutText, float& OutFollowers) const
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	const int32 Index = Data ? Milestones.NextIndex(Data->Milestones()) : -1;
+	if (Index < 0)
+	{
+		return false;
+	}
+	const ZR::FMilestoneDef& Def = Data->Milestones()[static_cast<size_t>(Index)];
+	OutText = UZMBGameData::ToFString(bPortuguese || Def.TextEn.empty() ? Def.TextPt : Def.TextEn);
+	OutFollowers = Def.Followers;
+	return true;
+}
+
+void UZMBStreamSubsystem::HandleMilestone(int32 Index)
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	if (!Data || Index < 0 || Index >= static_cast<int32>(Data->Milestones().size()))
+	{
+		return;
+	}
+	const ZR::FMilestoneDef& Def = Data->Milestones()[static_cast<size_t>(Index)];
+	const FText Text = FText::FromString(UZMBGameData::ToFString(bPortuguese || Def.TextEn.empty() ? Def.TextPt : Def.TextEn));
+	Announce(FText::Format(LOCTEXT("Milestone", "{0}!"), Text));
+	AddChat(FString(), FText::Format(LOCTEXT("MilestoneChat", "Meta batida: {0}. O chat mandou presente!"), Text).ToString(), Gold, true);
+	React("marco");
+	UZMBAudioSubsystem::Play2D(this, "pauta_ok");
+	State.Hype = FMath::Min(100.0f, State.Hype + Def.HypeBonus);
+	Highlights.Add(LiveSeconds, Def.HypeBonus, std::string(TCHAR_TO_UTF8(*Text.ToString())));
+	if (AZMBCharacter* Player = Cast<AZMBCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+	{
+		Player->AddScrap(Def.Scrap);
+		Player->AddThrowables(Def.Grenades, Def.Bombs);
+	}
+	if (Def.bAirdrop)
+	{
+		FZMBChatAction Action;
+		Action.Kind = EZMBChatActionKind::Airdrop;
+		PendingActions.Add(Action);
+	}
 }
 
 void UZMBStreamSubsystem::OnPlayerRespawned()
@@ -289,6 +349,7 @@ void UZMBStreamSubsystem::Clip()
 {
 	const ZR::FHighlightTracker::FWindow Window = Highlights.BestWindow(LiveSeconds, 20.0);
 	++ClipCount;
+	++Stats.Clips;
 	UZMBAudioSubsystem::Play2D(this, "clipe");
 	if (Window.bValid)
 	{
@@ -347,6 +408,7 @@ void UZMBStreamSubsystem::HandleChallenge(const ZR::FChallengeUpdate& Update)
 		break;
 	case ZR::EChallengeResult::Completed:
 		Money += Update.Reward;
+		++Stats.ChallengesDone;
 		State.Hype = FMath::Min(100.0f, State.Hype + Update.HypeBonus);
 		UZMBAudioSubsystem::Play2D(this, "pauta_ok");
 		Highlights.Add(LiveSeconds, Update.HypeBonus, std::string(TCHAR_TO_UTF8(*Text.ToString())));
@@ -355,6 +417,7 @@ void UZMBStreamSubsystem::HandleChallenge(const ZR::FChallengeUpdate& Update)
 		React("doacao");
 		break;
 	case ZR::EChallengeResult::Failed:
+		++Stats.ChallengesFailed;
 		AddChat(FString(), LOCTEXT("ChallengeFailed", "O patrocinador desistiu da pauta. Fica para a próxima.").ToString(), Hot, true);
 		React("calmo");
 		break;
@@ -459,9 +522,18 @@ void UZMBStreamSubsystem::Tick(float DeltaTime)
 
 	std::vector<ZR::FDonation> Donations;
 	ZR::TickHype(Config, State, DeltaTime, Donations);
+	Stats.Sample(LiveSeconds, State.Viewers, State.Followers, State.Combo);
+	if (const UZMBGameData* Data = UZMBGameData::Get(this))
+	{
+		for (const int Crossed : Milestones.Update(Data->Milestones(), State.Followers))
+		{
+			HandleMilestone(Crossed);
+		}
+	}
 	for (const ZR::FDonation& Donation : Donations)
 	{
 		Money += Donation.Amount;
+		Stats.Donations += Donation.Amount;
 		UZMBAudioSubsystem::Play2D(this, "doacao");
 		const FString Donor = FakeChat ? UZMBGameData::ToFString(FakeChat->FakeUserName()) : FString(TEXT("anonimo"));
 		const ZR::FChatLine* Line = FakeChat ? FakeChat->Pick("doacao") : nullptr;

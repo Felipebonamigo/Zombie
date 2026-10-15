@@ -1,7 +1,7 @@
-// HUD da live, desenhado no Canvas (sem UMG, que é binário): selo AO VIVO, espectadores e seguidores, barra de hype com o
-// combo, o chat à direita, a votação do chat, os lances que saltam no meio, mira com marcador de acerto, vida, fôlego,
-// foco da mira lenta, arma e munição, relógio e noite, sucata e o modo construção da base, e no "modo celular" (primeira
-// pessoa) a moldura do app gravando.
+// HUD da live, desenhado no Canvas (sem UMG, que é binário): selo AO VIVO, espectadores e seguidores com a próxima meta,
+// barra de hype com o combo, o chat à direita, a votação do chat, os lances que saltam no meio, mira com marcador de
+// acerto, vida, fôlego, foco da mira lenta, arma e munição, relógio e noite, sucata e o modo construção da base, o resumo
+// da live quando ela cai e, no "modo celular" (primeira pessoa), a moldura do app gravando.
 // Provisório: o HUD final vem em CommonUI (menus por controle, Steam Deck), com o mesmo conteúdo.
 
 #pragma once
@@ -26,6 +26,8 @@ private:
 	void DrawVote(float Scale);
 	void DrawPopups(float Scale);
 	void DrawPlayer(float Scale);
+	/** Morto: o resumo da live (nota, tempo, pico, seguidores ganhos, abates, combos, doações, pautas, clipes). */
+	void DrawLiveSummary(float Scale);
 	void DrawCrosshair(float Scale);
 	void DrawClock(float Scale);
 	void DrawPhoneFrame(float Scale);

@@ -53,6 +53,10 @@ chat.zumbis_com_nome_max,12,zumbis,Zumbis com nome de espectador vivos ao mesmo 
 pauta.primeira_espera_s,45,s,Tempo até a primeira pauta de patrocinador
 pauta.intervalo_s,40,s,Intervalo entre o fim de uma pauta e o começo da próxima
 pauta.espectadores_min,10,espectadores,Patrocinador só manda pauta com pelo menos esta audiência
+resumo.nota_c_espectadores,25,espectadores,"Nota C no resumo da live (pico de espectadores; abaixo disso, D)"
+resumo.nota_b_espectadores,100,espectadores,Nota B no resumo da live
+resumo.nota_a_espectadores,500,espectadores,Nota A no resumo da live
+resumo.nota_s_espectadores,2000,espectadores,Nota S no resumo da live (a live viralizou)
 base.sucata_inicio,60,sucata,Sucata no começo do jogo (paga três barricadas de madeira)
 base.sucata_por_caixa,40,sucata,Sucata em cada caixa da entrega por drone
 base.sucata_por_carro,25,sucata,Sucata de desmanchar um carro batido (segurar E ao lado dele)
@@ -117,6 +121,7 @@ jogador.escapou_por_pouco_vida,20,pontos,Sobreviver abaixo desta vida rende hype
 jogador.cura_por_s,3,pontos/s,Vida recuperada sozinha depois de um tempo sem apanhar
 jogador.cura_espera_s,6,s,Tempo sem apanhar para começar a recuperar
 jogador.cura_teto,60,pontos,A recuperação sozinha só vai até aqui
+jogador.renascer_s,8,s,"Morto, tempo até voltar à live (o resumo da live fica na tela)"
 carro.massa_kg,1300,kg,Massa do carro de protótipo
 carro.suspensao_cm,55,cm,Comprimento da suspensão (raio de cada roda)
 carro.mola_por_cm,16000,kg/s² por roda,Força da mola por cm comprimido (unidade do Unreal: kg·cm/s²); ~20 cm de compressão parado

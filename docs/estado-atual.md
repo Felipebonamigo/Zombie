@@ -3,7 +3,7 @@
 Documento de passagem. Uma sessão nova do Claude (nuvem ou PC) lê este arquivo e o `CLAUDE.md` e consegue continuar sem
 o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 
-Última revisão: 15 out 2026 (primeira sessão, na nuvem; blocos 1 a 5).
+Última revisão: 15 out 2026 (primeira sessão, na nuvem; blocos 1 a 6).
 
 ## Como o trabalho está dividido
 
@@ -17,10 +17,10 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 | Área | Onde | Estado |
 |---|---|---|
 | Design, estratégia viral, roteiro | `docs/design.md`, `docs/viralizar.md`, `docs/roadmap.md` | Versão 0.1, para o Felipe ler e decidir |
-| Regras puras: cidade, fluxo (com custo extra), grade fina da base, corpo, explosão, hype, Diretor, dia e noite, chat, clipes, pautas, base, CSV | `Source/Zombie/Rules/` | **112 testes passando** na nuvem (g++ 13 e clang++, `-Wall -Wextra -Wshadow -Wconversion -Werror`, ASan e UBSan) |
+| Regras puras: cidade, fluxo (com custo extra), grade fina da base, corpo, explosão, hype, Diretor, dia e noite, chat, clipes, pautas, base, som, marcos e resumo da live, CSV | `Source/Zombie/Rules/` | **118 testes passando** na nuvem (g++ 13 e clang++, `-Wall -Wextra -Wshadow -Wconversion -Werror`, ASan e UBSan) |
 | Tabelas de ajuste | `Data/*.csv` | Carregam sem erro (testes `Deriva.*`) |
 | Projeto Unreal 5.8 | `Zombie.uproject`, `Config/`, `Source/` | Escrito na nuvem; **ainda não compilado**. Conferidor de C++ sem erros. Uma revisão independente das assinaturas da API achou 1 erro de compilação (include do material dinâmico) e 1 defeito (o carro não viraria: o `APawn` segue o yaw do controle por padrão); os dois foram corrigidos. A revisão do bloco 3 (base) não achou erro de compilação; achou 10 defeitos de comportamento (zumbi alto não via a barricada, mordida por cima dela, peça afundando na praça, mira do modo construção pegando o que estava atrás do jogador, entre outros), todos corrigidos. A do bloco 4 também não achou erro de compilação; achou 6 defeitos (a calçada não existia para as regras, o preço de atravessar a barricada dobrava conforme o encaixe, vão de 1,5 m invisível, zumbi andando em "L", carro parando na segunda barricada e derrubando muro de raspão), todos corrigidos |
-| Jogo de protótipo | `Source/Zombie/{Game,Player,Zombies,Combat,Base,Vehicles,Stream,UI}` | Cidade gerada, jogador, 7 tipos de zumbi (com o gritador), explosões, carro, Diretor, live com pautas do patrocinador, base com barricadas e armadilhas (modo construção, X), som (25 sons, 65 arquivos), Twitch e HUD (lista no README) |
+| Jogo de protótipo | `Source/Zombie/{Game,Player,Zombies,Combat,Base,Vehicles,Stream,UI}` | Cidade gerada, jogador, 7 tipos de zumbi (com o gritador), explosões, carro, Diretor, live com pautas do patrocinador, base com barricadas e armadilhas (modo construção, X), som (25 sons, 65 arquivos), marcos de seguidores e resumo da live com nota, Twitch e HUD (lista no README) |
 | Branches | `main` e `claude/inspiring-einstein-idxmpu` | O `main` foi criado em 14/10 a partir do branch do Claude, a pedido do Felipe; os dois andam juntos |
 | Scripts do PC | `Tools/Unreal/*.ps1`, `criar_materiais.py` | Copiados e adaptados do Detonauto; `jogar.ps1` e `criar_materiais` são novos e nunca rodaram |
 | Rotinas do Claude | `.claude/skills/` | `verificar`, `revisar-sem-compilar`, `jogar-e-capturar`, `modelo-3d`, `triar-playtest` |
@@ -29,7 +29,7 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 
 1. `Tools\Unreal\build.ps1 -Uproject Zombie.uproject`. O C++ nunca foi compilado: espere alguns erros e corrija um por um.
    Cada erro que o conferidor deveria ter pego vira regra nova nele (skill `revisar-sem-compilar`, passo 6).
-2. `Tools\Unreal\test.ps1 -Uproject Zombie.uproject -Filter Zombie.Regras`: os mesmos 112 testes da nuvem.
+2. `Tools\Unreal\test.ps1 -Uproject Zombie.uproject -Filter Zombie.Regras`: os mesmos 118 testes da nuvem.
 3. `Tools\Unreal\criar_materiais.ps1`: materiais com aspereza e brilho; sem eles, o jogo usa o material básico da engine.
    `Tools\Unreal\importar_sons.ps1`: importa os 65 sons de `Audio/`; sem eles, o jogo roda mudo.
 4. Capturas: `jogar.ps1 -Shot 8`, `-Shot 8 -Hour 21` e `-Shot 8 -Cam 3`, em `docs/img/prototipo/`.
@@ -53,6 +53,9 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 - Som: os tiros soam fortes e cada disparo diferente? A explosão tem peso? Os gemidos viram um coro sem cansar? O motor
   do carro sobe com a velocidade? Na mira lenta (Q) tudo fica grave? Algum som alto ou baixo demais (`volume` em
   `Data/Sons.csv`)?
+- Marcos e resumo: o primeiro marco (50 seguidores) chega cedo e o presente se nota? A linha "META" embaixo dos
+  seguidores ajuda ou polui? Na tela "A LIVE CAIU", o resumo cabe e dá vontade de printar? 8 s é tempo bom para ler
+  (`jogador.renascer_s`)? A nota (S a D pelo pico de espectadores, `resumo.*`) parece justa?
 - Base com abertura: feche uma rua com barricadas, incluindo as duas calçadas (dá para construir nelas), e deixe um vão de
   2 m com estacas. A horda que vem de longe dá a volta e entra
   pelo vão? Sem vão, ela vem e bate? O zumbi segue o campo fino sem andar em zigue-zague? Carro a 60 km/h arromba a

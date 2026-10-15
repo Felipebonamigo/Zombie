@@ -41,7 +41,9 @@ Tudo em formas básicas da engine, para sentir o jogo; o visual realista vem por
   - **pautas do patrocinador:** desafios com prazo que pagam ("explosão em cadeia 3 vezes em 2 min");
   - chat simulado que comenta e vota;
   - **chat de verdade da Twitch** (`!zumbi`, `!horda`, `!bujao`, `!caixa`);
-  - botão **Clipar**.
+  - botão **Clipar**;
+  - **marcos de seguidores** (50, 100, 1.000... 1 milhão) com presente do chat, e o **resumo da live** com nota de S a D
+    quando ela cai (o "card" para printar e postar).
 
 ## Como jogar (PC com Unreal 5.8)
 

@@ -18,6 +18,7 @@
 #include "Rules/ZRDayNight.h"
 #include "Rules/ZRDirector.h"
 #include "Rules/ZRHype.h"
+#include "Rules/ZRLive.h"
 #include "Rules/ZRLocalGrid.h"
 #include "Rules/ZRSound.h"
 
@@ -130,6 +131,8 @@ namespace ZR
 		float RegenPerSecond = 3.0f;
 		float RegenDelaySeconds = 6.0f;
 		float RegenCap = 60.0f;
+		/** Morto, quanto tempo até voltar à live (é o tempo de ler o resumo) [s]. */
+		float RespawnSeconds = 8.0f;
 	};
 
 	/** Carro de protótipo: suspensão por raios em quatro rodas, sem malha esquelética. */
@@ -165,6 +168,8 @@ namespace ZR
 		FCarConfig Car;
 		FChallengeConfig Challenge;
 		FBaseConfig Base;
+		/** A nota do resumo da live (pico de espectadores). */
+		FGradeConfig Grade;
 		/** A grade fina em volta do jogador, onde a horda vê as barricadas. */
 		FLocalGridConfig HordeGrid;
 		/** Zumbis com o nome de espectadores vivos ao mesmo tempo. */
@@ -191,6 +196,8 @@ namespace ZR
 	void LoadChatLines(const std::string& Csv, std::vector<FChatLine>& Out, std::vector<std::string>& Errors);
 	/** Data/Pautas.csv: o evento tem que ser um id de EHypeEvent e a quantidade, pelo menos 1. */
 	void LoadChallenges(const std::string& Csv, std::vector<FChallengeDef>& Out, std::vector<std::string>& Errors);
+	/** Data/Marcos.csv: seguidores em ordem crescente, sem repetir. */
+	void LoadMilestones(const std::string& Csv, std::vector<FMilestoneDef>& Out, std::vector<std::string>& Errors);
 	/** Data/Sons.csv: arquivos separados por ";", só letras minúsculas, números e "_" (o nome vira asset no Unreal). */
 	void LoadSounds(const std::string& Csv, std::vector<FSoundDef>& Out, std::vector<std::string>& Errors);
 	/** Data/Construcoes.csv: o explosivo da armadilha tem que ser um id de Explosives (Explosivos.csv). */

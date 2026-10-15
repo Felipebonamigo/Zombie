@@ -53,6 +53,9 @@ public:
 	/** Sucata para a base (caixa do drone, carro desmanchado). */
 	void AddScrap(int32 Amount);
 
+	/** Granadas e bujões sem anúncio (presente de marco de seguidores: o anúncio é o do marco). */
+	void AddThrowables(int32 InGrenades, int32 InBombs);
+
 	// --- leitura para o HUD ---
 	bool IsDead() const { return bDead; }
 	float GetHealth() const { return Health; }
