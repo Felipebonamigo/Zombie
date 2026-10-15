@@ -58,6 +58,11 @@ resumo.nota_c_espectadores,25,espectadores,"Nota C no resumo da live (pico de es
 resumo.nota_b_espectadores,100,espectadores,Nota B no resumo da live
 resumo.nota_a_espectadores,500,espectadores,Nota A no resumo da live
 resumo.nota_s_espectadores,2000,espectadores,Nota S no resumo da live (a live viralizou)
+ferimento.dano_min,8,pontos,"Mordida de zumbi com menos dano que isto não abre ferimento (o comum morde 8, o corredor 6)"
+ferimento.chance,0.3,0 a 1,Chance de a mordida forte abrir um ferimento que sangra
+ferimento.max,3,ferimentos,"Ferimentos abertos ao mesmo tempo; no teto, a mordida nova renova o que ia fechar primeiro"
+ferimento.dano_por_s,0.4,pontos/s,Vida perdida por segundo por ferimento aberto (e a cura sozinha para enquanto sangra)
+ferimento.duracao_s,30,s,Quanto tempo um ferimento sangra antes de fechar sozinho; curativo fecha todos na hora
 saque.alcance_cm,160,cm,"Até onde o E alcança um lugar de saque, contado da borda dele"
 saque.espacamento_cm,800,cm,Distância mínima entre dois lugares de saque na cidade
 saque.longe_do_comeco_cm,600,cm,Nenhum lugar de saque a menos disso do começo do jogador

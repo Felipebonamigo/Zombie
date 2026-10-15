@@ -292,3 +292,21 @@ chat simulado não passa pelo filtro: as falas são nossas, e o teste de deriva 
 
 Testes: `Filtro.*`, `Dados.FiltroComErroEhApontado` e `Deriva.FiltroDePalavrasCarregaEPegaOBasico` (a lista carrega,
 pega o básico e não pega nenhuma fala do chat simulado nem os comandos do jogo).
+
+## 17. Ferimentos que sangram (`ZRWound.h`)
+
+Sobreviver de verdade, sem microgerenciamento: não há atadura para escolher nem menu, só curativo achado.
+
+- **Abre:** mordida de zumbi com pelo menos `ferimento.dano_min` (8) de dano tem `ferimento.chance` (30%) de abrir um
+  ferimento. Corredor, folião e gritador (6 e 7) não abrem; o comum (8), o zumbi-bujão, o inchado e o brutamontes, sim.
+  Explosão e carro não abrem.
+- **Sangra:** cada ferimento tira `ferimento.dano_por_s` (0,4) de vida por segundo e fecha sozinho depois de
+  `ferimento.duracao_s` (30 s): 12 de vida se ninguém cuidar. No máximo `ferimento.max` (3) abertos; no teto, a mordida
+  nova renova o que ia fechar primeiro. O ferimento que fecha no meio de um quadro sangra só o que faltava.
+- Enquanto sangra, **a cura sozinha para**. Sangrar até zero derruba a live como qualquer morte.
+- **Estanca:** curativo achado no saque (lixeira, mochila, isopor, viatura) e a caixa do drone fecham todos na hora.
+  Renascer também zera.
+- Dirigindo, o ferimento fica parado (nem sangra nem fecha) até sair do carro.
+- O HUD mostra "SANGRANDO x2" piscando ao lado da barra de vida; o chat comenta (`sangrando` em `ChatFalso.csv`).
+
+Testes: `Ferimento.*` (abrir, teto, sangrar e fechar, curativo); as chaves passam pela deriva de `Ajustes.csv`.

@@ -93,6 +93,8 @@ public:
 	float GetDismantle01() const;
 	/** Há um carro batido perto o bastante para desmanchar (dica no HUD). */
 	bool IsWreckNearby() const { return bWreckNearby; }
+	/** Ferimentos abertos sangrando (HUD). */
+	int32 GetWoundCount() const { return Wounds.Count(); }
 	/** Andamento do saque, 0 a 1 (negativo = não está revirando nada). */
 	float GetSearch01() const;
 	/** Nome do lugar de saque perto (dica "segure E: revirar ..."), vazio se não há nenhum. */
@@ -249,6 +251,8 @@ private:
 	float DismantleLeft = 0.0f;
 	float WreckScanTimer = 0.0f;
 	bool bWreckNearby = false;
+	/** Ferimentos que sangram (Rules/ZRWound.h): mordida forte abre, curativo fecha. */
+	ZR::FWoundState Wounds;
 	TWeakObjectPtr<AZMBLootSpot> SearchTarget;
 	float SearchLeft = 0.0f;
 	float LootScanTimer = 0.0f;

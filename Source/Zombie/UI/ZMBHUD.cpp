@@ -402,6 +402,13 @@ void AZMBHUD::DrawPlayer(float Scale)
 	float Y = Bottom - 3.0f * 34.0f * Scale;
 	DrawShadowedText(LOCTEXT("Health", "VIDA").ToString(), FLinearColor::White, Left, Y - 2.0f * Scale, Small, 1.1f * Scale);
 	DrawBar(Left + 96.0f * Scale, Y, BarWidth, BarHeight, Player->GetHealth() / FMath::Max(1.0f, Player->GetMaxHealth()), FLinearColor(0.85f, 0.08f, 0.06f));
+	if (Player->GetWoundCount() > 0)
+	{
+		// sangrando: pisca ao lado da barra, com quantos ferimentos estão abertos
+		const float Beat = 0.55f + 0.45f * FMath::Abs(FMath::Sin(Clock * 3.0f));
+		DrawShadowedText(FText::Format(LOCTEXT("Bleeding", "SANGRANDO x{0}"), FText::AsNumber(Player->GetWoundCount())).ToString(),
+			FLinearColor(1.0f, 0.12f, 0.08f, Beat), Left + 96.0f * Scale + BarWidth + 12.0f * Scale, Y - 4.0f * Scale, Small, 1.1f * Scale);
+	}
 	Y += 34.0f * Scale;
 	DrawShadowedText(LOCTEXT("Stamina", "FÔLEGO").ToString(), FLinearColor::White, Left, Y - 2.0f * Scale, Small, 1.1f * Scale);
 	DrawBar(Left + 96.0f * Scale, Y, BarWidth, BarHeight, Player->GetStamina01(), FLinearColor(0.85f, 0.85f, 0.8f));

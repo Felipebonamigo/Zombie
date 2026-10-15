@@ -755,6 +755,11 @@ void AZMBCharacter::Resupply(int32 AmmoPacks, int32 InGrenades, int32 InBombs, f
 	Grenades += InGrenades;
 	Bombs += InBombs;
 	Health = FMath::Min(GetMaxHealth(), Health + HealthBonus);
+	if (HealthBonus > 0.0f)
+	{
+		// a caixa traz curativo: estanca o sangramento
+		ZR::StopBleeding(Wounds);
+	}
 	if (UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this))
 	{
 		Stream->Announce(LOCTEXT("Resupply", "SUPRIMENTOS: MUNIÇÃO, GRANADAS E BUJÕES"));
@@ -783,11 +788,20 @@ float AZMBCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 	{
 		Director->ReportDamageTaken(Applied);
 	}
-	if (UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this))
+	UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this);
+	if (Stream)
 	{
 		Stream->ReportPlayerDamage(Applied, Health);
 	}
 	const UZMBGameData* Data = UZMBGameData::Get(this);
+	// mordida forte de zumbi pode abrir um ferimento que sangra (explosão e carro não)
+	if (Data && Health > 0.0f && Cast<AZMBZombie>(DamageCauser) && ZR::TryOpenWound(Data->Tuning().Wound, Wounds, Applied, FMath::FRand()))
+	{
+		if (Stream)
+		{
+			Stream->React("sangrando");
+		}
+	}
 	if (Data && Health > 0.0f && Health <= Data->Tuning().Player.CloseCallHealth && !bCloseCallPending && !bCloseCallSpent)
 	{
 		bCloseCallPending = true;
@@ -852,6 +866,7 @@ void AZMBCharacter::Respawn()
 	bDead = false;
 	bCloseCallSpent = false;
 	Health = GetMaxHealth();
+	ZR::StopBleeding(Wounds);
 	if (const UZMBGameData* Data = UZMBGameData::Get(this))
 	{
 		Focus = Data->Tuning().Player.FocusMax;
@@ -1054,8 +1069,19 @@ void AZMBCharacter::Tick(float DeltaSeconds)
 	bUseControllerRotationYaw = bFaceAim;
 	Move->bOrientRotationToMovement = !bFaceAim;
 
+	// ferimento aberto sangra e trava a cura sozinha; sangrar até o fim derruba a live
+	const float Bled = ZR::TickWounds(Data->Tuning().Wound, Wounds, DeltaSeconds);
+	if (Bled > 0.0f)
+	{
+		Health = FMath::Max(0.0f, Health - Bled);
+		if (Health <= 0.0f)
+		{
+			Die();
+			return;
+		}
+	}
 	// vida volta sozinha devagar, até um teto (o resto vem das caixas)
-	if (SinceDamage > Player.RegenDelaySeconds && Health < Player.RegenCap)
+	if (Wounds.Count() == 0 && SinceDamage > Player.RegenDelaySeconds && Health < Player.RegenCap)
 	{
 		Health = FMath::Min(Player.RegenCap, Health + Player.RegenPerSecond * DeltaSeconds);
 	}
@@ -1727,9 +1753,14 @@ void AZMBCharacter::ApplyLoot(const ZR::FLootResult& Loot, const FString& SpotNa
 	}
 	if (Loot.Health > 0.0f)
 	{
-		// curativo cura acima do teto da cura sozinha, até a vida cheia
+		// curativo cura acima do teto da cura sozinha, até a vida cheia, e estanca o sangramento
 		Health = FMath::Min(GetMaxHealth(), Health + Loot.Health);
 		Gains.Add(FText::Format(LOCTEXT("LootHealth", "+{0} VIDA"), FText::AsNumber(FMath::RoundToInt(Loot.Health))).ToString());
+		if (Wounds.Count() > 0)
+		{
+			ZR::StopBleeding(Wounds);
+			Gains.Add(LOCTEXT("LootStopBleeding", "ESTANCOU O SANGRAMENTO").ToString());
+		}
 	}
 	if (Loot.Scrap > 0)
 	{

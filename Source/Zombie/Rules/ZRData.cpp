@@ -875,6 +875,12 @@ namespace ZR
 
 			I("chat.filtro", T.ChatFilterOn, 0.0f, 1.0f);
 
+			F("ferimento.dano_min", T.Wound.MinDamage, 0.0f, 1000.0f);
+			F("ferimento.chance", T.Wound.Chance, 0.0f, 1.0f);
+			I("ferimento.max", T.Wound.MaxWounds, 0.0f, 20.0f);
+			F("ferimento.dano_por_s", T.Wound.DamagePerSecond, 0.0f, 100.0f);
+			F("ferimento.duracao_s", T.Wound.Seconds, 1.0f, 3600.0f);
+
 			F("saque.alcance_cm", T.Loot.RangeCm, 20.0f, 2000.0f);
 			F("saque.espacamento_cm", T.Loot.MinSpacingCm, 0.0f, 20000.0f);
 			F("saque.longe_do_comeco_cm", T.Loot.AvoidStartCm, 0.0f, 100000.0f);

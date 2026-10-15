@@ -28,6 +28,7 @@ que falta usa o padrão do código e aparece como aviso no log. Grupos:
 | `camera.` | As três distâncias da terceira pessoa, a mira, a primeira pessoa e o modo inicial |
 | `jogador.` | Vida, velocidades, fôlego, chute, mira lenta (foco), arremesso, sobra de vida, cura sozinha e tempo para voltar à live |
 | `resumo.` | Pico de espectadores que dá cada nota do resumo da live (C, B, A e S; seção 14) |
+| `ferimento.` | Dano mínimo e chance de a mordida abrir ferimento, teto de ferimentos, sangria por segundo e duração (seção 17) |
 | `saque.` | Alcance do E, distância mínima entre lugares de saque e quanto longe do começo eles ficam (seção 15) |
 | `carro.` | Massa, suspensão, motor, freio, esterço, aderência e atropelo (unidades do Unreal) |
 | `mundo.` | Cadáver, pedaços soltos, distância de sumir e de nascer, explosivos e carros nas ruas |
@@ -153,7 +154,7 @@ O crédito que as licenças CC BY dos sons pedem. Vai junto no jogo empacotado (
 
 Falas do chat simulado. As categorias (`ZR::FakeChatCategories()`) são `inicio`, `abate`, `cabeca`, `explosao`, `cadeia`,
 `atropelo`, `desmembrou`, `dano`, `quase_morte`, `calmo`, `doacao`, `horda`, `noite`, `mira_lenta`, `zumbi_do_chat`,
-`barricada` (uma barricada caiu), `armadilha` (abate por armadilha), `marco` (meta de seguidores batida) e `saque` (achou coisa boa revirando), com
+`barricada` (uma barricada caiu), `armadilha` (abate por armadilha), `marco` (meta de seguidores batida), `saque` (achou coisa boa revirando) e `sangrando` (abriu um ferimento), com
 pelo menos 2 falas cada. Sem emoji: o HUD de protótipo não desenha emoji.
 
 ## Jogo empacotado

@@ -23,6 +23,7 @@
 #include "Rules/ZRLocalGrid.h"
 #include "Rules/ZRLoot.h"
 #include "Rules/ZRSound.h"
+#include "Rules/ZRWound.h"
 
 namespace ZR
 {
@@ -176,6 +177,8 @@ namespace ZR
 		FLocalGridConfig HordeGrid;
 		/** Alcance do E e espalhamento dos lugares de saque. */
 		FLootConfig Loot;
+		/** Ferimentos que sangram (mordida de zumbi). */
+		FWoundConfig Wound;
 		/** Zumbis com o nome de espectadores vivos ao mesmo tempo. */
 		int MaxNamedZombies = 12;
 		/** Modo Streamer: 1 = o que vem da Twitch passa pelo filtro de palavras antes de aparecer. */
