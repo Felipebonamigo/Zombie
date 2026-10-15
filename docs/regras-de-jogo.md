@@ -200,7 +200,8 @@ Cada som do jogo é uma linha de `Data/Sons.csv` com um ou mais arquivos (as var
   bujões não perde a última explosão.
 - **O ouvinte** é o personagem (ou o carro que ele dirige) para a distância e a atenuação, e a câmera para a direção. A
   câmera fica a ~10 m do personagem: medindo dela, a recarga, o chute e a mordida no jogador sumiriam, e a mistura mudaria
-  ao trocar de câmera. Entrar e sair do carro troca o ouvinte na hora; sem pawn, a atenuação volta para a câmera.
+  ao trocar de câmera. Entrar e sair do carro troca o ouvinte na hora; sem pawn (destruído), a atenuação volta para a câmera
+  no próximo som que tocar.
 - O Unreal toca com a atenuação do alcance (volume cheio até 5% dele, queda natural até -30 dB no fim dele), preso a nada
   (som solto), preso a um objeto (o chiado do pavio anda com a granada e com o zumbi-bujão e para na explosão), em laço
   preso ao carro (o motor: o volume da tabela vezes 0,6 a 1,0 pelo acelerador) ou sem posição (interface).
@@ -271,7 +272,7 @@ Lugares para revirar espalhados pela cidade (`Data/Saque.csv`), com o que cada u
 - **Onde ficam:** "calçada" na faixa entre a rua e a fachada, de frente para a rua, longe das quinas; "rua" estacionado
   numa célula de rua, no sentido dela. Nada a menos de `saque.longe_do_comeco_cm` (6 m) do começo, nada a menos de
   `saque.espacamento_cm` (8 m) de outro lugar, sempre em chão. A mesma semente dá os mesmos lugares. No Unreal, o lugar
-  que cairia em cima de um carro, de um bujão ou do caminhão de gás fica de fora.
+  que ficaria embaixo de um carro, de um bujão ou do caminhão de gás (uma coluna de 3 m acima dele) fica de fora.
 - Mochila e isopor (abaixo de 60 cm) não barram ninguém: o jogador, os zumbis e o carro atravessam.
 - O chat comenta o saque bom (`saque` em `ChatFalso.csv`).
 
@@ -285,19 +286,26 @@ para o texto da mensagem, o apelido de quem escreveu e o nome do zumbi do `!zumb
 chat simulado não passa pelo filtro: as falas são nossas, e o teste de deriva garante que nenhuma é pega.
 
 - **Termos** (`Data/FiltroPalavras.csv`): palavra inteira ou, com `*` no fim, começo de palavra (`fod*` pega "foda",
-  "fodase", "fodido"). O streamer pode acrescentar linhas.
-- **Normalização:** minúsculas, sem acento, `0 1 3 4 5 7 @ $` viram `o i e a s t a s`, pontuação no meio sai
-  ("p.o.r.r.a") e letra repetida conta uma vez ("porrrra"). Termo com letra dobrada (`nigg*`, `porra`) compara o prefixo e
-  o nome colado com a repetição limitada a 2, para não encolher e pegar palavra inocente ("night", "diaspora").
-- **Texto:** só as letras da palavra pega viram `*` ("PORRA!!!" vira "*****!!!"); o resto da frase fica igual. Palavra
-  que só contém um termo não é pega ("cuidado", "computador").
-- **Apelido e nome do zumbi:** com termo inteiro, ou colado a partir de 4 letras ("xXporraXx"), aparece "espectador".
-  Termo curto colado não conta ("cuca_beludo" passa).
+  "fodase", "fodido"). O streamer pode acrescentar linhas. Termo com espaço é erro (o filtro compara uma palavra por vez).
+- **Normalização:** minúsculas, sem acento, `0 1 3 4 5 7 @ $` viram `o i e a s t a s` e pontuação no meio sai
+  ("p.o.r.r.a"). O `@` do começo da palavra é menção e fica como está.
+- **Letra repetida:** a comparação é por sequência da mesma letra. Letra dobrada no termo pede dobrada (ou mais) no texto:
+  "night" não é `nigg*`, "pasta" não é `pass*`. Letra simples no termo aceita 1 ou 3 ou mais, nunca exatamente 2: dobrar é
+  a grafia normal de muita palavra ("food", "fodder" e "shiitake" não são `fod*` e `shit*`), esticar é "foooda" e
+  "niiigga". O preço: dobrar uma letra só para fugir do filtro ("niigga") passa.
+- **Texto:** só as letras da palavra pega viram `*` ("PORRA!!!" vira "*****!!!"); o resto da frase fica igual. Se a palavra
+  inteira não é termo, os pedaços entre pontuação são testados ("porra,caralho", "filho-da-puta", "vai/se/foder").
+  Palavra que só contém um termo não é pega ("cuidado", "computador", "deputado").
+- **Apelido e nome do zumbi:** vira "espectador" se o apelido inteiro, ou um pedaço dele (separado por `_` ou pela troca de
+  minúscula para maiúscula: "Merda_123", "BigDick"), for termo. Termo no meio de um pedaço ("xXporraXx") só conta para os
+  marcados com `colado` = 1 na tabela, que não aparecem dentro de nome comum ("Hancock", "Dickson", "Aviador" passam).
 - A Twitch já segura mensagens pelo AutoMod e pelos termos bloqueados do canal; este filtro é a segunda camada, para o
   que aparece dentro do jogo e na gravação.
 
 Testes: `Filtro.*`, `Dados.FiltroComErroEhApontado` e `Deriva.FiltroDePalavrasCarregaEPegaOBasico` (a lista carrega,
-pega o básico e não pega nenhuma fala do chat simulado nem os comandos do jogo).
+pega o básico, não pega palavras e apelidos comuns que lembram um termo nem nenhuma fala do chat simulado ou comando do
+jogo). Disfarces fora do alcance: letras de outros alfabetos parecidas com as latinas (cirílico), letras de largura total e
+espaço não separável.
 
 ## 17. Ferimentos que sangram (`ZRWound.h`)
 

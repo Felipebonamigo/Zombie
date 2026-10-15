@@ -210,7 +210,7 @@ namespace ZR
 	/** Data/Sons.csv: arquivos separados por ";", só letras minúsculas, números e "_" (o nome vira asset no Unreal). */
 	void LoadSounds(const std::string& Csv, std::vector<FSoundDef>& Out, std::vector<std::string>& Errors);
 	/** Data/FiltroPalavras.csv: os termos do filtro do Modo Streamer ("fod*" = começa com). */
-	void LoadFilterTerms(const std::string& Csv, std::vector<std::string>& Out, std::vector<std::string>& Errors);
+	void LoadFilterTerms(const std::string& Csv, std::vector<FFilterTerm>& Out, std::vector<std::string>& Errors);
 	/** Data/Saque.csv: os lugares de saque (onde = calcada ou rua). */
 	void LoadLootSpots(const std::string& Csv, std::vector<FLootSpotType>& Out, std::vector<std::string>& Errors);
 	/** Data/SaqueItens.csv: o local tem que ser um id de Spots (Saque.csv) e o item, um de LootItemId. */

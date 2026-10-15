@@ -107,10 +107,12 @@ O rótulo é o texto que salta na tela.
 
 ## `FiltroPalavras.csv`
 
-`termo,idioma`
+`termo,idioma,colado`
 
 - Os termos do filtro do Modo Streamer (`regras-de-jogo.md`, seção 16): palavra inteira ou, com `*` no fim, começo de
-  palavra. Acento, maiúscula e letra repetida não importam ("PORRA" repete "porra" e é erro).
+  palavra. Acento, maiúscula e letra repetida não importam ("PORRA" repete "porra" e é erro). Termo com espaço é erro.
+- `colado` = 1: pega também no meio do apelido ("xXporraXx"). Só para termo que não aparece dentro de nome comum: `cock`
+  pegaria "Hancock", `viado` pegaria "Aviador". O teste de deriva tem uma lista de apelidos comuns que não podem cair.
 - Prefixo curto pega palavra comum: `put*` pegaria "put" e `viad*` pegaria "viaduto". Nesses casos, liste as palavras
   inteiras. O teste de deriva acusa se o filtro pegar uma fala do chat simulado.
 - `chat.filtro` = 0 em `Ajustes.csv` desliga o filtro.

@@ -691,6 +691,7 @@ void AZMBZombie::Die(const ZR::FHitOutcome& Outcome, const FZMBHitContext& Conte
 	{
 		bExplodePending = true;
 		ExplodeTimer = 0.25f;
+		PendingChainDepth = Context.ChainDepth + (Context.Cause == EZMBKillCause::Blast ? 1 : 0);
 	}
 
 	const bool bPlayerKill = Context.Instigator.IsValid() && Context.Instigator->IsPlayerController();
@@ -735,6 +736,8 @@ void AZMBZombie::ArmTank(const FZMBHitContext& Context)
 	FuseSound = UZMBAudioSubsystem::PlayAttached(this, "chiado", Tank ? Tank.Get() : GetRootComponent());
 	LastHit = Context;
 	bExplodePending = true;
+	// aceso por outra explosão, é o próximo elo da cadeia (como o bujão de rua, que a explosão acende com +1)
+	PendingChainDepth = Context.ChainDepth + (Context.Cause == EZMBKillCause::Blast ? 1 : 0);
 	// baleado chia um pouquinho (dá tempo de ver e correr); aceso por outra explosão estoura quase junto
 	ExplodeTimer = Context.Cause == EZMBKillCause::Blast ? FMath::FRandRange(0.15f, 0.35f) : 0.6f;
 }
@@ -776,7 +779,5 @@ void AZMBZombie::ExplodeSelf()
 	Tank->SetVisibility(false);
 	Tank->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	AZMBFx::Blood(GetWorld(), GetActorLocation(), FVector::UpVector, 12);
-	// aceso por outra explosão, é o próximo elo da cadeia (como o bujão de rua, que a explosão acende com +1)
-	const int32 Depth = LastHit.ChainDepth + (LastHit.Cause == EZMBKillCause::Blast ? 1 : 0);
-	ZMBExplosion::Detonate(GetWorld(), GetActorLocation(), Type.Blast, LastHit.Instigator.Get(), this, Depth, 45.0f);
+	ZMBExplosion::Detonate(GetWorld(), GetActorLocation(), Type.Blast, LastHit.Instigator.Get(), this, PendingChainDepth, 45.0f);
 }

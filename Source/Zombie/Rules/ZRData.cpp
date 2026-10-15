@@ -556,7 +556,7 @@ namespace ZR
 		}
 	}
 
-	void LoadFilterTerms(const std::string& Csv, std::vector<std::string>& Out, std::vector<std::string>& Errors)
+	void LoadFilterTerms(const std::string& Csv, std::vector<FFilterTerm>& Out, std::vector<std::string>& Errors)
 	{
 		Out.clear();
 		FCsvTable Table;
@@ -565,7 +565,7 @@ namespace ZR
 			return;
 		}
 		FRowReader Reader(Table, "FiltroPalavras.csv", Errors);
-		if (!Reader.Require({"termo"}))
+		if (!Reader.Require({"termo", "colado"}))
 		{
 			return;
 		}
@@ -573,23 +573,36 @@ namespace ZR
 		std::vector<std::string> Seen;
 		for (std::size_t Row = 0; Row < Table.Rows.size(); ++Row)
 		{
-			const std::string Term = Reader.Text(Row, "termo");
-			const bool bPrefix = !Term.empty() && Term.back() == '*';
-			const std::string Stem = bPrefix ? Term.substr(0, Term.size() - 1) : Term;
+			const std::size_t ErrorsBefore = Errors.size();
+			FFilterTerm Term;
+			Term.Text = Reader.Text(Row, "termo");
+			Term.bGlued = Reader.Bool(Row, "colado");
+			if (Errors.size() != ErrorsBefore)
+			{
+				continue;
+			}
+			const bool bPrefix = !Term.Text.empty() && Term.Text.back() == '*';
+			const std::string Stem = bPrefix ? Term.Text.substr(0, Term.Text.size() - 1) : Term.Text;
 			if (Stem.find('*') != std::string::npos)
 			{
-				Reader.Report(Row, "termo", "'" + Term + "': o * só vale no fim (começa com)");
+				Reader.Report(Row, "termo", "'" + Term.Text + "': o * só vale no fim (começa com)");
+				continue;
+			}
+			// o filtro compara palavra por palavra: termo com espaço nunca pegaria nada
+			if (Stem.find_first_of(" \t") != std::string::npos)
+			{
+				Reader.Report(Row, "termo", "'" + Term.Text + "' tem espaço: o filtro compara uma palavra por vez");
 				continue;
 			}
 			const std::string Key = NormalizeForFilter(Stem) + (bPrefix ? "*" : "");
 			if (Key.empty() || Key == "*")
 			{
-				Reader.Report(Row, "termo", "'" + Term + "' não tem letra");
+				Reader.Report(Row, "termo", "'" + Term.Text + "' não tem letra");
 				continue;
 			}
 			if (std::find(Seen.begin(), Seen.end(), Key) != Seen.end())
 			{
-				Reader.Report(Row, "termo", "'" + Term + "' repete outro termo");
+				Reader.Report(Row, "termo", "'" + Term.Text + "' repete outro termo");
 				continue;
 			}
 			Seen.push_back(Key);

@@ -102,6 +102,8 @@ private:
 	/** Já explodiu (não agenda outra explosão quando Die roda dentro da própria explosão). */
 	bool bSelfExploded = false;
 	float ExplodeTimer = 0.0f;
+	/** Elo da cadeia de explosões em que ele estoura, guardado ao acender (um tiro no pavio não pode apagar o elo). */
+	int32 PendingChainDepth = 0;
 	float AttackCooldown = 0.0f;
 	float LungeTimer = 0.0f;
 	float WalkPhase = 0.0f;

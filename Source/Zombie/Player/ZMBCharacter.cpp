@@ -794,8 +794,10 @@ float AZMBCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 		Stream->ReportPlayerDamage(Applied, Health);
 	}
 	const UZMBGameData* Data = UZMBGameData::Get(this);
-	// mordida forte de zumbi pode abrir um ferimento que sangra (explosão e carro não)
-	if (Data && Health > 0.0f && Cast<AZMBZombie>(DamageCauser) && ZR::TryOpenWound(Data->Tuning().Wound, Wounds, Applied, FMath::FRand()))
+	// mordida forte de zumbi pode abrir um ferimento que sangra (explosão e carro não; o zumbi-bujão que explode já
+	// está morto quando o dano chega, com ele mesmo como causador)
+	const AZMBZombie* Biter = Cast<AZMBZombie>(DamageCauser);
+	if (Data && Health > 0.0f && Biter && !Biter->IsDead() && ZR::TryOpenWound(Data->Tuning().Wound, Wounds, Applied, FMath::FRand()))
 	{
 		if (Stream)
 		{

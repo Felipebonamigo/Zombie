@@ -1,6 +1,7 @@
 #include "Rules/ZRFilter.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdint>
 
 namespace ZR
@@ -96,13 +97,72 @@ namespace ZR
 			return Out;
 		}
 
-		bool StartsWith(const std::string& Text, const std::string& Prefix)
+		/** Uma sequência da mesma letra: "porrra" é p1 o1 r3 a1. */
+		struct FRun
 		{
-			return Text.size() >= Prefix.size() && Text.compare(0, Prefix.size(), Prefix) == 0;
+			char Letter = 0;
+			int Count = 0;
+		};
+
+		/** As sequências de letras do texto (o que não é letra para o filtro some, então "p.o.r.r.a" é p o r2 a). */
+		std::vector<FRun> RunsOf(const std::string& Utf8)
+		{
+			std::vector<FRun> Runs;
+			std::size_t At = 0;
+			while (At < Utf8.size())
+			{
+				std::size_t Bytes = 1;
+				const char Letter = FilterLetter(NextCodePoint(Utf8, At, Bytes));
+				At += Bytes;
+				if (Letter == 0)
+				{
+					continue;
+				}
+				if (!Runs.empty() && Runs.back().Letter == Letter)
+				{
+					++Runs.back().Count;
+				}
+				else
+				{
+					Runs.push_back({Letter, 1});
+				}
+			}
+			return Runs;
 		}
 
-		/** Termo curto ("cu") só vale para a palavra inteira; a partir disto, também colado no nome. */
-		constexpr std::size_t MinGluedLetters = 4;
+		/**
+		 * Letra dobrada no termo pede dobrada (ou mais) no texto: "night" não é "nigg*". Letra simples no termo aceita 1 ou
+		 * 3 ou mais, nunca 2: dobrar é a grafia normal de muita palavra ("food" não é "fod*"), esticar é "foooda".
+		 */
+		bool RunMatches(int WordCount, int TermCount)
+		{
+			return TermCount >= 2 ? WordCount >= 2 : (WordCount == 1 || WordCount >= 3);
+		}
+
+		/** Nome de espectador em pedaços: "_", o que não é letra nem dígito e a troca de minúscula para maiúscula. */
+		std::vector<std::string> NamePieces(const std::string& Name)
+		{
+			std::vector<std::string> Pieces(1);
+			for (std::size_t i = 0; i < Name.size(); ++i)
+			{
+				const unsigned char C = static_cast<unsigned char>(Name[i]);
+				const bool bWordChar = std::isalnum(C) != 0;
+				const bool bCamel = i > 0 && std::isupper(C) != 0 && std::islower(static_cast<unsigned char>(Name[i - 1])) != 0;
+				if (!bWordChar || bCamel)
+				{
+					if (!Pieces.back().empty())
+					{
+						Pieces.emplace_back();
+					}
+					if (!bWordChar)
+					{
+						continue;
+					}
+				}
+				Pieces.back().push_back(Name[i]);
+			}
+			return Pieces;
+		}
 	}
 
 	std::string NormalizeForFilter(const std::string& Utf8)
@@ -110,40 +170,74 @@ namespace ZR
 		return Normalize(Utf8, 1);
 	}
 
-	void FWordFilter::Set(const std::vector<std::string>& InTerms)
+	void FWordFilter::Set(const std::vector<FFilterTerm>& InTerms)
 	{
 		Terms.clear();
-		for (const std::string& Term : InTerms)
+		for (const FFilterTerm& Source : InTerms)
 		{
 			FTerm Entry;
-			Entry.bPrefix = !Term.empty() && Term.back() == '*';
-			const std::string Stem = Entry.bPrefix ? Term.substr(0, Term.size() - 1) : Term;
-			Entry.Collapsed = Normalize(Stem, 1);
-			Entry.Capped = Normalize(Stem, 2);
-			Entry.bDouble = Entry.Capped != Entry.Collapsed;
-			if (!Entry.Collapsed.empty())
+			Entry.bPrefix = !Source.Text.empty() && Source.Text.back() == '*';
+			Entry.bGlued = Source.bGlued;
+			const std::string Stem = Entry.bPrefix ? Source.Text.substr(0, Source.Text.size() - 1) : Source.Text;
+			for (const FRun& Run : RunsOf(Stem))
+			{
+				// o termo guarda até 2: "porrra" na lista vale como "porra"
+				Entry.Letters.push_back(Run.Letter);
+				Entry.Counts.push_back(Run.Count >= 2 ? 2 : 1);
+			}
+			if (!Entry.Letters.empty())
 			{
 				Terms.push_back(Entry);
 			}
 		}
 	}
 
-	bool FWordFilter::MatchesWord(const std::string& Utf8Word) const
+	void FWordFilter::Set(const std::vector<std::string>& InTerms)
 	{
-		const std::string Collapsed = Normalize(Utf8Word, 1);
-		if (Collapsed.empty())
+		std::vector<FFilterTerm> Plain;
+		for (const std::string& Text : InTerms)
+		{
+			FFilterTerm Term;
+			Term.Text = Text;
+			Plain.push_back(Term);
+		}
+		Set(Plain);
+	}
+
+	bool FWordFilter::MatchesAt(const std::string& Utf8, bool bAnywhere, bool bOnlyGlued) const
+	{
+		const std::vector<FRun> Word = RunsOf(Utf8);
+		if (Word.empty())
 		{
 			return false;
 		}
-		const std::string Capped = Normalize(Utf8Word, 2);
-		return std::any_of(Terms.begin(), Terms.end(), [&Collapsed, &Capped](const FTerm& Term)
+		for (const FTerm& Term : Terms)
 		{
-			if (!Term.bPrefix)
+			if (bOnlyGlued && !Term.bGlued)
 			{
-				return Collapsed == Term.Collapsed;
+				continue;
 			}
-			return Term.bDouble ? StartsWith(Capped, Term.Capped) : StartsWith(Collapsed, Term.Collapsed);
-		});
+			const std::size_t Length = Term.Letters.size();
+			const std::size_t LastStart = Word.size() < Length ? 0 : Word.size() - Length;
+			for (std::size_t Start = 0; Word.size() >= Length && Start <= (bAnywhere ? LastStart : 0); ++Start)
+			{
+				// palavra inteira: o termo exato tem que acabar junto com ela; prefixo e colado, não
+				if (!bAnywhere && !Term.bPrefix && Length != Word.size())
+				{
+					break;
+				}
+				bool bMatch = true;
+				for (std::size_t i = 0; i < Length && bMatch; ++i)
+				{
+					bMatch = Word[Start + i].Letter == Term.Letters[i] && RunMatches(Word[Start + i].Count, Term.Counts[i]);
+				}
+				if (bMatch)
+				{
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	std::string FWordFilter::Mask(const std::string& Utf8) const
@@ -152,6 +246,25 @@ namespace ZR
 		{
 			return Utf8;
 		}
+		// troca por "*" as letras de Text[From, To)
+		auto Star = [](const std::string& Text, std::size_t From, std::size_t To, std::string& Out)
+		{
+			std::size_t At = From;
+			while (At < To)
+			{
+				std::size_t Bytes = 1;
+				const char Letter = FilterLetter(NextCodePoint(Text, At, Bytes));
+				if (Letter != 0)
+				{
+					Out.push_back('*');
+				}
+				else
+				{
+					Out.append(Text, At, Bytes);
+				}
+				At += Bytes;
+			}
+		};
 		std::string Out;
 		Out.reserve(Utf8.size());
 		std::size_t At = 0;
@@ -162,34 +275,54 @@ namespace ZR
 				Out.push_back(Utf8[At++]);
 				continue;
 			}
-			// uma palavra: até o próximo espaço
 			std::size_t End = At;
 			while (End < Utf8.size() && !IsSpace(Utf8[End]))
 			{
 				++End;
 			}
-			const std::string Word = Utf8.substr(At, End - At);
-			if (!MatchesWord(Word))
+			// menção: o @ do começo é do chat, não um "a"
+			while (At < End && Utf8[At] == '@')
 			{
-				Out += Word;
+				Out.push_back(Utf8[At++]);
+			}
+			const std::string Word = Utf8.substr(At, End - At);
+			if (MatchesAt(Word, false, false))
+			{
+				Star(Word, 0, Word.size(), Out);
 				At = End;
 				continue;
 			}
-			// pega: as letras viram "*", a pontuação em volta fica
-			std::size_t Inner = 0;
-			while (Inner < Word.size())
+			// a palavra inteira não é termo: os pedaços entre pontuação podem ser ("porra,caralho", "filho-da-puta")
+			std::size_t Piece = 0;
+			while (Piece < Word.size())
 			{
 				std::size_t Bytes = 1;
-				const char Letter = FilterLetter(NextCodePoint(Word, Inner, Bytes));
-				if (Letter != 0)
+				if (FilterLetter(NextCodePoint(Word, Piece, Bytes)) == 0)
 				{
-					Out.push_back('*');
+					Out.append(Word, Piece, Bytes);
+					Piece += Bytes;
+					continue;
+				}
+				std::size_t PieceEnd = Piece;
+				while (PieceEnd < Word.size())
+				{
+					std::size_t Next = 1;
+					if (FilterLetter(NextCodePoint(Word, PieceEnd, Next)) == 0)
+					{
+						break;
+					}
+					PieceEnd += Next;
+				}
+				const std::string Part = Word.substr(Piece, PieceEnd - Piece);
+				if (MatchesAt(Part, false, false))
+				{
+					Star(Word, Piece, PieceEnd, Out);
 				}
 				else
 				{
-					Out.append(Word, Inner, Bytes);
+					Out += Part;
 				}
-				Inner += Bytes;
+				Piece = PieceEnd;
 			}
 			At = End;
 		}
@@ -198,17 +331,18 @@ namespace ZR
 
 	bool FWordFilter::IsOffensiveName(const std::string& Name) const
 	{
-		if (MatchesWord(Name))
+		if (MatchesAt(Name, false, false))
 		{
 			return true;
 		}
-		const std::string Collapsed = Normalize(Name, 1);
-		const std::string Capped = Normalize(Name, 2);
-		return std::any_of(Terms.begin(), Terms.end(), [&Collapsed, &Capped](const FTerm& Term)
+		for (const std::string& Piece : NamePieces(Name))
 		{
-			const std::string& Needle = Term.bDouble ? Term.Capped : Term.Collapsed;
-			const std::string& Hay = Term.bDouble ? Capped : Collapsed;
-			return Needle.size() >= MinGluedLetters && Hay.find(Needle) != std::string::npos;
-		});
+			if (MatchesAt(Piece, false, false))
+			{
+				return true;
+			}
+		}
+		// colado no meio do nome ("xXporraXx"): só os termos marcados, que não aparecem dentro de nome comum
+		return MatchesAt(Name, true, true);
 	}
 }

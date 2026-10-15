@@ -521,8 +521,9 @@ void AZMBWorldBuilder::SpawnLoot(std::uint64_t Seed)
 		const float Floor = Type.Where == ZR::ELootWhere::Sidewalk ? SidewalkHeight : 0.0f;
 		const FVector Where = Origin + FVector(Place.X, Place.Y, Floor);
 		const FRotator Facing(0.0f, Place.Yaw, 0.0f);
-		// a planta não sabe dos carros, dos bujões e do caminhão de gás: lugar que cairia em cima de um deles fica de fora
-		const FVector Half(Type.WidthCm * 0.5f, Type.DepthCm * 0.5f, Type.HeightCm * 0.5f);
+		// a planta não sabe dos carros, dos bujões e do caminhão de gás: lugar que cairia embaixo de um deles fica de fora.
+		// Uma coluna de 3 m: eles ainda estão no ar quando o saque nasce (bujão a 60 cm, carro a 1,6 m) e vão cair em cima
+		const FVector Half(Type.WidthCm * 0.5f, Type.DepthCm * 0.5f, FMath::Max(Type.HeightCm * 0.5f, 150.0f));
 		if (World->OverlapAnyTestByObjectType(Where + FVector(0.0f, 0.0f, Half.Z + 2.0f), Facing.Quaternion(), Movables, FCollisionShape::MakeBox(Half)))
 		{
 			++Skipped;

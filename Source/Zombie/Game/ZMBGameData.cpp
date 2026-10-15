@@ -103,7 +103,7 @@ void UZMBGameData::Reload()
 	}
 	if (LoadText(TEXT("FiltroPalavras.csv"), Text))
 	{
-		std::vector<std::string> Terms;
+		std::vector<ZR::FFilterTerm> Terms;
 		ZR::LoadFilterTerms(Text, Terms, RuleErrors);
 		LoadedWordFilter.Set(Terms);
 	}

@@ -8,8 +8,23 @@ namespace
 	ZR::FWordFilter Filtro()
 	{
 		ZR::FWordFilter Filter;
-		Filter.Set({"porra", "cu", "fod*", "merda"});
+		Filter.Set(std::vector<std::string>{"porra", "cu", "fod*", "merd*", "caralh*", "puta"});
 		return Filter;
+	}
+
+	ZR::FFilterTerm Colado(const char* Text)
+	{
+		ZR::FFilterTerm Term;
+		Term.Text = Text;
+		Term.bGlued = true;
+		return Term;
+	}
+
+	ZR::FFilterTerm Solto(const char* Text)
+	{
+		ZR::FFilterTerm Term;
+		Term.Text = Text;
+		return Term;
 	}
 }
 
@@ -31,62 +46,96 @@ ZR_TEST(FiltroTroca, "Filtro.TrocaSoAsLetrasDaPalavraEORestoFicaIgual")
 	ZR_EQ(Filter.Mask("que porra é essa"), std::string("que ***** é essa"));
 	ZR_EQ(Filter.Mask("PORRA!!! que merda"), std::string("*****!!! que *****"));
 	ZR_EQ(Filter.Mask("P0RR4 mano"), std::string("***** mano"));
+	ZR_EQ(Filter.Mask("p.o.r.r.a"), std::string("*.*.*.*.*"));
 	// acento conta como uma letra só (UTF-8)
 	ZR_EQ(Filter.Mask("vai tomar no cú"), std::string("vai tomar no **"));
 	// prefixo: "fod*" pega as variações
 	ZR_EQ(Filter.Mask("fodase fodido"), std::string("****** ******"));
+	// menção: o @ do começo fica (não vira "a")
+	ZR_EQ(Filter.Mask("@porra"), std::string("@*****"));
 	// espaços e quebras ficam como estavam
 	ZR_EQ(Filter.Mask("  oi   gente  "), std::string("  oi   gente  "));
+}
+
+ZR_TEST(FiltroColadas, "Filtro.PalavrasColadasPorPontuacao")
+{
+	const ZR::FWordFilter Filter = Filtro();
+	ZR_EQ(Filter.Mask("porra,caralho"), std::string("*****,*******"));
+	ZR_EQ(Filter.Mask("filho-da-puta"), std::string("filho-da-****"));
+	ZR_EQ(Filter.Mask("vai/se/fod3r"), std::string("vai/se/*****"));
+	ZR_EQ(Filter.Mask("puta_merda!"), std::string("****_*****!"));
+}
+
+ZR_TEST(FiltroEsticada, "Filtro.LetraEsticadaNaoEscapaEDobradaNormalNaoEhPega")
+{
+	ZR::FWordFilter Filter;
+	Filter.Set(std::vector<std::string>{"nigg*", "asshol*", "faggot*", "porra", "fod*", "shit*", "pass*"});
+	// letra esticada (3 ou mais) não escapa, em qualquer posição
+	ZR_EQ(Filter.Mask("niiigga aaasshole faaaggot porrrra fooooda"), std::string("******* ********* ******** ******* *******"));
+	// a letra dobrada do termo precisa estar dobrada: "night" e "pasta" não são "nigg*" e "pass*"
+	ZR_EQ(Filter.Mask("night pasta passsaro"), std::string("night pasta ********"));
+	// letra dobrada é a grafia normal de muita palavra: não vale como esticada
+	ZR_EQ(Filter.Mask("food foods fodder f00d shiitake Shiite"), std::string("food foods fodder f00d shiitake Shiite"));
 }
 
 ZR_TEST(FiltroInocente, "Filtro.NaoPegaPalavraInocente")
 {
 	const ZR::FWordFilter Filter = Filtro();
 	ZR_EQ(Filter.Mask("cuidado com o computador"), std::string("cuidado com o computador"));
-	ZR_EQ(Filter.Mask("fofo demais, curitiba"), std::string("fofo demais, curitiba"));
+	ZR_EQ(Filter.Mask("fofo demais, curitiba, deputado"), std::string("fofo demais, curitiba, deputado"));
 	ZR_EQ(Filter.Mask("explode o bujão!"), std::string("explode o bujão!"));
-	// prefixo com letra dobrada não encolhe: "pass*" não pega "pasta", mas pega "passsaro"
-	ZR::FWordFilter Double;
-	Double.Set({"pass*"});
-	ZR_EQ(Double.Mask("pasta passsaro"), std::string("pasta ********"));
 	// sem termos, nada muda
 	const ZR::FWordFilter Empty;
 	ZR_EXPECT(Empty.IsEmpty());
 	ZR_EQ(Empty.Mask("porra"), std::string("porra"));
 }
 
-ZR_TEST(FiltroNome, "Filtro.NomeDeEspectadorComTermoColado")
+ZR_TEST(FiltroNome, "Filtro.NomeDeEspectadorPorPedacoEColadoSoComMarca")
 {
-	const ZR::FWordFilter Filter = Filtro();
-	ZR_EXPECT(Filter.IsOffensiveName("xXporraXx"));
+	ZR::FWordFilter Filter;
+	Filter.Set(std::vector<ZR::FFilterTerm>{Colado("porra"), Solto("puta"), Solto("cock"), Solto("dick"), Solto("shit*"),
+		Solto("cunt*"), Solto("bicha"), Solto("merd*"), Solto("fuck*"), Solto("fod*"), Solto("cu")});
+	// pedaço do nome (separado por _ ou pela troca de minúscula para maiúscula) que é termo
 	ZR_EXPECT(Filter.IsOffensiveName("Merda_123"));
-	ZR_EXPECT(Filter.IsOffensiveName("fodao"));
+	ZR_EXPECT(Filter.IsOffensiveName("Fuckboy99"));
+	ZR_EXPECT(Filter.IsOffensiveName("puta_merda"));
+	ZR_EXPECT(Filter.IsOffensiveName("BigDick"));
 	ZR_EXPECT(Filter.IsOffensiveName("cu"));
-	// termo curto só pega o nome inteiro
-	ZR_EXPECT(!Filter.IsOffensiveName("cuca_beludo"));
-	ZR_EXPECT(!Filter.IsOffensiveName("Kaique_Brasa"));
-	ZR_EXPECT(!Filter.IsOffensiveName(""));
-	// colado também respeita a letra dobrada do termo: "porra" não pega "diaspora"
-	ZR_EXPECT(!Filter.IsOffensiveName("Diaspora"));
+	// colado no meio do nome: só termo marcado como "colado"
+	ZR_EXPECT(Filter.IsOffensiveName("xXporraXx"));
 	ZR_EXPECT(Filter.IsOffensiveName("xXporrrraXx"));
+	// nomes comuns que contêm um termo não marcado
+	const char* Comuns[] = {"computador_br", "deputado", "Disputa", "Hancock", "Peacock", "Dickson", "Matsushita", "Scunthorpe",
+		"Bicharada", "FoodLover", "cuca_beludo", "Kaique_Brasa", "Diaspora", ""};
+	for (const char* Name : Comuns)
+	{
+		if (Filter.IsOffensiveName(Name))
+		{
+			T.Fail(std::string("o nome comum virou espectador: ") + Name);
+		}
+	}
 }
 
 ZR_TEST(DadosFiltroErros, "Dados.FiltroComErroEhApontado")
 {
 	const std::string Csv =
-		"termo,idioma\n"
-		"porra,pt\n"
-		"fod*,pt\n"
-		"PORRA,pt\n"
-		"!!!,pt\n"
-		"f*da,pt\n"
-		"shit*,en\n";
-	std::vector<std::string> Terms;
+		"termo,idioma,colado\n"
+		"porra,pt,1\n"
+		"fod*,pt,0\n"
+		"PORRA,pt,0\n"
+		"!!!,pt,0\n"
+		"f*da,pt,0\n"
+		"filho da puta,pt,0\n"
+		"shit*,en,talvez\n"
+		"cock,en,0\n";
+	std::vector<ZR::FFilterTerm> Terms;
 	std::vector<std::string> Errors;
 	ZR::LoadFilterTerms(Csv, Terms, Errors);
-	// repetido (depois de normalizar), vazio depois de normalizar e "*" fora do fim
-	ZR_EQ(Errors.size(), static_cast<std::size_t>(3));
-	ZR_EXPECT(Terms == std::vector<std::string>({"porra", "fod*", "shit*"}));
+	// repetido (depois de normalizar), sem letra, "*" fora do fim, com espaço e colado que não é 0 ou 1
+	ZR_EQ(Errors.size(), static_cast<std::size_t>(5));
+	ZR_EQ(Terms.size(), static_cast<std::size_t>(3));
+	ZR_EXPECT(Terms.size() == 3 && Terms[0].Text == "porra" && Terms[0].bGlued);
+	ZR_EXPECT(Terms.size() == 3 && Terms[1].Text == "fod*" && !Terms[1].bGlued && Terms[2].Text == "cock");
 }
 
 ZR_TEST(DerivaFiltro, "Deriva.FiltroDePalavrasCarregaEPegaOBasico")
@@ -96,7 +145,7 @@ ZR_TEST(DerivaFiltro, "Deriva.FiltroDePalavrasCarregaEPegaOBasico")
 	{
 		return;
 	}
-	std::vector<std::string> Terms;
+	std::vector<ZR::FFilterTerm> Terms;
 	std::vector<std::string> Errors;
 	ZR::LoadFilterTerms(Text, Terms, Errors);
 	ExpectNoErrors(T, "FiltroPalavras.csv", Errors);
@@ -104,6 +153,26 @@ ZR_TEST(DerivaFiltro, "Deriva.FiltroDePalavrasCarregaEPegaOBasico")
 	ZR::FWordFilter Filter;
 	Filter.Set(Terms);
 	ZR_EQ(Filter.Mask("que porra"), std::string("que *****"));
+	// palavras comuns que lembram um termo não podem ser pegas
+	const char* Inocentes[] = {"food", "fodder", "shiitake", "computador", "deputado", "viaduto", "pasta", "night", "retardar",
+		"cuidado", "curitiba", "bicharada", "passaro", "assim", "Hancock", "Dickson", "Scunthorpe", "assassino", "classe"};
+	for (const char* Word : Inocentes)
+	{
+		if (Filter.Mask(Word) != Word)
+		{
+			T.Fail(std::string("o filtro pega a palavra comum: ") + Word);
+		}
+	}
+	// apelidos comuns que contêm um termo não podem virar "espectador"
+	const char* Apelidos[] = {"Aviador_BR", "computador_br", "Hancock", "Dickson", "Scunthorpe", "Matsushita", "Bicharada",
+		"FoodLover", "Classe_A", "Assassino", "Deputado", "Disputa", "Cockpit", "Retardant"};
+	for (const char* Name : Apelidos)
+	{
+		if (Filter.IsOffensiveName(Name))
+		{
+			T.Fail(std::string("o apelido comum vira espectador: ") + Name);
+		}
+	}
 	// as falas do chat simulado e os comandos do jogo não podem ser pegos pelo filtro
 	std::string Chat;
 	if (ReadDataFile(T, "ChatFalso.csv", Chat))

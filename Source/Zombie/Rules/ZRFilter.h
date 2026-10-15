@@ -19,9 +19,19 @@ namespace ZR
 	/** O texto do jeito que o filtro compara (só letras a-z, normalizadas). */
 	std::string NormalizeForFilter(const std::string& Utf8);
 
+	/** Uma linha de Data/FiltroPalavras.csv. */
+	struct FFilterTerm
+	{
+		std::string Text;
+		/** Pega também colado no meio do apelido ("xXporraXx"); só para termo que não aparece dentro de nome comum. */
+		bool bGlued = false;
+	};
+
 	class FWordFilter
 	{
 	public:
+		void Set(const std::vector<FFilterTerm>& InTerms);
+		/** Termos sem a marca de colado. */
 		void Set(const std::vector<std::string>& InTerms);
 		bool IsEmpty() const { return Terms.empty(); }
 
@@ -34,16 +44,16 @@ namespace ZR
 	private:
 		struct FTerm
 		{
-			/** Sem letra repetida ("pora"). */
-			std::string Collapsed;
-			/** Repetição limitada a 2 ("porra"). */
-			std::string Capped;
+			/** As letras do termo, uma por sequência ("porra": p o r a)... */
+			std::vector<char> Letters;
+			/** ...e quantas de cada (1 ou 2: "porra" pede o r dobrado). */
+			std::vector<int> Counts;
 			bool bPrefix = false;
-			/** Tem letra dobrada: prefixo e colado comparam pelo Capped. */
-			bool bDouble = false;
+			bool bGlued = false;
 		};
 
-		bool MatchesWord(const std::string& Utf8Word) const;
+		/** Algum termo bate com o texto: na palavra inteira (prefixo vale), ou em qualquer ponto dela (bAnywhere). */
+		bool MatchesAt(const std::string& Utf8, bool bAnywhere, bool bOnlyGlued) const;
 
 		std::vector<FTerm> Terms;
 	};
