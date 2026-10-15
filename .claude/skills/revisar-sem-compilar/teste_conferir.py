@@ -111,10 +111,18 @@ void ATSTHero::Scan()
 	}
 	auto Sum = [this](int32 Value) -> int32 // LIMPO
 	{
-		const int32 Count = Value; // LIMPO
-		return Count;
+		const int32 Doubled = Value * 2; // LIMPO
+		return Doubled;
 	};
 	(void)Sum;
+	auto Spawn = [this](const FVector& Where, bool bHidden) // ESPERA: parâmetro bHidden da lambda esconde o membro herdado de AActor
+	{
+		const int32 Count = 1; // ESPERA: Count esconde o membro ATSTHero::Count
+		(void)Where;
+		(void)bHidden;
+		(void)Count;
+	};
+	(void)Spawn;
 	FActorSpawnParameters Params; // LIMPO
 	(void)Params;
 	return;

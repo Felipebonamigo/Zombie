@@ -190,7 +190,7 @@ void AZMBWorldBuilder::BuildGround()
 	const float BeachDepth = BeachRows * CellSize;
 	const float SeaStartY = Origin.Y + LandDepth + BeachDepth;
 
-	auto Block = [this, Cube](const TCHAR* Name, const FVector& Center, const FVector& SizeCm, UMaterialInterface* Material, bool bCollision, bool bHidden)
+	auto Block = [this, Cube](const TCHAR* Name, const FVector& Center, const FVector& SizeCm, UMaterialInterface* Material, bool bCollision, bool bHiddenInGame)
 	{
 		UStaticMeshComponent* Part = NewObject<UStaticMeshComponent>(this, Name);
 		Part->SetupAttachment(GetRootComponent());
@@ -207,7 +207,7 @@ void AZMBWorldBuilder::BuildGround()
 		{
 			Part->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
-		Part->SetHiddenInGame(bHidden);
+		Part->SetHiddenInGame(bHiddenInGame);
 		Part->SetCanEverAffectNavigation(false);
 		Part->RegisterComponent();
 		AddInstanceComponent(Part);

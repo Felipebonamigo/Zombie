@@ -264,7 +264,8 @@ def conferir_cpp(caminho, limpo, raiz_repo, achados):
 # Membros das bases do Unreal que viram nome de variável com facilidade (privados também contam: a busca de nome acha).
 MEMBROS_DA_BASE = {
     'AActor': {'RootComponent', 'Tags', 'Instigator', 'Owner', 'Children', 'Layers', 'InputComponent',
-               'CustomTimeDilation', 'InitialLifeSpan', 'PrimaryActorTick'},
+               'CustomTimeDilation', 'InitialLifeSpan', 'PrimaryActorTick', 'bHidden', 'bCanBeDamaged', 'bReplicates',
+               'bActorEnableCollision', 'NetDormancy', 'SpawnCollisionHandlingMethod'},
     'APawn': {'Controller', 'PlayerState', 'BaseEyeHeight', 'LastHitBy', 'AutoPossessPlayer', 'AutoPossessAI',
               'AIControllerClass'},
     'ACharacter': {'Mesh', 'CharacterMovement', 'CapsuleComponent', 'JumpMaxCount', 'JumpCurrentCount',
@@ -394,7 +395,8 @@ def conferir_sombras(caminho, limpo, classes, achados):
 
 
 def conferir_corpo(caminho, limpo, abre, fecha, classe, membros, herdados, parametros, achados):
-    """Anda pelo corpo com uma pilha de escopos; corpo de lambda é pulado (escopo à parte)."""
+    """Anda pelo corpo com uma pilha de escopos. Lambda é um escopo de dentro: o membro da classe continua visível nela
+    (caso real: o parâmetro bHidden de uma lambda no AZMBWorldBuilder, que herda AActor::bHidden)."""
     escopos = [set()]
     pendentes = set()  # declarados no if/for/while/switch: valem no bloco que vem
     i = abre + 1
@@ -402,12 +404,22 @@ def conferir_corpo(caminho, limpo, abre, fecha, classe, membros, herdados, param
     while i < fecha:
         c = limpo[i]
         if c == '{':
-            # lambda: ](...) [mutable] [-> tipo] {  — pula o corpo inteiro
             antes = limpo[max(abre, i - 300):i]
-            if re.search(r'\]\s*(\([^()]*(?:\([^()]*\)[^()]*)*\))?\s*(mutable\s*)?(->\s*[\w:<>*&\s]+)?\s*$', antes):
-                fim = corpo_de(limpo, i)
-                i = (fim[1] if fim else fecha) + 1
-                inicio_frase = False
+            lambda_m = re.search(r'\]\s*(\(((?:[^()]|\([^()]*\))*)\))?\s*(mutable\s*)?(->\s*[\w:<>*&\s]+)?\s*$', antes)
+            if lambda_m:
+                escopos.append(set())
+                linha_l = linha_de(limpo, max(abre, i - 300) + lambda_m.start())
+                for p in nomes_dos_parametros(lambda_m.group(2) or ''):
+                    if p in membros:
+                        achados.append(('ERRO', caminho, linha_l, f'parâmetro {p} da lambda esconde o membro {classe}::{p} (C4458: troque o nome)'))
+                    elif p in herdados:
+                        achados.append(('ERRO', caminho, linha_l, f'parâmetro {p} da lambda esconde o membro herdado de {herdados[p]} (C4458: troque o nome)'))
+                    elif p in parametros or any(p in e for e in escopos[:-1]):
+                        achados.append(('AVISO', caminho, linha_l, f'parâmetro {p} da lambda tem o nome de uma variável de fora: o MSVC pode acusar C4456/C4457 (melhor trocar)'))
+                    escopos[-1].add(p)
+                pendentes = set()
+                i += 1
+                inicio_frase = True
                 continue
             # struct ou class local: os campos dela não são variáveis locais; com nome de membro, só um aviso
             if re.search(r'\b(struct|class)\s+\w+\s*(?:final\s*)?(?::[^{;]*)?$', antes):

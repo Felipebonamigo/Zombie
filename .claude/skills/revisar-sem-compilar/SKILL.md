@@ -33,9 +33,9 @@ As regras puras (`Source/Zombie/Rules/`) **compilam na nuvem**: para elas vale `
 
 - **Sombra de nome, fora do que o conferidor vê:** ele confere os métodos `Classe::Metodo` dos `.cpp` (parâmetro ou local
   com nome de membro da classe, C4458; local com nome de parâmetro, C4457; local escondendo outro local de fora, C4456),
-  mas não olha dentro de lambda, função solta nem método inline do `.h`, e das bases do Unreal só conhece os membros
-  mais comuns (`MEMBROS_DA_BASE`: `Controller`, `Mesh`, `Canvas`...). Nesses lugares, confira à mão: o Unreal trata
-  sombra como **erro**.
+  inclusive parâmetros e locais de lambda, mas não olha função solta nem método inline do `.h`, e das bases do Unreal só
+  conhece os membros mais comuns (`MEMBROS_DA_BASE`: `Controller`, `Mesh`, `Canvas`, `bHidden`...). Nesses lugares,
+  confira à mão: o Unreal trata sombra como **erro**.
 - Assinatura igual no .h e no .cpp (`const`, referência, `override`); handler de `AddDynamic` com a assinatura exata do
   delegate e `UFUNCTION()`.
 - `FMath::Min`, `Max`, `Clamp` e `RandRange` com tipos misturados (`int32` com `size_t`, `float` com `double`): o template
