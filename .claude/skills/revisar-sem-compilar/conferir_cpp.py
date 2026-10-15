@@ -290,7 +290,8 @@ PALAVRAS_NAO_TIPO = {'return', 'delete', 'new', 'throw', 'goto', 'case', 'else',
 
 DECLARACAO = re.compile(
     r'\s*(?:(?:const|constexpr|static|unsigned|signed|volatile|mutable|typename|class|struct)\s+)*'
-    r'(?P<tipo>[A-Za-z_][\w]*(?:::[A-Za-z_]\w*)*(?:\s*<[^;{}()]*>)?(?:::[A-Za-z_]\w*)*)'
+    # argumentos de template com até dois níveis (TArray<TWeakObjectPtr<X>>), sem engolir o "->" de "K : B->Get()"
+    r'(?P<tipo>[A-Za-z_][\w]*(?:::[A-Za-z_]\w*)*(?:\s*<(?:[^<>;{}()]|<(?:[^<>;{}()]|<[^<>;{}()]*>)*>)*>)?(?:::[A-Za-z_]\w*)*)'
     r'(?:\s+const)?\s*(?:[*&]+\s*(?:const\s+)?)*\s*(?<=[\s*&>])(?P<nome>[A-Za-z_]\w*)\s*(?P<depois>=(?!=)|;|:(?!:)|\(|\{|\[|,|\))')
 
 

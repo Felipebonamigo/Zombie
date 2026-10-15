@@ -125,6 +125,11 @@ void ATSTHero::Scan()
 	(void)Spawn;
 	FActorSpawnParameters Params; // LIMPO
 	(void)Params;
+	// caso real do Age of Earth: range-for com "->" no contêiner, fora e dentro de lambda de uma linha
+	const ATSTHero* Self = this; // LIMPO
+	int32 Sum2 = 0; for (const TPair<int32, int32>& K : Self->GetPairs()) Sum2 += K.Key; // LIMPO
+	auto CountB = [&](int32 Key) { int32 N = 0; for (const TPair<int32, int32>& K : Self->GetPairs()) if (K.Key == Key) ++N; return N; }; // LIMPO
+	(void)CountB;
 	return;
 }
 
