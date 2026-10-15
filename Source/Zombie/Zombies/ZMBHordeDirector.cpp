@@ -239,13 +239,16 @@ void AZMBHordeDirector::UpdateLocalFlow(float DeltaSeconds)
 	const float PlayerY = static_cast<float>(PlayerLocal.Y);
 	int CellX = -1;
 	int CellY = -1;
-	const bool bSameCell = bLocalActive && LocalGrid.ToCell(PlayerX, PlayerY, CellX, CellY) && CellX == LocalPlayerX && CellY == LocalPlayerY;
-	// refaz a cada meio segundo (barricada nova ou quebrada) e quando o jogador muda de célula
-	if (LocalAge < 0.5f && (!bLocalActive || bSameCell))
+	// refaz na hora quando uma barricada muda; senão a cada meio segundo ou quando o jogador anda duas células (de carro,
+	// isso seria todo quadro), e nunca mais que uma vez a cada 0,15 s
+	const bool bMoved = bLocalActive
+		&& (!LocalGrid.ToCell(PlayerX, PlayerY, CellX, CellY) || FMath::Abs(CellX - LocalPlayerX) >= 2 || FMath::Abs(CellY - LocalPlayerY) >= 2);
+	if (LocalAge < 0.15f || (!bLocalDirty && !bMoved && LocalAge < 0.5f))
 	{
 		return;
 	}
 	LocalAge = 0.0f;
+	bLocalDirty = false;
 	const ZR::FLocalGridConfig& Config = Data->Tuning().HordeGrid;
 	const float Reach = Config.SizeCm * 0.75f;
 	std::vector<ZR::FFootprint> Barricades;
@@ -270,7 +273,8 @@ void AZMBHordeDirector::UpdateLocalFlow(float DeltaSeconds)
 	}
 	LocalPlayerX = CellX;
 	LocalPlayerY = CellY;
-	// jogador fora do chão andável (na calçada colada no prédio): o alvo vira a célula andável mais perto
+	// jogador fora do chão (encostado num canto que a grade marca como prédio): o alvo vira a célula andável mais perto,
+	// pela distância de verdade, até um pouco mais que o maior recuo de fachada
 	int TargetX = CellX;
 	int TargetY = CellY;
 	const auto WalkableAt = [this](int X, int Y)
@@ -278,17 +282,20 @@ void AZMBHordeDirector::UpdateLocalFlow(float DeltaSeconds)
 		return X >= 0 && Y >= 0 && X < LocalGrid.Width && Y < LocalGrid.Height
 			&& LocalGrid.Walkable[static_cast<size_t>(Y * LocalGrid.Width + X)] != 0;
 	};
-	for (int Radius = 1; Radius <= 4 && !WalkableAt(TargetX, TargetY); ++Radius)
+	if (!WalkableAt(CellX, CellY))
 	{
-		for (int Dy = -Radius; Dy <= Radius && !WalkableAt(TargetX, TargetY); ++Dy)
+		const int SearchCells = FMath::CeilToInt32(450.0f / FMath::Max(LocalGrid.ResolutionCm, 1.0f)) + 1;
+		int BestDistance = TNumericLimits<int>::Max();
+		for (int Dy = -SearchCells; Dy <= SearchCells; ++Dy)
 		{
-			for (int Dx = -Radius; Dx <= Radius; ++Dx)
+			for (int Dx = -SearchCells; Dx <= SearchCells; ++Dx)
 			{
-				if (WalkableAt(CellX + Dx, CellY + Dy))
+				const int Distance = Dx * Dx + Dy * Dy;
+				if (Distance < BestDistance && WalkableAt(CellX + Dx, CellY + Dy))
 				{
+					BestDistance = Distance;
 					TargetX = CellX + Dx;
 					TargetY = CellY + Dy;
-					break;
 				}
 			}
 		}
@@ -306,6 +313,23 @@ bool AZMBHordeDirector::FlowDirection(const FVector& From, FVector& OutDirection
 	if (bLocalActive)
 	{
 		const FVector Local = From - Builder->GetOrigin();
+		// nada no caminho até o jogador (sem prédio nem barricada na reta): direto, sem o zigue-zague das 8 direções
+		const APawn* Player = UGameplayStatics::GetPlayerPawn(this, 0);
+		if (Player)
+		{
+			const FVector PlayerLocal = Player->GetActorLocation() - Builder->GetOrigin();
+			if (LocalGrid.ClearLine(static_cast<float>(Local.X), static_cast<float>(Local.Y), static_cast<float>(PlayerLocal.X),
+					static_cast<float>(PlayerLocal.Y)))
+			{
+				FVector Straight = Player->GetActorLocation() - From;
+				Straight.Z = 0.0f;
+				OutDirection = Straight.GetSafeNormal();
+				if (!OutDirection.IsNearlyZero())
+				{
+					return true;
+				}
+			}
+		}
 		int LocalX = 0;
 		int LocalY = 0;
 		int AheadX = 0;

@@ -4,6 +4,7 @@
 #include "Combat/ZMBFx.h"
 #include "Combat/ZMBTypes.h"
 #include "Stream/ZMBStreamSubsystem.h"
+#include "Zombies/ZMBHordeDirector.h"
 #include "Zombies/ZMBZombie.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -15,6 +16,15 @@
 
 namespace
 {
+	/** Barricada nova, quebrada ou desmontada: a horda recalcula por onde contornar a base. */
+	void NotifyBaseChanged(const UObject* WorldContext)
+	{
+		if (AZMBHordeDirector* Director = AZMBHordeDirector::Find(WorldContext))
+		{
+			Director->MarkBaseDirty();
+		}
+	}
+
 	/** Quanto a cor escurece em cada estágio de dano (inteira, avariada, quase caindo). */
 	constexpr float StageShade[] = {1.0f, 0.72f, 0.5f};
 	/** Quanto cada parte da barricada entorta por estágio [graus]. */
@@ -58,6 +68,10 @@ void AZMBBuildPiece::Setup(const ZR::FBuildPieceType& InType, int32 InRot90)
 	BuildLook();
 	LastStage = -1;
 	UpdateLook();
+	if (IsBarricade())
+	{
+		NotifyBaseChanged(this);
+	}
 }
 
 UStaticMeshComponent* AZMBBuildPiece::AddPart(EZMBShape Shape, const FVector& LocationCm, const FRotator& Rotation, const FVector& SizeCm,
@@ -306,12 +320,13 @@ void AZMBBuildPiece::TakeBlast(float Damage, AController* DamageInstigator, int3
 	Break();
 }
 
-bool AZMBBuildPiece::TakeVehicleHit(float Damage)
+bool AZMBBuildPiece::TakeVehicleHit(float Damage, const FVector& ImpactPoint)
 {
 	if (bGone || FuseLeft >= 0.0f || !IsBarricade())
 	{
 		return false;
 	}
+	AZMBFx::ImpactDust(GetWorld(), ImpactPoint, (ImpactPoint - GetActorLocation()).GetSafeNormal2D());
 	if (ZR::DamagePiece(State, Damage))
 	{
 		Break();
@@ -382,6 +397,10 @@ void AZMBBuildPiece::Break()
 		}
 	}
 	UE_LOG(LogZombie, Verbose, TEXT("Peça %s quebrou"), *UZMBGameData::ToFString(Type.Id));
+	if (IsBarricade())
+	{
+		NotifyBaseChanged(this);
+	}
 	Destroy();
 }
 
@@ -407,6 +426,10 @@ int32 AZMBBuildPiece::Dismantle()
 	const int32 Refund = RefundNow();
 	bGone = true;
 	AZMBFx::Debris(GetWorld(), GetActorLocation(), 4, Looks.Num() > 0 ? Looks[0].Color : FLinearColor::Gray, 250.0f);
+	if (IsBarricade())
+	{
+		NotifyBaseChanged(this);
+	}
 	Destroy();
 	return Refund;
 }

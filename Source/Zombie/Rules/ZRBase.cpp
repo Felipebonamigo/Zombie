@@ -9,21 +9,8 @@ namespace ZR
 	{
 		/** Encostar não é sobrepor: a sobreposição precisa passar disso [cm]. */
 		constexpr float TouchSlackCm = 0.01f;
-		/** O canto da pegada entra este tanto antes de virar célula, para a peça poder encostar na parede do prédio [cm]. */
-		constexpr float CornerInsetCm = 0.5f;
 		/** Folga do arredondamento da sucata (12 x 0,25 em float dá 3,0000001, que não pode virar 4). */
 		constexpr float ScrapRoundSlack = 1.0e-3f;
-
-		bool WalkableAt(const FCityPlan& Plan, float CellSizeCm, float X, float Y)
-		{
-			if (X < 0.0f || Y < 0.0f || CellSizeCm <= 0.0f)
-			{
-				return false;
-			}
-			const int CellX = static_cast<int>(std::floor(X / CellSizeCm));
-			const int CellY = static_cast<int>(std::floor(Y / CellSizeCm));
-			return Plan.IsWalkable(CellX, CellY);
-		}
 
 		/** Distância do ponto até o retângulo (0 dentro dele). */
 		float DistanceToFootprint(const FFootprint& Piece, float X, float Y)
@@ -77,19 +64,9 @@ namespace ZR
 		{
 			return EPlaceResult::TooFar;
 		}
-		// cantos e centro: as peças são bem menores que uma célula, então nenhuma célula cabe entre dois cantos
-		const float Left = Piece.X - Piece.HalfX + CornerInsetCm;
-		const float Right = Piece.X + Piece.HalfX - CornerInsetCm;
-		const float Top = Piece.Y - Piece.HalfY + CornerInsetCm;
-		const float Bottom = Piece.Y + Piece.HalfY - CornerInsetCm;
-		const float Xs[] = {Left, Right, Left, Right, Piece.X};
-		const float Ys[] = {Top, Top, Bottom, Bottom, Piece.Y};
-		for (int i = 0; i < 5; ++i)
+		if (!Plan.IsWalkableRect(Piece.X - Piece.HalfX, Piece.Y - Piece.HalfY, Piece.X + Piece.HalfX, Piece.Y + Piece.HalfY, CellSizeCm))
 		{
-			if (!WalkableAt(Plan, CellSizeCm, Xs[i], Ys[i]))
-			{
-				return EPlaceResult::OffStreet;
-			}
+			return EPlaceResult::OffStreet;
 		}
 		if (DistanceToFootprint(Piece, Query.PlayerX, Query.PlayerY) < Config.PlayerClearanceCm)
 		{

@@ -48,6 +48,11 @@ namespace ZR
 		void CellCenter(int X, int Y, float& OutX, float& OutY) const;
 		/** Quantas células têm custo extra. */
 		int CountCostly() const;
+		/**
+		 * A reta entre os dois pontos só passa por chão sem custo extra (o zumbi pode ir direto, sem seguir o campo em
+		 * zigue-zague). Falso se algum ponto sai da grade.
+		 */
+		bool ClearLine(float FromX, float FromY, float ToX, float ToY) const;
 	};
 
 	FLocalGrid MakeLocalGrid(const FCityPlan& Plan, float CityCellCm, float CenterX, float CenterY, const FLocalGridConfig& Config,

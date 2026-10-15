@@ -56,6 +56,15 @@ namespace
 
 	constexpr float Celula = 1000.0f;
 
+	/** A PlantaBase com recuo de 3 m no prédio (1, 0): o prédio vai de x 1300 a 1700 e de y 300 a 700; o resto é calçada. */
+	ZR::FCityPlan PlantaComRecuo()
+	{
+		ZR::FCityPlan Plan = PlantaBase();
+		Plan.InsetCm.assign(8, 0.0f);
+		Plan.InsetCm[1] = 300.0f;
+		return Plan;
+	}
+
 	/** Pedido que passa em tudo: barricada deitada no eixo X no meio da rua (0, 1), jogador 3 m ao sul, sucata de sobra. */
 	ZR::FPlaceQuery PedidoBom(const ZR::FBuildPieceType& Type)
 	{
@@ -483,3 +492,70 @@ ZR_TEST(DerivaConstrucoes, "Deriva.ConstrucoesCarregamEFazemSentido")
 	ZR_EXPECT(CheapestBarricade * 2 <= Tuning.Base.StartScrap);
 	ZR_EXPECT(Tuning.Base.RefundFraction < 1.0f);
 }
+
+ZR_TEST(CidadeRecuo, "Cidade.RecuoDoPredioNaFaixaESoNoPredio")
+{
+	ZR::FCityConfig Config;
+	const ZR::FCityPlan Plan = ZR::GenerateCity(Config);
+	ZR_EQ(Plan.InsetCm.size(), Plan.Cells.size());
+	int Buildings = 0;
+	bool bAllInRange = true;
+	bool bOthersZero = true;
+	for (int Y = 0; Y < Plan.Height; ++Y)
+	{
+		for (int X = 0; X < Plan.Width; ++X)
+		{
+			const float Inset = Plan.InsetAt(X, Y);
+			if (Plan.At(X, Y) == ZR::ECell::Building)
+			{
+				++Buildings;
+				bAllInRange = bAllInRange && Inset >= Config.MinInsetCm && Inset <= Config.MaxInsetCm;
+			}
+			else
+			{
+				bOthersZero = bOthersZero && Inset == 0.0f;
+			}
+		}
+	}
+	ZR_EXPECT(Buildings > 0);
+	ZR_EXPECT(bAllInRange);
+	ZR_EXPECT(bOthersZero);
+	// a mesma semente dá os mesmos recuos
+	const ZR::FCityPlan Again = ZR::GenerateCity(Config);
+	ZR_EXPECT(Again.InsetCm == Plan.InsetCm);
+}
+
+ZR_TEST(CidadeCalcada, "Cidade.CalcadaEBecoSaoChaoNoPonto")
+{
+	const ZR::FCityPlan Plan = PlantaComRecuo();
+	ZR_EXPECT(Plan.IsWalkablePoint(500.0f, 500.0f, Celula));    // rua
+	ZR_EXPECT(Plan.IsWalkablePoint(1100.0f, 500.0f, Celula));   // calçada do prédio (1, 0)
+	ZR_EXPECT(Plan.IsWalkablePoint(1500.0f, 150.0f, Celula));   // calçada de cima
+	ZR_EXPECT(Plan.IsWalkablePoint(1300.0f, 500.0f, Celula));   // encostado na fachada ainda é chão
+	ZR_EXPECT(!Plan.IsWalkablePoint(1301.0f, 500.0f, Celula));  // dentro do prédio
+	ZR_EXPECT(!Plan.IsWalkablePoint(1500.0f, 500.0f, Celula));
+	ZR_EXPECT(!Plan.IsWalkablePoint(3500.0f, 1500.0f, Celula)); // mar
+	ZR_EXPECT(!Plan.IsWalkablePoint(-1.0f, 500.0f, Celula));    // fora da planta
+	// planta sem recuo (montada à mão): o prédio ocupa a célula inteira
+	ZR_EXPECT(!PlantaBase().IsWalkablePoint(1100.0f, 500.0f, Celula));
+}
+
+ZR_TEST(BaseCalcada, "Base.ConstroiNaCalcadaMasNaoNoPredio")
+{
+	const ZR::FBuildPieceType Type = Barricada();
+	auto Checa = [&Type](float X, float Y, int Rot90)
+	{
+		ZR::FPlaceQuery Query = PedidoBom(Type);
+		Query.Piece = ZR::MakeFootprint(Type, X, Y, Rot90);
+		Query.PlayerX = X;
+		Query.PlayerY = Y + 300.0f;
+		return ZR::CheckPlacement(PlantaComRecuo(), Celula, ZR::FBaseConfig(), Query, {});
+	};
+	ZR_EQ(Checa(1150.0f, 500.0f, 1), ZR::EPlaceResult::Ok);        // em pé na calçada, de x 1130 a 1170
+	ZR_EQ(Checa(1280.0f, 500.0f, 1), ZR::EPlaceResult::Ok);        // encostada na fachada (x até 1300)
+	ZR_EQ(Checa(1290.0f, 500.0f, 1), ZR::EPlaceResult::OffStreet); // entra 10 cm no prédio
+	ZR_EQ(Checa(1150.0f, 250.0f, 0), ZR::EPlaceResult::Ok);        // da rua para a calçada de cima
+	// a quina do prédio entra na peça sem nenhum canto dela cair dentro do prédio
+	ZR_EQ(Checa(1500.0f, 290.0f, 0), ZR::EPlaceResult::OffStreet);
+}
+

@@ -4,8 +4,9 @@
 // pedaços caem com física e somem depois de Tuning.CorpseSeconds. Contrato: docs/regras-de-jogo.md, seção 4.
 //
 // Comportamento (à Left 4 Dead / Days Gone): sempre vai atrás do jogador; longe anda pelo campo de fluxo da cidade
-// (AZMBHordeDirector::FlowDirection), perto vai direto; corre quando está perto, à noite ou na horda. Travado numa barricada
-// (Base/ZMBBuildPiece.h) com o jogador fora do alcance, para e bate nela até quebrar (à Night of the Dead).
+// (AZMBHordeDirector::FlowDirection), perto vai direto; com barricada perto do jogador, segue o campo fino que contorna a
+// base (direto quando nada atrapalha a reta); corre quando está perto, à noite ou na horda. Travado numa barricada
+// (Base/ZMBBuildPiece.h), para e bate nela até quebrar (à Night of the Dead).
 // Arte final: malha esquelética com ossos que se soltam (docs/plano-visual.md); este corpo de blocos é só o protótipo.
 
 #pragma once

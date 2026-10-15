@@ -178,7 +178,9 @@ ZR_TEST(GradeFinaBarricada, "GradeFina.BarricadaCrescePeloRaioDoZumbiEFicaCara")
 	Config.ResolutionCm = 100.0f;
 	Config.InflateCm = 40.0f;
 	Config.BarricadeCost = 400;
-	// barricada de 400 x 40 em (500, 1500), crescida 40 cm: x de 260 a 740 e y de 1440 a 1560, ou as células 7 a 12 e 9 a 10
+	// barricada de 400 x 40 em (500, 1500), crescida 40 cm: x de 260 a 740 e y de 1440 a 1560. Conta a célula com o centro
+	// dentro da faixa: colunas 8 a 11 (centros 350 a 650) e linhas 9 e 10 (centros 1450 e 1550). Duas células de espessura:
+	// cada uma cobra metade, e atravessar custa o preço cheio
 	const std::vector<ZR::FFootprint> Pieces = {ZR::MakeFootprint(Barricada(), 500.0f, 1500.0f, 0)};
 	const ZR::FLocalGrid Grid = ZR::MakeLocalGrid(PlantaBase(), Celula, 500.0f, 1500.0f, Config, Pieces);
 	ZR_EQ(Grid.ExtraCost.size(), static_cast<std::size_t>(400));
@@ -187,13 +189,100 @@ ZR_TEST(GradeFinaBarricada, "GradeFina.BarricadaCrescePeloRaioDoZumbiEFicaCara")
 		return;
 	}
 	auto CostAt = [&Grid](int X, int Y) { return Grid.ExtraCost[static_cast<std::size_t>(Y * Grid.Width + X)]; };
-	ZR_EQ(Grid.CountCostly(), 12);
-	ZR_EQ(CostAt(7, 9), 400);
-	ZR_EQ(CostAt(12, 10), 400);
-	ZR_EQ(CostAt(6, 9), 0);
-	ZR_EQ(CostAt(13, 9), 0);
-	ZR_EQ(CostAt(7, 8), 0);
-	ZR_EQ(CostAt(7, 11), 0);
+	ZR_EQ(Grid.CountCostly(), 8);
+	ZR_EQ(CostAt(8, 9), 200);
+	ZR_EQ(CostAt(11, 10), 200);
+	ZR_EQ(CostAt(7, 9), 0);
+	ZR_EQ(CostAt(12, 9), 0);
+	ZR_EQ(CostAt(8, 8), 0);
+	ZR_EQ(CostAt(8, 11), 0);
 	// a barricada é cara, não parede: a célula continua andável
-	ZR_EXPECT(Grid.Walkable[static_cast<std::size_t>(9 * Grid.Width + 7)] != 0);
+	ZR_EXPECT(Grid.Walkable[static_cast<std::size_t>(9 * Grid.Width + 8)] != 0);
 }
+
+namespace
+{
+	/** 3 x 3 células de rua de 1000 cm: 30 m de chão aberto. */
+	ZR::FCityPlan PlantaAberta()
+	{
+		ZR::FCityPlan Plan;
+		Plan.Width = 3;
+		Plan.Height = 3;
+		Plan.LandHeight = 3;
+		Plan.Cells.assign(9, ZR::ECell::Road);
+		Plan.Floors.assign(9, 0);
+		return Plan;
+	}
+
+	/** Custo de andar de (1550, 550) até (1550, 2550) na grade fina de 30 m com estas barricadas (a grade cobre a planta). */
+	int CustoDeAtravessar(const std::vector<ZR::FFootprint>& Pieces)
+	{
+		ZR::FLocalGridConfig Config;
+		Config.SizeCm = 3000.0f;
+		Config.ResolutionCm = 100.0f;
+		Config.InflateCm = 40.0f;
+		Config.BarricadeCost = 400;
+		const ZR::FLocalGrid Grid = ZR::MakeLocalGrid(PlantaAberta(), Celula, 1500.0f, 1500.0f, Config, Pieces);
+		ZR::FFlowField Field;
+		Field.Build(Grid.Walkable, Grid.ExtraCost, Grid.Width, Grid.Height, 15, 25);
+		return Field.CostAt(15, 5);
+	}
+
+	/** Uma faixa de barricada de x = Left a x = Right, deitada em y. */
+	ZR::FFootprint Faixa(float Left, float Right, float Y)
+	{
+		ZR::FFootprint Piece;
+		Piece.X = (Left + Right) * 0.5f;
+		Piece.Y = Y;
+		Piece.HalfX = (Right - Left) * 0.5f;
+		Piece.HalfY = 20.0f;
+		return Piece;
+	}
+}
+
+ZR_TEST(GradeFinaPrecoCheio, "GradeFina.AtravessarABarricadaCustaOPrecoCheio")
+{
+	// sem barricada: 20 passos retos
+	ZR_EQ(CustoDeAtravessar({}), 200);
+	// a faixa crescida (120 cm) pega duas linhas de centros (1450 e 1550) ou uma só (1450): o preço é o mesmo
+	ZR_EQ(CustoDeAtravessar({Faixa(0.0f, 3000.0f, 1500.0f)}), 600);
+	ZR_EQ(CustoDeAtravessar({Faixa(0.0f, 3000.0f, 1450.0f)}), 600);
+}
+
+ZR_TEST(GradeFinaVao, "GradeFina.VaoDeUmMetroEOitentaEhPassagem")
+{
+	// vão de 1,8 m entre duas barricadas, em dois encaixes diferentes: a horda passa pelo vão sem pagar
+	ZR_EQ(CustoDeAtravessar({Faixa(0.0f, 1410.0f, 1500.0f), Faixa(1590.0f, 3000.0f, 1500.0f)}), 200);
+	ZR_EQ(CustoDeAtravessar({Faixa(0.0f, 1460.0f, 1500.0f), Faixa(1640.0f, 3000.0f, 1500.0f)}), 200);
+}
+
+ZR_TEST(GradeFinaLinhaLivre, "GradeFina.LinhaLivreSoPorChaoSemBarricada")
+{
+	ZR::FLocalGridConfig Config;
+	Config.SizeCm = 2000.0f;
+	Config.ResolutionCm = 100.0f;
+	const std::vector<ZR::FFootprint> Pieces = {ZR::MakeFootprint(Barricada(), 500.0f, 1500.0f, 0)};
+	const ZR::FLocalGrid Grid = ZR::MakeLocalGrid(PlantaBase(), Celula, 500.0f, 1500.0f, Config, Pieces);
+	ZR_EXPECT(Grid.ClearLine(50.0f, 1050.0f, 950.0f, 1050.0f));    // rua aberta
+	ZR_EXPECT(Grid.ClearLine(950.0f, 1850.0f, 1350.0f, 1250.0f));  // diagonal pela rua
+	ZR_EXPECT(!Grid.ClearLine(500.0f, 1200.0f, 500.0f, 1800.0f));  // atravessa a barricada
+	ZR_EXPECT(!Grid.ClearLine(500.0f, 550.0f, 1200.0f, 550.0f));   // entra no prédio (1, 0)
+	ZR_EXPECT(!Grid.ClearLine(500.0f, 1050.0f, 500.0f, 2600.0f));  // sai da grade
+}
+
+ZR_TEST(GradeFinaCalcada, "GradeFina.CalcadaDoPredioEhChao")
+{
+	ZR::FLocalGridConfig Config;
+	Config.SizeCm = 2000.0f;
+	Config.ResolutionCm = 100.0f;
+	const ZR::FLocalGrid Grid = ZR::MakeLocalGrid(PlantaComRecuo(), Celula, 500.0f, 1500.0f, Config, {});
+	ZR_EQ(Grid.Walkable.size(), static_cast<std::size_t>(400));
+	if (Grid.Walkable.size() != 400)
+	{
+		return;
+	}
+	auto WalkableAt = [&Grid](int X, int Y) { return Grid.Walkable[static_cast<std::size_t>(Y * Grid.Width + X)] != 0; };
+	ZR_EXPECT(WalkableAt(15, 0));   // centro (1050, 550): calçada do prédio (1, 0)
+	ZR_EXPECT(!WalkableAt(19, 0));  // centro (1450, 550): dentro do prédio
+}
+

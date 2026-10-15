@@ -21,6 +21,80 @@ namespace ZR
 		return Mask;
 	}
 
+	namespace
+	{
+		/** O prédio da célula (X, Y): o quadrado da célula encolhido pelo recuo. */
+		void BuildingSquare(const FCityPlan& Plan, int X, int Y, float CellSizeCm, float& OutLeft, float& OutTop, float& OutRight,
+			float& OutBottom)
+		{
+			const float Inset = std::clamp(Plan.InsetAt(X, Y), 0.0f, CellSizeCm * 0.5f);
+			OutLeft = static_cast<float>(X) * CellSizeCm + Inset;
+			OutTop = static_cast<float>(Y) * CellSizeCm + Inset;
+			OutRight = static_cast<float>(X + 1) * CellSizeCm - Inset;
+			OutBottom = static_cast<float>(Y + 1) * CellSizeCm - Inset;
+		}
+	}
+
+	bool FCityPlan::IsWalkablePoint(float X, float Y, float CellSizeCm) const
+	{
+		if (X < 0.0f || Y < 0.0f || CellSizeCm <= 0.0f)
+		{
+			return false;
+		}
+		const int CellX = static_cast<int>(std::floor(X / CellSizeCm));
+		const int CellY = static_cast<int>(std::floor(Y / CellSizeCm));
+		if (At(CellX, CellY) != ECell::Building)
+		{
+			return IsWalkable(CellX, CellY);
+		}
+		// no prédio, só a faixa do recuo; a borda da fachada ainda é chão
+		float Left = 0.0f;
+		float Top = 0.0f;
+		float Right = 0.0f;
+		float Bottom = 0.0f;
+		BuildingSquare(*this, CellX, CellY, CellSizeCm, Left, Top, Right, Bottom);
+		return !(X > Left && X < Right && Y > Top && Y < Bottom);
+	}
+
+	bool FCityPlan::IsWalkableRect(float Left, float Top, float Right, float Bottom, float CellSizeCm) const
+	{
+		if (Left < 0.0f || Top < 0.0f || CellSizeCm <= 0.0f || Right < Left || Bottom < Top)
+		{
+			return false;
+		}
+		// toda célula que o retângulo cobre de verdade (encostar na borda da célula não conta)
+		constexpr float Edge = 0.01f;
+		const int FirstX = static_cast<int>(std::floor(Left / CellSizeCm));
+		const int LastX = static_cast<int>(std::floor(std::max(Left, Right - Edge) / CellSizeCm));
+		const int FirstY = static_cast<int>(std::floor(Top / CellSizeCm));
+		const int LastY = static_cast<int>(std::floor(std::max(Top, Bottom - Edge) / CellSizeCm));
+		for (int Y = FirstY; Y <= LastY; ++Y)
+		{
+			for (int X = FirstX; X <= LastX; ++X)
+			{
+				const ECell Cell = At(X, Y);
+				if (Cell == ECell::Sea || !InBounds(X, Y))
+				{
+					return false;
+				}
+				if (Cell != ECell::Building)
+				{
+					continue;
+				}
+				float BuildingLeft = 0.0f;
+				float BuildingTop = 0.0f;
+				float BuildingRight = 0.0f;
+				float BuildingBottom = 0.0f;
+				BuildingSquare(*this, X, Y, CellSizeCm, BuildingLeft, BuildingTop, BuildingRight, BuildingBottom);
+				if (Left < BuildingRight && Right > BuildingLeft && Top < BuildingBottom && Bottom > BuildingTop)
+				{
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
 	int FCityPlan::CountOf(ECell Kind) const
 	{
 		return static_cast<int>(std::count(Cells.begin(), Cells.end(), Kind));
@@ -82,6 +156,19 @@ namespace ZR
 				const double Extra = (MaxFloors - MinFloors) * std::pow(Closeness, 1.5) * Jitter;
 				Plan.Cells[Cell] = ECell::Building;
 				Plan.Floors[Cell] = std::clamp(MinFloors + static_cast<int>(std::lround(Extra)), MinFloors, MaxFloors);
+			}
+		}
+
+		// recuo de cada prédio num sorteio à parte: a mesma semente continua dando as mesmas ruas, praças e andares
+		Plan.InsetCm.assign(Total, 0.0f);
+		FRng InsetRng(Config.Seed ^ 0xA5A5F00DCAFEBEEFull);
+		const double MaxInset = std::clamp(static_cast<double>(Config.MaxInsetCm), 0.0, static_cast<double>(Config.CellSizeCm) * 0.45);
+		const double MinInset = std::clamp(static_cast<double>(Config.MinInsetCm), 0.0, MaxInset);
+		for (std::size_t Cell = 0; Cell < Total; ++Cell)
+		{
+			if (Plan.Cells[Cell] == ECell::Building)
+			{
+				Plan.InsetCm[Cell] = static_cast<float>(InsetRng.RangeDouble(MinInset, MaxInset));
 			}
 		}
 		return Plan;

@@ -606,6 +606,8 @@ namespace ZR
 			I("cidade.andares_min", T.City.MinFloors, 1.0f, 100.0f);
 			I("cidade.andares_max", T.City.MaxFloors, 1.0f, 100.0f);
 			F("cidade.celula_cm", T.City.CellSizeCm, 500.0f, 10000.0f);
+			F("cidade.recuo_min_cm", T.City.MinInsetCm, 0.0f, 4000.0f);
+			F("cidade.recuo_max_cm", T.City.MaxInsetCm, 0.0f, 4000.0f);
 
 			F("chat.rodada_s", T.Vote.RoundSeconds, 1.0f, 3600.0f);
 			I("chat.votos_min", T.Vote.MinVotes, 1.0f, 100000.0f);
@@ -630,10 +632,11 @@ namespace ZR
 			F("base.dano_explosao_multiplicador", T.Base.BlastDamageMultiplier, 0.0f, 100.0f);
 			F("base.barulho_construir", T.Base.BuildNoise, 0.0f, 1000.0f);
 			F("base.dano_carro_multiplicador", T.Base.VehicleDamageMultiplier, 0.0f, 100.0f);
-			F("base.horda_grade_cm", T.HordeGrid.SizeCm, 1000.0f, 20000.0f);
-			F("base.horda_resolucao_cm", T.HordeGrid.ResolutionCm, 25.0f, 500.0f);
+			// a grade fina vai a no máximo 256 x 256 células (12800 / 50): o Dijkstra fica em milissegundos e o custo cabe num int
+			F("base.horda_grade_cm", T.HordeGrid.SizeCm, 1000.0f, 12800.0f);
+			F("base.horda_resolucao_cm", T.HordeGrid.ResolutionCm, 50.0f, 500.0f);
 			F("base.horda_raio_zumbi_cm", T.HordeGrid.InflateCm, 0.0f, 200.0f);
-			I("base.horda_custo_barricada", T.HordeGrid.BarricadeCost, 0.0f, 100000.0f);
+			I("base.horda_custo_barricada", T.HordeGrid.BarricadeCost, 0.0f, 10000.0f);
 
 			F("dia.duracao_s", T.Day.DayLengthSeconds, 10.0f, 86400.0f);
 			F("dia.hora_inicio", T.Day.StartHour, 0.0f, 23.99f);

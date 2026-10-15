@@ -45,6 +45,8 @@ public:
 
 	/** Horda já (chat, Noite da Horda ou a tecla de teste N). */
 	void StartHorde(float Seconds);
+	/** Barricada construída, quebrada ou desmontada: o campo fino é refeito no próximo quadro. */
+	void MarkBaseDirty() { bLocalDirty = true; }
 	/** Chat pediu !bujao: um grupo de zumbis-bujão nasce junto, perto o bastante para virar cadeia. */
 	void SpawnBombSquad(int32 Count);
 	/** Chat pediu !zumbi: nasce um zumbi com o nome do espectador. */
@@ -84,6 +86,7 @@ private:
 	ZR::FLocalGrid LocalGrid;
 	ZR::FFlowField LocalFlow;
 	bool bLocalActive = false;
+	bool bLocalDirty = true;
 	int32 LocalPlayerX = -1;
 	int32 LocalPlayerY = -1;
 	float LocalAge = 0.0f;

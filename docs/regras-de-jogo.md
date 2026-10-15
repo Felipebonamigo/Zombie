@@ -19,6 +19,10 @@ Testes: `Sorteio.*`.
 - O resto é prédio. **Praça é o quarteirão inteiro** (chance `PlazaChance` por quarteirão), porque uma célula de praça
   cercada de prédios ficaria inalcançável. O teste de conectividade achou isso.
 - Andares: `Min + (Max - Min) x proximidade^1,5 x sorteio(0,6 a 1,0)`, com proximidade 1 no centro e 0 na borda.
+- **Recuo da fachada** de cada prédio, sorteado entre `cidade.recuo_min_cm` e `cidade.recuo_max_cm` (2,5 a 4,2 m) num sorteio
+  à parte (a mesma semente dá as mesmas ruas). O prédio é o quadrado da célula encolhido pelo recuo; a faixa em volta é a
+  calçada e metade do beco. **Calçada e beco são chão** para andar e construir (`IsWalkablePoint`, `IsWalkableRect`); a
+  borda da fachada também. O campo de fluxo da cidade continua por célula inteira.
 - `PickRoadSpots`: células de rua distintas, longe do início do jogador (distância de Chebyshev maior que o raio).
 - Testes: `Cidade.*` (borda, ruas no período, praia e mar, andares na faixa e determinismo, centro mais alto, **todo chão
   andável alcançável**, pontos de objeto).
@@ -146,21 +150,28 @@ O "dia constrói, noite sobrevive" do Night of the Dead. Peças em `Data/Constru
 - **Sucata:** 60 no começo, 40 em cada caixa do drone e 25 por carro desmanchado (segurar E ao lado dele por 2,5 s; tomar
   dano, sair andando ou o carro pegar fogo cancela).
 - **Onde dá para construir** (o primeiro motivo que falha é o que aparece): ter a sucata; ter vaga (até 40 peças); o centro
-  a até 7 m do jogador; a pegada inteira em rua, praça ou praia (encostar na parede do prédio pode); a pelo menos 50 cm do
+  a até 7 m do jogador; a pegada inteira no chão: rua, praça, praia, calçada ou beco, sem entrar no prédio (encostar na
+  fachada pode; a quina do prédio dentro da peça não pode); a pelo menos 50 cm do
   jogador; sem sobrepor outra peça (encostar pode, para fazer muro). A peça encaixa numa grade de 50 cm e gira de 90 em
   90 graus. No jogo, poste, árvore, carro, bujão de rua ou zumbi dentro da pegada também impedem (o Unreal confere; a
   regra pura não vê o mundo).
 - **Barricada:** segura zumbi e jogador. A de madeira tem 1,1 m e o jogador pula; o zumbi não pula. O zumbi colado nela
   na direção do jogador não morde por cima: quase parado (abaixo de 30% da velocidade dele), para e bate (o ataque dele
   vezes `base.dano_zumbi_multiplicador`) até ela cair; quem chega de lado escorrega e dá a volta. Explosão tira o dano dela vezes `base.dano_explosao_multiplicador`.
-  Carro acima de `carro.atropelo_min_kmh` tira `km/h x carro.atropelo_dano_por_kmh x base.dano_carro_multiplicador`; se
-  ela cai, o carro passa com três quartos da velocidade (a madeira cai acima de ~35 km/h, o muro acima de ~100).
-- **A horda contorna a base:** com barricada a até 48 m do jogador, o Diretor faz uma grade fina de 64 x 64 m (células de
-  1 m) em volta dele. Prédio, mar e fora da planta bloqueiam; a barricada, crescida 40 cm (o raio do zumbi), custa 400 a
-  mais (o mesmo que andar 40 m). O zumbi dentro da grade segue esse campo, mirando dois passos à frente: se a abertura
-  da base fica a menos de 40 m de desvio, ele dá a volta e entra por ela (onde ficam as armadilhas); se não, vem e bate.
-  Fora da grade, segue a rua da cidade; sem barricada perto, nada muda. Números em `base.horda_*`.
+  Carro acima de `carro.atropelo_min_kmh` (contando só a velocidade contra a peça: raspar de lado não derruba) tira
+  `km/h x carro.atropelo_dano_por_kmh x base.dano_carro_multiplicador`; se ela cai, o carro passa com três quartos da
+  velocidade (de frente, a madeira cai acima de ~35 km/h e o muro acima de ~100). Cada peça leva uma batida por vez;
+  duas lado a lado levam uma cada no mesmo choque.
   Estágios para o visual: inteira (acima de 2/3 da vida), avariada (acima de 1/3), quase caindo, quebrada.
+- **A horda contorna a base:** com barricada a até 48 m do jogador, o Diretor faz uma grade fina de 64 x 64 m (células de
+  1 m) em volta dele. Prédio, mar e fora da planta bloqueiam (a calçada e o beco são chão). A barricada cresce 40 cm (o
+  raio do zumbi) e marca as células com o centro dentro dela; o preço se divide pela espessura em células, então
+  **atravessar uma barricada custa 400** (o mesmo que andar 40 m), encaixada onde for. Um vão de 1,8 m ou mais sempre
+  deixa passagem. O zumbi dentro da grade vai direto quando a reta até o jogador não passa por prédio nem barricada;
+  senão, segue o campo mirando dois passos à frente: se a abertura da base fica a menos de 40 m de desvio, ele dá a volta
+  e entra por ela (onde ficam as armadilhas); se não, vem e bate. Fora da grade, segue a rua da cidade; sem barricada
+  perto, nada muda. A grade é refeita quando uma barricada muda, a cada 0,5 s ou quando o jogador anda 2 m (no máximo
+  uma vez a cada 0,15 s). Números em `base.horda_*`.
 - **Armadilha:** o jogador e a bala passam. Cada zumbi em cima leva `dano_por_s` (nas pernas ou no corpo) e anda na fração
   `lentidao` da velocidade. A armadilha gasta com o dano que causa (`desgaste`; 0 = não gasta). O abate conta para a live
   (`abate_armadilha`). O bujão armado explode no primeiro zumbi que pisa, no tiro ou na explosão vizinha, com pavio curto

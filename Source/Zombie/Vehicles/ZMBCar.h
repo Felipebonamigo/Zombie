@@ -18,6 +18,7 @@ class USpotLightComponent;
 class UInputAction;
 class UInputMappingContext;
 class AZMBCharacter;
+class AZMBBuildPiece;
 struct FInputActionValue;
 
 UCLASS()
@@ -103,8 +104,11 @@ private:
 	TArray<FVector> WheelMounts;
 	/** Velocidade no começo do quadro (antes do choque da física), para medir a batida e devolver o embalo ao arrombar. */
 	FVector LastVelocity = FVector::ZeroVector;
-	/** Uma batida em peça por vez: o choque gera vários contatos no mesmo instante. */
-	float PieceHitCooldown = 0.0f;
+	FVector LastAngularVelocity = FVector::ZeroVector;
+	/** Peças batidas há pouco e quanto falta para valer outra batida em cada uma (o choque gera vários contatos). */
+	TArray<TPair<TWeakObjectPtr<AZMBBuildPiece>, float>> RecentPieceHits;
+	/** Quadro em que o embalo já foi devolvido (duas barricadas arrombadas no mesmo quadro devolvem uma vez só). */
+	uint64 RestoredFrame = 0;
 	float ThrottleInput = 0.0f;
 	float SteerInput = 0.0f;
 	bool bHandbrake = false;

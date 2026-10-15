@@ -20,7 +20,7 @@ que falta usa o padrão do código e aparece como aviso no log. Grupos:
 |---|---|
 | `hype.` | Combo, variedade, queda, espectadores, seguidores e doações (`regras-de-jogo.md`, seção 5) |
 | `diretor.` | Ritmo da horda, tetos de zumbis vivos, noite, horda e barulho (seção 6) |
-| `cidade.` | Tamanho da cidade, quarteirões, praia e mar, praças, andares e tamanho da célula (seção 2) |
+| `cidade.` | Tamanho da cidade, quarteirões, praia e mar, praças, andares, recuo das fachadas (calçada e beco) e tamanho da célula (seção 2) |
 | `chat.` | Rodada de votação, votos mínimos, espera do `!zumbi` e zumbis com nome ao mesmo tempo (seção 9) |
 | `pauta.` | Espera da primeira pauta, intervalo entre pautas e audiência mínima (seção 11) |
 | `base.` | Sucata (começo, caixa, carro), desmanche, conserto, desmonte, alcance, grade, teto de peças, dano nas peças (zumbi, explosão, carro), barulho e a grade fina em que a horda contorna a base (`base.horda_*`) (seção 12) |

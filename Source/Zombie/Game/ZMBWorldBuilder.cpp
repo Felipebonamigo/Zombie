@@ -315,9 +315,10 @@ void AZMBWorldBuilder::BuildBlocks()
 				continue;
 			}
 
-			// prédio: recuo da calçada sorteado (becos entre prédios do mesmo quarteirão), altura pelos andares da planta
+			// prédio: recuo da calçada vindo da planta (as regras usam o mesmo: dá para andar e construir na calçada e no beco),
+			// altura pelos andares da planta
 			const int32 Floors = Plan.FloorsAt(X, Y);
-			const float Inset = Rng.FRandRange(250.0f, 420.0f);
+			const float Inset = Plan.InsetAt(X, Y);
 			const float Side = CellSize - 2.0f * Inset;
 			const float Height = Floors * FloorHeight;
 			const float Base = SidewalkHeight;

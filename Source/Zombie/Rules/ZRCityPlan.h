@@ -33,6 +33,9 @@ namespace ZR
 		double PlazaChance = 0.08;
 		int MinFloors = 2;
 		int MaxFloors = 16;
+		/** Recuo da fachada em cada prédio (a calçada e metade do beco entre dois prédios), sorteado entre os dois [cm]. */
+		float MinInsetCm = 250.0f;
+		float MaxInsetCm = 420.0f;
 		/** Tamanho de uma célula no mundo [cm]. Só o Unreal usa; fica aqui para viajar junto da planta. */
 		float CellSizeCm = 2000.0f;
 		std::uint64_t Seed = 1;
@@ -46,6 +49,8 @@ namespace ZR
 		std::vector<ECell> Cells;
 		/** Andares de cada célula: maior que zero só em prédio. */
 		std::vector<int> Floors;
+		/** Recuo da fachada de cada prédio [cm]; 0 nas outras células (e vazio numa planta montada à mão: prédio inteiro). */
+		std::vector<float> InsetCm;
 
 		bool InBounds(int X, int Y) const
 		{
@@ -68,6 +73,20 @@ namespace ZR
 			const ECell Cell = At(X, Y);
 			return Cell == ECell::Road || Cell == ECell::Plaza || Cell == ECell::Beach;
 		}
+
+		float InsetAt(int X, int Y) const
+		{
+			return InBounds(X, Y) && Index(X, Y) < InsetCm.size() ? InsetCm[Index(X, Y)] : 0.0f;
+		}
+
+		/**
+		 * Chão num ponto do plano [cm, origem no canto da célula (0, 0)]: rua, praça e praia inteiras, e no prédio só a faixa
+		 * do recuo (calçada e beco); a borda da fachada ainda é chão. Mar e fora da planta, não.
+		 */
+		bool IsWalkablePoint(float X, float Y, float CellSizeCm) const;
+
+		/** O retângulo inteiro é chão: não toca mar nem fora da planta e não entra em prédio (encostar na fachada pode). */
+		bool IsWalkableRect(float Left, float Top, float Right, float Bottom, float CellSizeCm) const;
 
 		std::vector<std::uint8_t> WalkableMask() const;
 		int CountOf(ECell Kind) const;

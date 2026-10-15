@@ -44,6 +44,8 @@ cidade.chance_praca,0.08,fração,Chance de uma célula de quarteirão virar pra
 cidade.andares_min,2,andares,Andares dos prédios na borda
 cidade.andares_max,16,andares,Andares máximos no centro
 cidade.celula_cm,2000,cm,Tamanho de uma célula (20 m)
+cidade.recuo_min_cm,250,cm,"Recuo mínimo da fachada em cada prédio: a calçada e metade do beco (dá para andar e construir nela)"
+cidade.recuo_max_cm,420,cm,Recuo máximo da fachada em cada prédio
 chat.rodada_s,30,s,Duração de cada rodada de votação do chat
 chat.votos_min,3,votos,Votos mínimos para uma opção do chat vencer
 chat.zumbi_espera_s,60,s,Espera de cada espectador entre dois !zumbi

@@ -1,6 +1,7 @@
 #include "Vehicles/ZMBCar.h"
 #include "Zombie.h"
 #include "Base/ZMBBuildPiece.h"
+#include "CoreGlobals.h"
 #include "Combat/ZMBTypes.h"
 #include "Game/ZMBGameData.h"
 #include "Player/ZMBCharacter.h"
@@ -301,7 +302,15 @@ void AZMBCar::Tick(float DeltaSeconds)
 	}
 	const ZR::FCarConfig& Car = Data->Tuning().Car;
 	LastVelocity = Box->GetPhysicsLinearVelocity();
-	PieceHitCooldown -= DeltaSeconds;
+	LastAngularVelocity = Box->GetPhysicsAngularVelocityInDegrees();
+	for (int32 i = RecentPieceHits.Num() - 1; i >= 0; --i)
+	{
+		RecentPieceHits[i].Value -= DeltaSeconds;
+		if (RecentPieceHits[i].Value <= 0.0f || !RecentPieceHits[i].Key.IsValid())
+		{
+			RecentPieceHits.RemoveAt(i);
+		}
+	}
 	const FTransform Frame = Box->GetComponentTransform();
 	const FVector Up = Frame.GetUnitAxis(EAxis::Z);
 	const FVector Forward = Frame.GetUnitAxis(EAxis::X);
@@ -383,23 +392,34 @@ void AZMBCar::HandleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 {
 	AZMBBuildPiece* Piece = Cast<AZMBBuildPiece>(OtherActor);
 	const UZMBGameData* Data = UZMBGameData::Get(this);
-	if (!Piece || !Data || Piece->IsGone() || PieceHitCooldown > 0.0f)
+	if (!Piece || !Data || Piece->IsGone())
 	{
 		return;
 	}
+	// cada peça leva uma batida por vez; duas barricadas lado a lado levam cada uma a sua no mesmo quadro
+	for (const TPair<TWeakObjectPtr<AZMBBuildPiece>, float>& Recent : RecentPieceHits)
+	{
+		if (Recent.Key.Get() == Piece)
+		{
+			return;
+		}
+	}
+	// conta só a velocidade contra a peça: raspar de lado num muro não o derruba
 	const ZR::FCarConfig& Car = Data->Tuning().Car;
-	const float SpeedKmh = static_cast<float>(LastVelocity.Size()) * KmhPerCmS;
-	if (SpeedKmh < Car.RunOverMinKmh)
+	const float ApproachKmh = static_cast<float>(FMath::Abs(FVector::DotProduct(LastVelocity, Hit.ImpactNormal))) * KmhPerCmS;
+	if (ApproachKmh < Car.RunOverMinKmh)
 	{
 		return;
 	}
-	PieceHitCooldown = 0.3f;
-	// madeira cai acima de ~35 km/h, o muro de sucata só acima de ~100 (base.dano_carro_multiplicador)
-	const float Damage = SpeedKmh * Car.RunOverDamagePerKmh * Data->Tuning().Base.VehicleDamageMultiplier;
-	if (Piece->TakeVehicleHit(Damage))
+	RecentPieceHits.Add(TPair<TWeakObjectPtr<AZMBBuildPiece>, float>(Piece, 0.3f));
+	// madeira cai acima de ~35 km/h de frente, o muro de sucata só acima de ~100 (base.dano_carro_multiplicador)
+	const float Damage = ApproachKmh * Car.RunOverDamagePerKmh * Data->Tuning().Base.VehicleDamageMultiplier;
+	if (Piece->TakeVehicleHit(Damage, Hit.ImpactPoint) && RestoredFrame != GFrameCounter)
 	{
-		// arrombou: o choque da física já parou o carro neste quadro; devolve o embalo, menos um quarto (cena de filme)
+		// arrombou: o choque da física já parou (e talvez girou) o carro neste quadro; devolve o embalo, menos um quarto
+		RestoredFrame = GFrameCounter;
 		Box->SetPhysicsLinearVelocity(LastVelocity * 0.75f);
+		Box->SetPhysicsAngularVelocityInDegrees(LastAngularVelocity);
 	}
 }
 
