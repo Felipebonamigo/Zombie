@@ -192,20 +192,29 @@ Cada som do jogo é uma linha de `Data/Sons.csv` com um ou mais arquivos (as var
 
 - **Variação:** sorteada entre os arquivos, sem repetir a anterior (um som só, sempre ele).
 - **Tom:** `1 ± variacao_tom`, sorteado.
-- **Não toca** quando: o som não tem arquivo; o ouvinte (a câmera) está além do `alcance_m` (som de interface não tem
-  distância); `vozes_max` toques dele já tocam; ou não passou `espera_s` desde o último toque dele. Relógio que voltou
-  (fase recomeçada) libera a espera.
-- O Unreal toca com a atenuação do alcance (volume cheio até 5% dele, queda natural até ele), preso a nada (som solto),
-  preso a um componente (laço: o motor do carro) ou sem posição (interface).
+- **Não toca** quando: o som não tem arquivo; o ouvinte está além do `alcance_m` (som de interface não tem distância);
+  `vozes_max` toques dele já tocam; ou não passou `espera_s` desde o último toque dele. Relógio que voltou (fase
+  recomeçada) libera a espera.
+- **Rouba a voz** (`roubar` = 1: os tiros e a explosão): com `vozes_max` cheio, o toque novo toca e o Unreal corta o mais
+  antigo dele, que já está na cauda. A rajada do fuzil (9 tiros/s, arquivos de ~1,3 s) não perde tiro e a cadeia de
+  bujões não perde a última explosão.
+- **O ouvinte** é o personagem (ou o carro que ele dirige) para a distância e a atenuação, e a câmera para a direção. A
+  câmera fica a ~10 m do personagem: medindo dela, a recarga, o chute e a mordida no jogador sumiriam, e a mistura mudaria
+  ao trocar de câmera.
+- O Unreal toca com a atenuação do alcance (volume cheio até 5% dele, queda natural até -30 dB no fim dele), preso a nada
+  (som solto), preso a um objeto (o chiado do pavio anda com a granada e com o zumbi-bujão e para na explosão), em laço
+  preso ao carro (o motor: o volume da tabela vezes 0,6 a 1,0 pelo acelerador) ou sem posição (interface).
 - Mira lenta: o som do mundo desce para 0,65 do tom enquanto ela dura.
 
-Quem toca o quê: tiro (`tiro_<id da arma>`), clique sem munição, recarga, chute, impacto no corpo, explosão (volume pelo
-raio), chiado do pavio, gemido do zumbi (a cada 4 a 11 s, sorteado por zumbi), ataque, morte, membro arrancado, grito do
-gritador, pancada e quebra da barricada, martelada de construir e consertar, desmonte e desmanche, motor e batida do
-carro, a caixa do drone, e na live a doação, a pauta nova, a pauta cumprida e o clipe.
+Quem toca o quê: tiro (`tiro_<id da arma>`), clique sem munição (um a cada 0,3 s com o gatilho apertado), recarga, chute,
+impacto no corpo (bala e chute), explosão (volume pelo raio), chiado do pavio, gemido do zumbi (a cada 4 a 11 s, sorteado
+por zumbi), ataque, morte, membro arrancado, grito do gritador, pancada e quebra da barricada, martelada de construir e
+consertar, desmonte e desmanche, motor e batida do carro, a caixa do drone, e na live a doação, a pauta nova, a pauta
+cumprida, o marco de seguidores e o clipe.
 
 Testes: `Som.*`, `Dados.SomComErroEhApontado` e `Deriva.SonsTemOsQueOCodigoTocaEOsArquivosSaoWavMono48k` (todo id do
-código tem linha; todo arquivo é WAV PCM 16 bits mono 48 kHz, até 6 s, ou 12 s em laço).
+código tem linha, toda arma de `Armas.csv` tem o seu `tiro_<id>`; todo arquivo é WAV PCM 16 bits mono 48 kHz, até 6 s, ou
+12 s em laço).
 
 ## 14. Marcos de seguidores e resumo da live (`ZRLive.h`)
 

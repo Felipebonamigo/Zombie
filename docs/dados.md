@@ -92,13 +92,15 @@ O rótulo é o texto que salta na tela.
 
 ## `Sons.csv`
 
-`id,arquivos,volume,variacao_tom,alcance_m,vozes_max,espera_s,laco,interface`
+`id,arquivos,volume,variacao_tom,alcance_m,vozes_max,roubar,espera_s,laco,interface`
 
 - `arquivos`: nomes sem extensão, separados por `;`, de `Audio/<nome>.wav` (só minúsculas, números e `_`: o nome vira o
   asset `SW_<nome>` no Unreal). Vazio = o som fica mudo.
 - `variacao_tom`: o tom varia `1 ± isto`. `alcance_m`: além disso não toca. `vozes_max`: toques ao mesmo tempo.
+  `roubar` = 1: com `vozes_max` cheio, o toque novo corta o mais antigo em vez de não tocar (tiros e explosão).
   `espera_s`: mínimo entre dois toques. `laco` = 1: toca sem fim, preso a algo (motor). `interface` = 1: sem posição.
-- Os ids que o código toca estão em `ZR::RequiredSoundIds()`; o teste de deriva cobra uma linha para cada.
+- Os ids que o código toca estão em `ZR::RequiredSoundIds()`; o teste de deriva cobra uma linha para cada, e uma
+  `tiro_<id>` para cada arma de `Armas.csv`.
 - Som novo: skill `som-livre` (procurar, conferir a licença, tratar com `Tools/Audio/tratar_sons.py`, registrar).
 
 ## `Marcos.csv`

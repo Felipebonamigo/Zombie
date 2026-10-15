@@ -104,6 +104,8 @@ private:
 	/** Motor em laço enquanto alguém dirige (o tom sobe com a velocidade). */
 	UPROPERTY(Transient)
 	TObjectPtr<UAudioComponent> EngineSound;
+	/** Volume do motor na tabela (Sons.csv): o acelerador multiplica isto (SetVolumeMultiplier troca, não multiplica). */
+	float EngineBaseVolume = 1.0f;
 
 	TWeakObjectPtr<AZMBCharacter> Driver;
 	TArray<FVector> WheelMounts;

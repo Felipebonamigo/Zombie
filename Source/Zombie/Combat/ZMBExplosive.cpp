@@ -3,6 +3,7 @@
 #include "Audio/ZMBAudioSubsystem.h"
 #include "Combat/ZMBExplosion.h"
 #include "Game/ZMBGameData.h"
+#include "Components/AudioComponent.h"
 #include "Components/PointLightComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
@@ -123,7 +124,7 @@ void AZMBExplosive::Ignite(int32 ChainDepth)
 		Explode();
 		return;
 	}
-	UZMBAudioSubsystem::Play(this, "chiado", GetActorLocation());
+	FuseSound = UZMBAudioSubsystem::PlayAttached(this, "chiado", Body);
 	FuseLight = NewObject<UPointLightComponent>(this, TEXT("FuseLight"));
 	FuseLight->SetupAttachment(Body);
 	FuseLight->SetMobility(EComponentMobility::Movable);
@@ -166,6 +167,10 @@ void AZMBExplosive::Explode()
 	}
 	bExploded = true;
 	FuseLeft = -1.0f;
+	if (UAudioComponent* Hiss = FuseSound.Get())
+	{
+		Hiss->Stop();
+	}
 	if (FuseLight)
 	{
 		FuseLight->DestroyComponent();

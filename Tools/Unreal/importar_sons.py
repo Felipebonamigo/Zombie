@@ -65,9 +65,10 @@ def main():
             wave.set_editor_property("looping", True)
             unreal.EditorAssetLibrary.save_asset(path, only_if_is_dirty=False)
             loops += 1
-    unreal.log(f"importar_sons: {imported} de {len(tasks)} sons importados em {DEST} ({loops} em laço)")
     if imported != len(tasks):
-        raise RuntimeError("importar_sons: algum .wav não importou (veja o log acima)")
+        raise RuntimeError(f"importar_sons FALHOU: {imported} de {len(tasks)} .wav importados (veja o log acima)")
+    # a linha que o importar_sons.ps1 procura: só sai com tudo importado
+    unreal.log(f"importar_sons OK: {imported} sons importados em {DEST} ({loops} em laço)")
 
 
 main()

@@ -17,6 +17,7 @@
 #include "Rules/ZRData.h"
 #include "ZMBZombie.generated.h"
 
+class UAudioComponent;
 class UStaticMeshComponent;
 class UTextRenderComponent;
 class UPrimitiveComponent;
@@ -95,6 +96,8 @@ private:
 	bool bHorde = false;
 	bool bCrawler = false;
 	bool bTankArmed = false;
+	/** Chiado do bujão nas costas, preso a ele (anda com o zumbi); para na explosão. */
+	TWeakObjectPtr<UAudioComponent> FuseSound;
 	bool bExplodePending = false;
 	/** Já explodiu (não agenda outra explosão quando Die roda dentro da própria explosão). */
 	bool bSelfExploded = false;

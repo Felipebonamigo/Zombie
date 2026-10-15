@@ -7,6 +7,7 @@
 #include "Stream/ZMBStreamSubsystem.h"
 #include "Zombies/ZMBHordeDirector.h"
 #include "Zombies/ZMBZombie.h"
+#include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/World.h"
@@ -354,7 +355,7 @@ void AZMBBuildPiece::Arm(AController* DamageInstigator, int32 ChainDepth)
 	const ZR::FExplosiveType* Explosive = Data ? Data->FindExplosive(Type.ExplosiveId.c_str()) : nullptr;
 	PendingInstigator = DamageInstigator;
 	PendingChainDepth = ChainDepth;
-	UZMBAudioSubsystem::Play(this, "chiado", GetActorLocation());
+	FuseSound = UZMBAudioSubsystem::PlayAttached(this, "chiado", Box);
 	// pavio curto: o clique do arame e já era (em cadeia "pipoca" como os bujões da rua)
 	FuseLeft = FMath::Max(0.05f, (Explosive ? Explosive->FuseSeconds : 0.9f) * (ChainDepth > 0 ? FMath::FRandRange(0.25f, 0.6f) : 0.4f));
 	SetActorTickEnabled(true);
@@ -372,6 +373,10 @@ void AZMBBuildPiece::Explode()
 	}
 	bGone = true;
 	FuseLeft = -1.0f;
+	if (UAudioComponent* Hiss = FuseSound.Get())
+	{
+		Hiss->Stop();
+	}
 	const UZMBGameData* Data = UZMBGameData::Get(this);
 	const ZR::FExplosiveType* Explosive = Data ? Data->FindExplosive(Type.ExplosiveId.c_str()) : nullptr;
 	// a própria explosão não acha esta peça de novo

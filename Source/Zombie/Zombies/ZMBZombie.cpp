@@ -8,6 +8,7 @@
 #include "Stream/ZMBStreamSubsystem.h"
 #include "Zombies/ZMBHordeDirector.h"
 #include "Camera/PlayerCameraManager.h"
+#include "Components/AudioComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -731,7 +732,7 @@ void AZMBZombie::ArmTank(const FZMBHitContext& Context)
 		return;
 	}
 	bTankArmed = true;
-	UZMBAudioSubsystem::Play(this, "chiado", Tank ? Tank->GetComponentLocation() : GetActorLocation());
+	FuseSound = UZMBAudioSubsystem::PlayAttached(this, "chiado", Tank ? Tank.Get() : GetRootComponent());
 	LastHit = Context;
 	bExplodePending = true;
 	// baleado chia um pouquinho (dá tempo de ver e correr); aceso por outra explosão estoura quase junto
@@ -742,6 +743,10 @@ void AZMBZombie::ExplodeSelf()
 {
 	bExplodePending = false;
 	bSelfExploded = true;
+	if (UAudioComponent* Hiss = FuseSound.Get())
+	{
+		Hiss->Stop();
+	}
 	if (!Body.bGibbed)
 	{
 		FZMBHitContext Context = LastHit;

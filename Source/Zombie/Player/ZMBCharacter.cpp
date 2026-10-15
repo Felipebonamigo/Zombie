@@ -545,6 +545,7 @@ void AZMBCharacter::KickKey(const FInputActionValue& Value)
 				continue;
 			}
 			Done.Add(Zombie);
+			UZMBAudioSubsystem::Play(this, "impacto_carne", Zombie->GetActorLocation());
 			Zombie->TakeLimbHit(nullptr, Player.KickDamage, Zombie->GetActorLocation(), Forward * Player.KickImpulse, Context);
 			if (!Zombie->IsDead())
 			{
@@ -864,6 +865,8 @@ void AZMBCharacter::FireOnce()
 			UZMBAudioSubsystem::Play(this, "arma_vazia", GetActorLocation());
 		}
 		ReloadKey(FInputActionValue());
+		// sem isto o gatilho apertado chamaria de novo todo quadro: um "tac" a cada 0,3 s basta
+		FireCooldown = 0.3f;
 		return;
 	}
 	--State.Magazine;
@@ -1478,13 +1481,15 @@ void AZMBCharacter::DismantleAimed()
 	{
 		return;
 	}
+	// a peça se destrói dentro do Dismantle: a posição vem antes
+	const FVector PieceLocation = Piece->GetActorLocation();
 	const int32 Refund = Piece->Dismantle();
 	if (!Piece->IsGone())
 	{
 		// bujão armado com o pavio aceso não se desmonta
 		return;
 	}
-	UZMBAudioSubsystem::Play(this, "desmanche", Piece->GetActorLocation());
+	UZMBAudioSubsystem::Play(this, "desmanche", PieceLocation);
 	AimedPiece = nullptr;
 	Scrap += Refund;
 	if (UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this))

@@ -10,6 +10,7 @@
 #include "Rules/ZRData.h"
 #include "ZMBExplosive.generated.h"
 
+class UAudioComponent;
 class UStaticMeshComponent;
 class UPointLightComponent;
 class AController;
@@ -53,6 +54,9 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UPointLightComponent> FuseLight;
+
+	/** Chiado do pavio, preso ao corpo (a granada voa com ele); para na explosão. */
+	TWeakObjectPtr<UAudioComponent> FuseSound;
 
 	ZR::FExplosiveType Type;
 	float Health = 1.0f;

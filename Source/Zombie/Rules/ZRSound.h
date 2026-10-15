@@ -7,6 +7,8 @@
 //  - Não toca: sem arquivo, longe demais (só som com posição), com vozes_max do mesmo som já tocando, ou antes de espera_s
 //    desde o último toque dele (cem zumbis gemendo no mesmo quadro viram um coro, não um estouro); relógio que voltou
 //    (fase recomeçada) libera a espera.
+//  - Som que rouba (roubar = 1: tiro, explosão): com vozes_max cheio, toca mesmo assim e o Unreal corta o toque mais
+//    antigo dele (a rajada do fuzil não perde tiro, a cadeia de bujões não perde a última explosão).
 
 #pragma once
 
@@ -30,6 +32,8 @@ namespace ZR
 		float RangeCm = 4000.0f;
 		/** Toques deste som ao mesmo tempo. */
 		int MaxVoices = 4;
+		/** Com vozes_max cheio, o toque novo toca e o Unreal corta o mais antigo (tiro em rajada, explosão em cadeia). */
+		bool bStealOldest = false;
 		/** Espera mínima entre dois toques deste som [s]. */
 		float CooldownSeconds = 0.0f;
 		/** Em laço (motor do carro): o Unreal toca preso a um componente, sem fim. */

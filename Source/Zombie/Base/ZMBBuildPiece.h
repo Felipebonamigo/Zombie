@@ -15,6 +15,7 @@
 #include "Rules/ZRBase.h"
 #include "ZMBBuildPiece.generated.h"
 
+class UAudioComponent;
 class UBoxComponent;
 class UStaticMeshComponent;
 class AController;
@@ -97,5 +98,7 @@ private:
 	float TrapClock = 0.0f;
 	/** Pavio do bujão armado; negativo = apagado. */
 	float FuseLeft = -1.0f;
+	/** Chiado do pavio; para na explosão. */
+	TWeakObjectPtr<UAudioComponent> FuseSound;
 	bool bGone = false;
 };

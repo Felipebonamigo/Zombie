@@ -66,6 +66,7 @@ bool UZMBGameData::LoadText(const TCHAR* FileName, std::string& Out)
 
 void UZMBGameData::Reload()
 {
+	++ReloadCount;
 	Errors.Reset();
 	std::vector<std::string> RuleErrors;
 	std::vector<std::string> Missing;

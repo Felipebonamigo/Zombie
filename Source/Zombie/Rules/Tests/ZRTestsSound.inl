@@ -115,6 +115,21 @@ ZR_TEST(SomVozesEspera, "Som.LimiteDeVozesEEsperaEntreToques")
 	ZR_EXPECT(Picker.Pick(Defs, 1, 0, 100.0f, 0.6).bPlay);
 }
 
+ZR_TEST(SomRoubaVoz, "Som.RajadaRoubaAVozMaisAntigaEmVezDeSairMuda")
+{
+	std::vector<ZR::FSoundDef> Defs = {SomDe("fuzil", 4), SomDe("gemido", 4)};
+	Defs[0].bStealOldest = true;
+	Defs[0].CooldownSeconds = 0.05f;
+	ZR::FSoundPicker Picker(5);
+	// vozes cheias: o tiro toca mesmo assim (o Unreal corta o mais antigo); o gemido não
+	ZR_EXPECT(Picker.Pick(Defs, 0, 3, 100.0f, 0.0).bPlay);
+	ZR_EXPECT(Picker.Pick(Defs, 0, 9, 100.0f, 0.1).bPlay);
+	ZR_EXPECT(!Picker.Pick(Defs, 1, 3, 100.0f, 0.0).bPlay);
+	// o resto das regras continua: espera e alcance
+	ZR_EXPECT(!Picker.Pick(Defs, 0, 3, 100.0f, 0.12).bPlay);
+	ZR_EXPECT(!Picker.Pick(Defs, 0, 0, 3001.0f, 1.0).bPlay);
+}
+
 ZR_TEST(SomDistancia, "Som.LongeDemaisOuSemArquivoNaoToca")
 {
 	std::vector<ZR::FSoundDef> Defs = {SomDe("tiro", 2), SomDe("ding", 1), SomDe("vazio", 0)};
@@ -155,12 +170,12 @@ ZR_TEST(SomWav, "Som.CabecalhoWavMonoPcm16")
 ZR_TEST(DadosSonsErros, "Dados.SomComErroEhApontado")
 {
 	const std::string Csv =
-		"id,arquivos,volume,variacao_tom,alcance_m,vozes_max,espera_s,laco,interface\n"
-		"tiro,tiro_01;tiro_02,0.9,0.05,120,6,0,0,0\n"
-		"tiro,tiro_03,1,0,10,1,0,0,0\n"
-		"ding,Ding Bom.wav,1,0,1,1,0,0,1\n"
-		"vazio,,1,0,10,2,0,0,0\n"
-		"alto,alto_01,9,0,10,2,0,0,0\n";
+		"id,arquivos,volume,variacao_tom,alcance_m,vozes_max,roubar,espera_s,laco,interface\n"
+		"tiro,tiro_01;tiro_02,0.9,0.05,120,6,1,0,0,0\n"
+		"tiro,tiro_03,1,0,10,1,0,0,0,0\n"
+		"ding,Ding Bom.wav,1,0,1,1,0,0,0,1\n"
+		"vazio,,1,0,10,2,0,0,0,0\n"
+		"alto,alto_01,9,0,10,2,0,0,0,0\n";
 	std::vector<ZR::FSoundDef> Sounds;
 	std::vector<std::string> Errors;
 	ZR::LoadSounds(Csv, Sounds, Errors);
@@ -169,8 +184,9 @@ ZR_TEST(DadosSonsErros, "Dados.SomComErroEhApontado")
 	const ZR::FSoundDef* Tiro = ZR::FindById(Sounds, "tiro");
 	ZR_EXPECT(Tiro != nullptr && Tiro->Files.size() == 2 && Tiro->Files[1] == "tiro_02");
 	ZR_EXPECT(Tiro != nullptr && Tiro->RangeCm > 11999.0f && Tiro->RangeCm < 12001.0f);
+	ZR_EXPECT(Tiro != nullptr && Tiro->bStealOldest);
 	const ZR::FSoundDef* Vazio = ZR::FindById(Sounds, "vazio");
-	ZR_EXPECT(Vazio != nullptr && Vazio->Files.empty());
+	ZR_EXPECT(Vazio != nullptr && Vazio->Files.empty() && !Vazio->bStealOldest);
 	bool bMentionsName = false;
 	for (const std::string& Error : Errors)
 	{
@@ -198,6 +214,21 @@ ZR_TEST(DerivaSons, "Deriva.SonsTemOsQueOCodigoTocaEOsArquivosSaoWavMono48k")
 		}
 	}
 	ZR_EXPECT(ZR::RequiredSoundIds().size() >= 20);
+	// o tiro é "tiro_<id da arma>": arma nova em Armas.csv sem som sairia muda
+	std::string WeaponsText;
+	if (ReadDataFile(T, "Armas.csv", WeaponsText))
+	{
+		std::vector<ZR::FWeaponType> Weapons;
+		std::vector<std::string> WeaponErrors;
+		ZR::LoadWeapons(WeaponsText, Weapons, WeaponErrors);
+		for (const ZR::FWeaponType& Weapon : Weapons)
+		{
+			if (ZR::FindById(Sounds, "tiro_" + Weapon.Id) == nullptr)
+			{
+				T.Fail("Sons.csv sem tiro_" + Weapon.Id + " (a arma " + Weapon.Id + " de Armas.csv atiraria muda)");
+			}
+		}
+	}
 	// cada arquivo: Audio/<nome>.wav, PCM 16 bits, mono, 48 kHz; som solto até 6 s, laço até 12 s
 	ZRTest::FContext Audio;
 	Audio.DataDir = T.DataDir + "/../Audio";

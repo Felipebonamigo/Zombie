@@ -22,7 +22,7 @@ namespace ZR
 		}
 		// relógio que voltou (fase recomeçada) libera a espera
 		const double Since = Now - LastTime[Slot];
-		if (Def.Files.empty() || ActiveVoices >= Def.MaxVoices || (!Def.b2D && DistanceCm > Def.RangeCm)
+		if (Def.Files.empty() || (ActiveVoices >= Def.MaxVoices && !Def.bStealOldest) || (!Def.b2D && DistanceCm > Def.RangeCm)
 			|| (Since >= 0.0 && Since < static_cast<double>(Def.CooldownSeconds)))
 		{
 			return Out;

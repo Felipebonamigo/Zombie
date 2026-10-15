@@ -37,6 +37,8 @@ public:
 
 	/** Lê de novo as tabelas (console: zmb.dados.recarregar). Vale para o que nascer depois. */
 	void Reload();
+	/** Quantas vezes as tabelas foram lidas: quem guarda algo por linha (o som) compara e limpa ao mudar. */
+	int32 GetReloadCount() const { return ReloadCount; }
 
 	const ZR::FTuning& Tuning() const { return LoadedTuning; }
 	const std::vector<ZR::FZombieType>& Zombies() const { return LoadedZombies; }
@@ -87,6 +89,7 @@ private:
 	std::vector<ZR::FSoundDef> LoadedSounds;
 	std::vector<ZR::FMilestoneDef> LoadedMilestones;
 	TArray<FString> Errors;
+	int32 ReloadCount = 0;
 
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInterface> SurfaceParent;

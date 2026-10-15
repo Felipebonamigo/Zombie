@@ -158,6 +158,7 @@ void AZMBCar::Enter(AZMBCharacter* InDriver)
 		if (UZMBAudioSubsystem* Audio = UZMBAudioSubsystem::Get(this))
 		{
 			EngineSound = Audio->PlayLoop("carro_motor", Box);
+			EngineBaseVolume = EngineSound ? EngineSound->VolumeMultiplier : 1.0f;
 		}
 	}
 }
@@ -173,6 +174,8 @@ void AZMBCar::ExitCar()
 	Driver.Reset();
 	if (EngineSound)
 	{
+		// o laço foi criado sem autodestruição: some quando o FadeOut terminar
+		EngineSound->bAutoDestroy = true;
 		EngineSound->FadeOut(0.4f, 0.0f);
 		EngineSound = nullptr;
 	}
@@ -322,7 +325,7 @@ void AZMBCar::Tick(float DeltaSeconds)
 		// marcha lenta em 0,7 e o giro sobe com a velocidade e com o pé no acelerador
 		const float Speed01 = FMath::Clamp(static_cast<float>(LastVelocity.Size()) * KmhPerCmS / FMath::Max(Car.MaxSpeedKmh, 1.0f), 0.0f, 1.0f);
 		EngineSound->SetPitchMultiplier(0.7f + Speed01 * 1.1f + FMath::Abs(ThrottleInput) * 0.15f);
-		EngineSound->SetVolumeMultiplier(0.6f + FMath::Abs(ThrottleInput) * 0.4f);
+		EngineSound->SetVolumeMultiplier(EngineBaseVolume * (0.6f + FMath::Abs(ThrottleInput) * 0.4f));
 	}
 	for (int32 i = RecentPieceHits.Num() - 1; i >= 0; --i)
 	{

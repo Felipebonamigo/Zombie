@@ -28,7 +28,7 @@ Write-Host "Importando os sons de Audio/ (limite ${TimeoutSeconds}s)"
 $p = Start-Process $exe -ArgumentList $argList -PassThru -WindowStyle Hidden
 if (-not $p.WaitForExit($TimeoutSeconds * 1000)) { $p.Kill(); Write-Host "TIMEOUT. Log: $log"; exit 1 }
 if ($p.ExitCode -ne 0) { Write-Host "FALHOU (código $($p.ExitCode)). Log: $log"; exit 1 }
-$ok = Select-String -LiteralPath $log -Pattern 'importar_sons:' -SimpleMatch | Select-Object -Last 1
+$ok = Select-String -LiteralPath $log -Pattern 'importar_sons OK:' -SimpleMatch | Select-Object -Last 1
 if (-not $ok) { Write-Host "Sem a linha de confirmação no log: $log"; exit 1 }
 Write-Host $ok.Line
 exit 0

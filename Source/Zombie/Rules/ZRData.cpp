@@ -499,7 +499,7 @@ namespace ZR
 			return;
 		}
 		FRowReader Reader(Table, "Sons.csv", Errors);
-		if (!Reader.Require({"id", "arquivos", "volume", "variacao_tom", "alcance_m", "vozes_max", "espera_s", "laco", "interface"}))
+		if (!Reader.Require({"id", "arquivos", "volume", "variacao_tom", "alcance_m", "vozes_max", "roubar", "espera_s", "laco", "interface"}))
 		{
 			return;
 		}
@@ -548,6 +548,7 @@ namespace ZR
 			Sound.PitchJitter = Reader.Float(Row, "variacao_tom", 0.0f, 0.5f, 0.05f);
 			Sound.RangeCm = Reader.Float(Row, "alcance_m", 1.0f, 2000.0f, 40.0f) * 100.0f;
 			Sound.MaxVoices = Reader.Int(Row, "vozes_max", 1, 64, 4);
+			Sound.bStealOldest = Reader.Bool(Row, "roubar");
 			Sound.CooldownSeconds = Reader.Float(Row, "espera_s", 0.0f, 60.0f, 0.0f);
 			Sound.bLoop = Reader.Bool(Row, "laco");
 			Sound.b2D = Reader.Bool(Row, "interface");
