@@ -3,6 +3,7 @@
 #include "Audio/ZMBAudioSubsystem.h"
 #include "Game/ZMBGameData.h"
 #include "Player/ZMBCharacter.h"
+#include "Vehicles/ZMBCar.h"
 #include "Stream/ZMBTwitchChat.h"
 #include "Zombies/ZMBHordeDirector.h"
 #include "Engine/GameInstance.h"
@@ -277,7 +278,7 @@ char UZMBStreamSubsystem::GetLiveGrade() const
 	return ZR::LiveGrade(Data ? Data->Tuning().Grade : ZR::FGradeConfig(), Stats);
 }
 
-bool UZMBStreamSubsystem::GetNextMilestone(FString& OutText, float& OutFollowers) const
+bool UZMBStreamSubsystem::GetNextMilestone(FString& OutText, float& OutFollowers, float& OutFromFollowers) const
 {
 	const UZMBGameData* Data = UZMBGameData::Get(this);
 	const int32 Index = Data ? Milestones.NextIndex(Data->Milestones()) : -1;
@@ -288,6 +289,7 @@ bool UZMBStreamSubsystem::GetNextMilestone(FString& OutText, float& OutFollowers
 	const ZR::FMilestoneDef& Def = Data->Milestones()[static_cast<size_t>(Index)];
 	OutText = UZMBGameData::ToFString(bPortuguese || Def.TextEn.empty() ? Def.TextPt : Def.TextEn);
 	OutFollowers = Def.Followers;
+	OutFromFollowers = Index > 0 ? Data->Milestones()[static_cast<size_t>(Index - 1)].Followers : Stats.StartFollowers;
 	return true;
 }
 
@@ -300,13 +302,22 @@ void UZMBStreamSubsystem::HandleMilestone(int32 Index)
 	}
 	const ZR::FMilestoneDef& Def = Data->Milestones()[static_cast<size_t>(Index)];
 	const FText Text = FText::FromString(UZMBGameData::ToFString(bPortuguese || Def.TextEn.empty() ? Def.TextPt : Def.TextEn));
-	Announce(FText::Format(LOCTEXT("Milestone", "{0}!"), Text));
+	// com caixa, um anúncio só: o do Diretor ("entrega por drone") apagaria o do marco no mesmo quadro
+	Announce(Def.bAirdrop ? FText::Format(LOCTEXT("MilestoneAirdrop", "{0}! O CHAT MANDOU UMA CAIXA"), Text)
+		: FText::Format(LOCTEXT("Milestone", "{0}!"), Text));
 	AddChat(FString(), FText::Format(LOCTEXT("MilestoneChat", "Meta batida: {0}. O chat mandou presente!"), Text).ToString(), Gold, true);
 	React("marco");
 	UZMBAudioSubsystem::Play2D(this, "pauta_ok");
 	State.Hype = FMath::Min(100.0f, State.Hype + Def.HypeBonus);
 	Highlights.Add(LiveSeconds, Def.HypeBonus, std::string(TCHAR_TO_UTF8(*Text.ToString())));
-	if (AZMBCharacter* Player = Cast<AZMBCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0)))
+	// dirigindo, o pawn é o carro: o presente vai para quem está ao volante
+	APawn* Pawn = UGameplayStatics::GetPlayerPawn(this, 0);
+	AZMBCharacter* Player = Cast<AZMBCharacter>(Pawn);
+	if (const AZMBCar* Car = Cast<AZMBCar>(Pawn))
+	{
+		Player = Car->GetDriver();
+	}
+	if (Player)
 	{
 		Player->AddScrap(Def.Scrap);
 		Player->AddThrowables(Def.Grenades, Def.Bombs);
@@ -315,6 +326,7 @@ void UZMBStreamSubsystem::HandleMilestone(int32 Index)
 	{
 		FZMBChatAction Action;
 		Action.Kind = EZMBChatActionKind::Airdrop;
+		Action.bQuiet = true;
 		PendingActions.Add(Action);
 	}
 }

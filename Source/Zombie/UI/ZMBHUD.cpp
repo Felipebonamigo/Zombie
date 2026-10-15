@@ -102,11 +102,17 @@ void AZMBHUD::DrawLiveBadge(float Scale)
 	// próxima meta de seguidores: o que falta para o presente do chat
 	FString NextText;
 	float NextFollowers = 0.0f;
-	if (Stream->GetNextMilestone(NextText, NextFollowers))
+	float FromFollowers = 0.0f;
+	if (Stream->GetNextMilestone(NextText, NextFollowers, FromFollowers))
 	{
-		DrawShadowedText(FText::Format(LOCTEXT("NextMilestone", "META: {0}"), FText::FromString(NextText)).ToString(), Soft, X, Y, Small, 1.0f * Scale);
-		DrawBar(X + 230.0f * Scale, Y + 3.0f * Scale, 130.0f * Scale, 12.0f * Scale, Stream->GetFollowers() / FMath::Max(1.0f, NextFollowers), Soft);
-		Y += 24.0f * Scale;
+		// a barra vai do marco anterior ao próximo (perto de 1 milhão, de 0 até ele ficaria parada) e diz quanto falta
+		const float Missing = FMath::Max(0.0f, NextFollowers - Stream->GetFollowers());
+		DrawShadowedText(FText::Format(LOCTEXT("NextMilestone", "META: {0} (faltam {1})"), FText::FromString(NextText),
+			FText::FromString(Thousands(FMath::CeilToFloat(Missing)))).ToString(), Soft, X, Y, Small, 1.0f * Scale);
+		Y += 22.0f * Scale;
+		const float Fill = (Stream->GetFollowers() - FromFollowers) / FMath::Max(1.0f, NextFollowers - FromFollowers);
+		DrawBar(X, Y, 360.0f * Scale, 10.0f * Scale, Fill, Soft);
+		Y += 20.0f * Scale;
 	}
 
 	// hype: amarelo, laranja, vermelho
@@ -514,7 +520,7 @@ void AZMBHUD::DrawBuild(float Scale)
 	if (Search >= 0.0f)
 	{
 		const float BarWidth = 260.0f * Scale;
-		Centered(FText::Format(LOCTEXT("Searching", "REVIRANDO: {0}"), FText::FromString(Player->GetSearchName().ToUpper())).ToString(), FLinearColor::White,
+		Centered(FText::Format(LOCTEXT("Searching", "REVIRANDO: {0}"), FText::FromString(Player->GetSearchName()).ToUpper()).ToString(), FLinearColor::White,
 			Canvas->ClipY * 0.58f, Medium, 1.1f * Scale);
 		DrawBar((Canvas->ClipX - BarWidth) * 0.5f, Canvas->ClipY * 0.58f + 30.0f * Scale, BarWidth, 14.0f * Scale, Search, Gold);
 	}

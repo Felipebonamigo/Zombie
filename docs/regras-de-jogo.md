@@ -200,7 +200,7 @@ Cada som do jogo é uma linha de `Data/Sons.csv` com um ou mais arquivos (as var
   bujões não perde a última explosão.
 - **O ouvinte** é o personagem (ou o carro que ele dirige) para a distância e a atenuação, e a câmera para a direção. A
   câmera fica a ~10 m do personagem: medindo dela, a recarga, o chute e a mordida no jogador sumiriam, e a mistura mudaria
-  ao trocar de câmera.
+  ao trocar de câmera. Entrar e sair do carro troca o ouvinte na hora; sem pawn, a atenuação volta para a câmera.
 - O Unreal toca com a atenuação do alcance (volume cheio até 5% dele, queda natural até -30 dB no fim dele), preso a nada
   (som solto), preso a um objeto (o chiado do pavio anda com a granada e com o zumbi-bujão e para na explosão), em laço
   preso ao carro (o motor: o volume da tabela vezes 0,6 a 1,0 pelo acelerador) ou sem posição (interface).
@@ -223,11 +223,14 @@ um prêmio do chat: sucata, granadas, bujões, uma caixa por drone e hype.
 
 - Paga **uma vez só**, na ordem dos seguidores. Vários cruzados no mesmo passo pagam todos, do menor para o maior.
 - Os que já estavam passados no começo da live não pagam (com 37 seguidores no começo, o primeiro é o de 50).
-- Ao bater: anúncio no meio da tela, fala do chat (`marco` em `ChatFalso.csv`), som de pauta cumprida, o hype do marco e
-  um lance para o clipe. O HUD mostra embaixo dos seguidores a próxima meta e quanto falta.
+- Ao bater: anúncio no meio da tela (com caixa, um anúncio só: "500 SEGUIDORES! O CHAT MANDOU UMA CAIXA"), fala do chat
+  (`marco` em `ChatFalso.csv`), som de pauta cumprida, o hype do marco e um lance para o clipe. O presente vai para o
+  jogador mesmo dirigindo. O HUD mostra embaixo dos seguidores a próxima meta, quanto falta e uma barra que vai do marco
+  anterior ao próximo.
 
 **Resumo da live:** a live inteira (não zera quando o jogador cai e volta) guarda tempo ao vivo, pico de espectadores,
-seguidores ganhos, abates e tiros na cabeça, maior combo, maior cadeia de explosões (uma explosão sozinha é 1), doações
+seguidores ganhos, abates e tiros na cabeça, maior combo, maior cadeia de explosões (uma explosão sozinha é 1; o
+zumbi-bujão aceso por outra explosão conta como mais um elo, como o bujão de rua), doações
 (R$), pautas cumpridas e perdidas, clipes e quedas. Quando a live cai, a tela "A LIVE CAIU" mostra o resumo e a **nota**:
 
 | Pico de espectadores | Nota |
@@ -266,7 +269,9 @@ Lugares para revirar espalhados pela cidade (`Data/Saque.csv`), com o que cada u
   chamam zumbis).
 - **Onde ficam:** "calçada" na faixa entre a rua e a fachada, de frente para a rua, longe das quinas; "rua" estacionado
   numa célula de rua, no sentido dela. Nada a menos de `saque.longe_do_comeco_cm` (6 m) do começo, nada a menos de
-  `saque.espacamento_cm` (8 m) de outro lugar, sempre em chão. A mesma semente dá os mesmos lugares.
+  `saque.espacamento_cm` (8 m) de outro lugar, sempre em chão. A mesma semente dá os mesmos lugares. No Unreal, o lugar
+  que cairia em cima de um carro, de um bujão ou do caminhão de gás fica de fora.
+- Mochila e isopor (abaixo de 60 cm) não barram ninguém: o jogador, os zumbis e o carro atravessam.
 - O chat comenta o saque bom (`saque` em `ChatFalso.csv`).
 
 Testes: `Saque.*`, `Dados.SaqueComErroEhApontado` e `Deriva.SaqueCarregaETodoLugarRendeAlgo` (as tabelas carregam, todo

@@ -143,6 +143,11 @@ float AZMBCar::GetSpeedKmh() const
 	return FVector::DotProduct(Box->GetPhysicsLinearVelocity(), GetActorForwardVector()) * KmhPerCmS;
 }
 
+AZMBCharacter* AZMBCar::GetDriver() const
+{
+	return Driver.Get();
+}
+
 void AZMBCar::Enter(AZMBCharacter* InDriver)
 {
 	AController* DriverController = InDriver ? InDriver->GetController() : nullptr;
@@ -198,6 +203,11 @@ void AZMBCar::ExitCar()
 		}
 	}
 	DriverController->Possess(Character);
+	// o som volta a medir a distância do personagem já agora, não só no próximo som
+	if (UZMBAudioSubsystem* Audio = UZMBAudioSubsystem::Get(this))
+	{
+		Audio->RefreshListener();
+	}
 }
 
 void AZMBCar::CreateInput()

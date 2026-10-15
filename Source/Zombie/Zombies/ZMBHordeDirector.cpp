@@ -555,7 +555,10 @@ void AZMBHordeDirector::ConsumeChatActions()
 			break;
 		case EZMBChatActionKind::Airdrop:
 			DropSupplyCrate();
-			Stream->Announce(LOCTEXT("Airdrop", "ENTREGA POR DRONE A CAMINHO"));
+			if (!Action.bQuiet)
+			{
+				Stream->Announce(LOCTEXT("Airdrop", "ENTREGA POR DRONE A CAMINHO"));
+			}
 			break;
 		}
 	}

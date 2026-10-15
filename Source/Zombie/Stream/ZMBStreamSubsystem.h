@@ -100,8 +100,11 @@ public:
 	/** O resumo da live até agora (a tela da morte mostra) e a nota dela. */
 	const ZR::FLiveStats& GetLiveStats() const { return Stats; }
 	char GetLiveGrade() const;
-	/** O próximo marco de seguidores: texto e quantos seguidores ele pede (falso se todos já foram). */
-	bool GetNextMilestone(FString& OutText, float& OutFollowers) const;
+	/**
+	 * O próximo marco de seguidores: texto, quantos seguidores ele pede e de onde a barra parte (o marco anterior, ou os
+	 * seguidores do começo da live). Falso se todos já foram.
+	 */
+	bool GetNextMilestone(FString& OutText, float& OutFollowers, float& OutFromFollowers) const;
 
 private:
 	void HandleTwitchMessage(const FZMBTwitchMessage& Message);

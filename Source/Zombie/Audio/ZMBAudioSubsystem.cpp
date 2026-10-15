@@ -64,6 +64,13 @@ bool UZMBAudioSubsystem::ListenerLocation(UWorld* World, FVector& Out)
 	APawn* Pawn = Controller ? Controller->GetPawn() : nullptr;
 	if (!Pawn || !Pawn->GetRootComponent())
 	{
+		// sem pawn (destruído, trocando): solta, senão o motor mediria do componente nulo, a origem do mapa
+		if (Controller && bListenerOverridden)
+		{
+			Controller->ClearAudioListenerAttenuationOverride();
+		}
+		bListenerOverridden = false;
+		ListenerPawn = nullptr;
 		const APlayerCameraManager* Camera = UGameplayStatics::GetPlayerCameraManager(World, 0);
 		if (!Camera)
 		{
@@ -77,9 +84,19 @@ bool UZMBAudioSubsystem::ListenerLocation(UWorld* World, FVector& Out)
 	{
 		Controller->SetAudioListenerAttenuationOverride(Pawn->GetRootComponent(), FVector::ZeroVector);
 		ListenerPawn = Pawn;
+		bListenerOverridden = true;
 	}
 	Out = Pawn->GetActorLocation();
 	return true;
+}
+
+void UZMBAudioSubsystem::RefreshListener()
+{
+	if (UWorld* World = GetWorld())
+	{
+		FVector Listener = FVector::ZeroVector;
+		ListenerLocation(World, Listener);
+	}
 }
 
 void UZMBAudioSubsystem::Play(const UObject* WorldContext, const char* Id, const FVector& Where, float VolumeScale)

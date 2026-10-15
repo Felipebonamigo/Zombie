@@ -57,4 +57,6 @@ struct FZMBChatAction
 {
 	EZMBChatActionKind Kind = EZMBChatActionKind::Horde;
 	FString ViewerName;
+	/** Quem pediu já anunciou (o marco de seguidores com caixa): o Diretor não anuncia de novo. */
+	bool bQuiet = false;
 };

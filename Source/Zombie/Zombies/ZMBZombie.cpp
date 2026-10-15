@@ -776,5 +776,7 @@ void AZMBZombie::ExplodeSelf()
 	Tank->SetVisibility(false);
 	Tank->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	AZMBFx::Blood(GetWorld(), GetActorLocation(), FVector::UpVector, 12);
-	ZMBExplosion::Detonate(GetWorld(), GetActorLocation(), Type.Blast, LastHit.Instigator.Get(), this, LastHit.ChainDepth, 45.0f);
+	// aceso por outra explosão, é o próximo elo da cadeia (como o bujão de rua, que a explosão acende com +1)
+	const int32 Depth = LastHit.ChainDepth + (LastHit.Cause == EZMBKillCause::Blast ? 1 : 0);
+	ZMBExplosion::Detonate(GetWorld(), GetActorLocation(), Type.Blast, LastHit.Instigator.Get(), this, Depth, 45.0f);
 }

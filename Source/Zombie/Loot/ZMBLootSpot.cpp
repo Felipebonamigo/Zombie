@@ -34,9 +34,11 @@ void AZMBLootSpot::Setup(const ZR::FLootSpotType& InType)
 	Body->SetRelativeLocation(FVector(0.0f, 0.0f, Type.HeightCm * 0.5f));
 	if (Type.HeightCm < 60.0f)
 	{
-		// mochila e isopor: dá para passar por cima (o jogador e os zumbis não tropeçam numa caixa de 45 cm)
+		// mochila e isopor: o jogador, os zumbis e o carro atravessam (ninguém tropeça nem bate numa caixa de 45 cm);
+		// o E e a mira continuam achando
 		Body->SetCollisionResponseToChannel(ECC_Pawn, ECR_Ignore);
 		Body->SetCollisionResponseToChannel(ECC_ZMBZombie, ECR_Ignore);
+		Body->SetCollisionResponseToChannel(ECC_Vehicle, ECR_Ignore);
 	}
 	Paint(false);
 }

@@ -1739,17 +1739,17 @@ void AZMBCharacter::ApplyLoot(const ZR::FLootResult& Loot, const FString& SpotNa
 				WeaponStates[i].Reserve += Weapons[static_cast<size_t>(i)].Magazine * Loot.AmmoPacks;
 			}
 		}
-		Gains.Add(FText::Format(LOCTEXT("LootAmmo", "+{0} PENTE POR ARMA"), FText::AsNumber(Loot.AmmoPacks)).ToString());
+		Gains.Add(FText::Format(LOCTEXT("LootAmmo", "+{0} {0}|plural(one=PENTE,other=PENTES) POR ARMA"), Loot.AmmoPacks).ToString());
 	}
 	if (Loot.Grenades > 0)
 	{
 		Grenades += Loot.Grenades;
-		Gains.Add(FText::Format(LOCTEXT("LootGrenades", "+{0} GRANADA"), FText::AsNumber(Loot.Grenades)).ToString());
+		Gains.Add(FText::Format(LOCTEXT("LootGrenades", "+{0} {0}|plural(one=GRANADA,other=GRANADAS)"), Loot.Grenades).ToString());
 	}
 	if (Loot.Bombs > 0)
 	{
 		Bombs += Loot.Bombs;
-		Gains.Add(FText::Format(LOCTEXT("LootBombs", "+{0} BUJÃO"), FText::AsNumber(Loot.Bombs)).ToString());
+		Gains.Add(FText::Format(LOCTEXT("LootBombs", "+{0} {0}|plural(one=BUJÃO,other=BUJÕES)"), Loot.Bombs).ToString());
 	}
 	if (Loot.Health > 0.0f)
 	{
@@ -1773,7 +1773,8 @@ void AZMBCharacter::ApplyLoot(const ZR::FLootResult& Loot, const FString& SpotNa
 		return;
 	}
 	const FString What = Gains.Num() > 0 ? FString::Join(Gains, TEXT(", ")) : LOCTEXT("LootNothing", "NADA AQUI").ToString();
-	Stream->ShowToast(FString::Printf(TEXT("%s: %s"), *SpotName.ToUpper(), *What));
+	// FString::ToUpper só sabe ASCII ("FOLIãO"); o FText sobe o acento
+	Stream->ShowToast(FString::Printf(TEXT("%s: %s"), *FText::FromString(SpotName).ToUpper().ToString(), *What));
 	if (Gains.Num() > 0)
 	{
 		Stream->React("saque");

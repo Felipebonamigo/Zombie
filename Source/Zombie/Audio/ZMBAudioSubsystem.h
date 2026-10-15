@@ -50,6 +50,9 @@ public:
 	 */
 	UAudioComponent* PlayLoop(const char* Id, USceneComponent* Parent);
 
+	/** Prende a atenuação do ouvinte no pawn atual (ao entrar e sair do carro); sem pawn, solta. */
+	void RefreshListener();
+
 private:
 	UAudioComponent* PlayAt(const char* Id, const FVector& Where, bool b2D, float VolumeScale, USceneComponent* AttachTo = nullptr);
 	int32 FindSound(const char* Id) const;
@@ -82,6 +85,8 @@ private:
 	std::unique_ptr<ZR::FSoundPicker> Picker;
 	/** O pawn em que a atenuação do ouvinte está presa (troca ao entrar e sair do carro). */
 	TWeakObjectPtr<APawn> ListenerPawn;
+	/** A atenuação do ouvinte está presa num pawn (o ponteiro fraco não diz isso depois que o pawn some). */
+	bool bListenerOverridden = false;
 	/** GetReloadCount das tabelas quando os caches foram feitos. */
 	int32 SeenReload = -1;
 };

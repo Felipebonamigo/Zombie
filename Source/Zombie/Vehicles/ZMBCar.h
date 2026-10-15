@@ -31,7 +31,10 @@ public:
 	AZMBCar();
 
 	/** O jogador entra (o controlador passa para o carro). */
-	void Enter(AZMBCharacter* Driver);
+	void Enter(AZMBCharacter* InDriver);
+
+	/** Quem dirige agora (nulo se ninguém): o personagem continua existindo, escondido, enquanto o carro é o pawn. */
+	AZMBCharacter* GetDriver() const;
 	/** O jogador sai pela porta do motorista. */
 	void ExitCar();
 

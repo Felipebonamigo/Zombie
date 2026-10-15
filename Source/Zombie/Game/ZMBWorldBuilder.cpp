@@ -507,6 +507,9 @@ void AZMBWorldBuilder::SpawnLoot(std::uint64_t Seed)
 		static_cast<float>(StartOnPlan.X), static_cast<float>(StartOnPlan.Y));
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	const FCollisionObjectQueryParams Movables(FCollisionObjectQueryParams::AllDynamicObjects);
+	int32 Spawned = 0;
+	int32 Skipped = 0;
 	for (const ZR::FLootPlace& Place : Places)
 	{
 		if (Place.Type < 0 || Place.Type >= static_cast<int32>(Types.size()))
@@ -517,12 +520,21 @@ void AZMBWorldBuilder::SpawnLoot(std::uint64_t Seed)
 		// na calçada fica em cima do meio-fio; na rua, no asfalto
 		const float Floor = Type.Where == ZR::ELootWhere::Sidewalk ? SidewalkHeight : 0.0f;
 		const FVector Where = Origin + FVector(Place.X, Place.Y, Floor);
-		if (AZMBLootSpot* Spot = World->SpawnActor<AZMBLootSpot>(AZMBLootSpot::StaticClass(), Where, FRotator(0.0f, Place.Yaw, 0.0f), Params))
+		const FRotator Facing(0.0f, Place.Yaw, 0.0f);
+		// a planta não sabe dos carros, dos bujões e do caminhão de gás: lugar que cairia em cima de um deles fica de fora
+		const FVector Half(Type.WidthCm * 0.5f, Type.DepthCm * 0.5f, Type.HeightCm * 0.5f);
+		if (World->OverlapAnyTestByObjectType(Where + FVector(0.0f, 0.0f, Half.Z + 2.0f), Facing.Quaternion(), Movables, FCollisionShape::MakeBox(Half)))
+		{
+			++Skipped;
+			continue;
+		}
+		if (AZMBLootSpot* Spot = World->SpawnActor<AZMBLootSpot>(AZMBLootSpot::StaticClass(), Where, Facing, Params))
 		{
 			Spot->Setup(Type);
+			++Spawned;
 		}
 	}
-	UE_LOG(LogZombie, Display, TEXT("Porto Brasa: %d lugares de saque"), static_cast<int32>(Places.size()));
+	UE_LOG(LogZombie, Display, TEXT("Porto Brasa: %d lugares de saque (%d pulados por cair em cima de carro ou bujão)"), Spawned, Skipped);
 }
 
 float AZMBWorldBuilder::GetHour() const
