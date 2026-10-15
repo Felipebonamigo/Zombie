@@ -1,5 +1,6 @@
 #include "Combat/ZMBPickup.h"
 #include "Zombie.h"
+#include "Audio/ZMBAudioSubsystem.h"
 #include "Game/ZMBGameData.h"
 #include "Player/ZMBCharacter.h"
 #include "Components/PointLightComponent.h"
@@ -70,6 +71,7 @@ void AZMBPickup::HandleOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 		return;
 	}
 	bTaken = true;
+	UZMBAudioSubsystem::Play(this, "caixa", GetActorLocation());
 	Player->Resupply(2, 2, 2, 35.0f);
 	if (const UZMBGameData* Data = UZMBGameData::Get(this))
 	{

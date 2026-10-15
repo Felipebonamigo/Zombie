@@ -20,5 +20,7 @@ public class Zombie : ModuleRules
 		// Data/*.csv vai junto no jogo empacotado, solta (fora do .pak): o UZMBGameData lê do disco em FPaths::ProjectDir()/Data,
 		// e no editor e no -game já lê da pasta do projeto. Sem isto o pacote rodaria com os padrões do código.
 		RuntimeDependencies.Add("$(ProjectDir)/Data/*.csv", StagedFileType.NonUFS);
+		// Data/Creditos.txt: o crédito que as licenças CC BY dos sons pedem vai junto com o jogo
+		RuntimeDependencies.Add("$(ProjectDir)/Data/*.txt", StagedFileType.NonUFS);
 	}
 }

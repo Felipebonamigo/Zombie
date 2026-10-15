@@ -40,6 +40,7 @@ Versão 0.1, 14 out 2026. Base: Unreal Engine 5.8, C++, um módulo (`Zombie`), W
 | `Zombies/` | `AZMBZombie`, `AZMBHordeDirector` | Corpo por membros; onde e quando nascem; fluxo; pedidos do chat |
 | `Combat/` | `AZMBExplosive`, `ZMBExplosion`, `AZMBFx`, `AZMBPickup` | Explosivos, explosão, efeitos provisórios, caixa do drone |
 | `Base/` | `AZMBBuildPiece` | Barricada e armadilha construídas: colisão, golpes, conserto, desmonte e o bujão armado |
+| `Audio/` | `UZMBAudioSubsystem` | Toca os sons de `Data/Sons.csv` (variação, vozes, alcance); motor em laço |
 | `Vehicles/` | `AZMBCar` | Carro de suspensão por raios (protótipo) |
 | `Stream/` | `UZMBStreamSubsystem`, `UZMBTwitchChat` | A live e o chat da Twitch por WebSocket |
 | `UI/` | `AZMBHUD` | HUD da live no Canvas |
@@ -60,6 +61,7 @@ Versão 0.1, 14 out 2026. Base: Unreal Engine 5.8, C++, um módulo (`Zombie`), W
 | Pedaços com física (sangue e entulho) | até 220 | `mundo.pedacos_max`; os novos não nascem acima disso |
 | Luzes pontuais | 64 postes (só à noite) + efeitos curtos | Sem sombra |
 | Cidade | ~25 x 30 células; componentes instanciados (uma chamada por cor) | `cidade.*` |
+| Vozes de som | por som, `vozes_max` de `Data/Sons.csv` (6 gemidos, 8 tiros de fuzil...) | A escolha (`ZR::FSoundPicker`) corta antes de tocar; atenuação por som criada em código |
 | Peças da base | até 40 | `base.pecas_max`; armadilha olha quem está em cima 10 vezes por segundo; zumbi procura barricada na frente 4 vezes por segundo (varredura curta); com barricada perto, a grade fina (64 x 64 células) é refeita a cada 0,5 s e quando o jogador muda de célula (um Dijkstra de ~4 mil células) |
 
 Meta de quadro: 16,7 ms (60 fps) no perfil alvo. A primeira medição fica para a sessão do PC (skill `achar-gargalo`).
@@ -75,6 +77,7 @@ Meta de quadro: 16,7 ms (60 fps) no perfil alvo. A primeira medição fica para 
 | Explosões | Formas básicas e luz | Niagara (fogo, fumaça e faíscas), decalques e **Chaos Destruction** em vidros, muros e carros |
 | Base | Peças de blocos (barricada, muro, estacas, arame, bujão armado) | Peças modulares do acervo-3d (skill `modelo-3d`), barricada que lasca com Chaos Destruction, portas e janelas de prédio para trancar |
 | Carro | Caixa com suspensão por raios | **Chaos Vehicles**, com o que o Detonauto já aprendeu (presets e amassado) |
+| Som | Gravações livres (CC0 e CC BY) em WAV, atenuação simples, mira lenta pelo tom global | **MetaSounds** (variação e camadas por arma), submixes com reverb por lugar (rua, beco, prédio), oclusão, a Free Firearm Sound Library e gravações próprias; música de banda independente com acordo escrito (nunca por IA) |
 | Clipe | Print + janela no log | **Steam Timeline** (marcadores na Gravação de Jogo da Steam) e exportação 9:16 |
 | Replay | — | Sistema de replay do Unreal (DemoNetDriver) para o replay de 10 s do clipe |
 | Chat | Twitch anônimo (só leitura) | Mais YouTube Live e TikTok LIVE; extensão da Twitch |

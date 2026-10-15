@@ -6,7 +6,7 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
 ## Fase 0 — Protótipo jogável (agora)
 
 - [x] Design, estratégia viral e contrato das regras (`design.md`, `viralizar.md`, `regras-de-jogo.md`)
-- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2, 91 com o bloco 3, 105 com o bloco 4) (g++ e clang++, avisos como erro,
+- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2, 91 com o bloco 3, 105 com o bloco 4, 112 com o bloco 5) (g++ e clang++, avisos como erro,
   sanitizers)
 - [x] Projeto Unreal 5.8 em C++ escrito:
   - cidade gerada, jogador com 4 câmeras, 3 armas, granada, bujão, chute e mira lenta;
@@ -19,6 +19,8 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
 - [x] Bloco 3, adiantado da fase 4: a base do Night of the Dead. Sucata (caixa do drone e carro desmanchado), modo
   construção (X) com barricada de madeira, muro de sucata, estacas, arame farpado e bujão armado; o zumbi travado bate na
   barricada até quebrar; conserto e desmonte
+- [x] Bloco 5, adiantado da fase 1: som. 25 sons (65 arquivos CC0 e CC BY) com variação, tom, vozes e alcance pela
+  tabela `Data/Sons.csv`; motor do carro em laço; mira lenta grave; importação por script no PC
 - [x] Bloco 4: a horda contorna a base (campo fino de 1 m em volta do jogador, barricada cara mas passável) e entra pela
   abertura; o carro rápido arromba barricada; `Data/` vai no jogo empacotado
 - [ ] **Compilar no PC** (skill `verificar`) e corrigir o que o compilador apontar
@@ -33,7 +35,7 @@ satisfatório e a live dá vontade de subir o hype.
 
 - Personagem real com Motion Matching (Game Animation Sample); armas com animação, recuo e som.
 - Zumbi esquelético: andar, correr, rastejar, morder e cair; desmembramento por osso; sangue em Niagara.
-- Explosão em Niagara; som das armas e explosões (skill `som-livre`).
+- Explosão em Niagara; som das armas e explosões em MetaSounds, sobre os sons do bloco 5 (skill `som-livre`).
 - Mira lenta com som abafado e rastro de bala.
 - **Portão:** capturas aprovadas na cena de aparência e 60 fps no perfil alvo com 80 zumbis.
 

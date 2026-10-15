@@ -185,3 +185,25 @@ O "dia constrói, noite sobrevive" do Night of the Dead. Peças em `Data/Constru
 
 Testes: `Base.*`, `GradeFina.*`, `Fluxo.BarricadaCaraFazAHordaDarAVolta`, `Fluxo.SemDesvioAHordaVemBaterNaBarricada`,
 `Dados.ConstrucaoComErroEhApontada` e `Deriva.ConstrucoesCarregamEFazemSentido`.
+
+## 13. Som (`ZRSound.h`)
+
+Cada som do jogo é uma linha de `Data/Sons.csv` com um ou mais arquivos (as variações) de `Audio/`. A cada toque:
+
+- **Variação:** sorteada entre os arquivos, sem repetir a anterior (um som só, sempre ele).
+- **Tom:** `1 ± variacao_tom`, sorteado.
+- **Não toca** quando: o som não tem arquivo; o ouvinte (a câmera) está além do `alcance_m` (som de interface não tem
+  distância); `vozes_max` toques dele já tocam; ou não passou `espera_s` desde o último toque dele. Relógio que voltou
+  (fase recomeçada) libera a espera.
+- O Unreal toca com a atenuação do alcance (volume cheio até 5% dele, queda natural até ele), preso a nada (som solto),
+  preso a um componente (laço: o motor do carro) ou sem posição (interface).
+- Mira lenta: o som do mundo desce para 0,65 do tom enquanto ela dura.
+
+Quem toca o quê: tiro (`tiro_<id da arma>`), clique sem munição, recarga, chute, impacto no corpo, explosão (volume pelo
+raio), chiado do pavio, gemido do zumbi (a cada 4 a 11 s, sorteado por zumbi), ataque, morte, membro arrancado, grito do
+gritador, pancada e quebra da barricada, martelada de construir e consertar, desmonte e desmanche, motor e batida do
+carro, a caixa do drone, e na live a doação, a pauta nova, a pauta cumprida e o clipe.
+
+Testes: `Som.*`, `Dados.SomComErroEhApontado` e `Deriva.SonsTemOsQueOCodigoTocaEOsArquivosSaoWavMono48k` (todo id do
+código tem linha; todo arquivo é WAV PCM 16 bits mono 48 kHz, até 6 s, ou 12 s em laço).
+

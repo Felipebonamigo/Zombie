@@ -19,6 +19,7 @@ class UInputAction;
 class UInputMappingContext;
 class AZMBCharacter;
 class AZMBBuildPiece;
+class UAudioComponent;
 struct FInputActionValue;
 
 UCLASS()
@@ -99,6 +100,10 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UInputAction> ResetAction;
+
+	/** Motor em laço enquanto alguém dirige (o tom sobe com a velocidade). */
+	UPROPERTY(Transient)
+	TObjectPtr<UAudioComponent> EngineSound;
 
 	TWeakObjectPtr<AZMBCharacter> Driver;
 	TArray<FVector> WheelMounts;

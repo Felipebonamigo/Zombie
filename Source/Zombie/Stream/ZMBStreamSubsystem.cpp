@@ -1,5 +1,6 @@
 #include "Stream/ZMBStreamSubsystem.h"
 #include "Zombie.h"
+#include "Audio/ZMBAudioSubsystem.h"
 #include "Game/ZMBGameData.h"
 #include "Stream/ZMBTwitchChat.h"
 #include "Zombies/ZMBHordeDirector.h"
@@ -288,6 +289,7 @@ void UZMBStreamSubsystem::Clip()
 {
 	const ZR::FHighlightTracker::FWindow Window = Highlights.BestWindow(LiveSeconds, 20.0);
 	++ClipCount;
+	UZMBAudioSubsystem::Play2D(this, "clipe");
 	if (Window.bValid)
 	{
 		Toast = FText::Format(LOCTEXT("ClipSaved", "CLIPE {0} SALVO: {1} (nota {2})"), FText::AsNumber(ClipCount),
@@ -340,11 +342,13 @@ void UZMBStreamSubsystem::HandleChallenge(const ZR::FChallengeUpdate& Update)
 	{
 	case ZR::EChallengeResult::Started:
 		Announce(FText::Format(LOCTEXT("ChallengeStart", "PATROCÍNIO: {0} EM {1} S"), Text, FText::AsNumber(FMath::RoundToInt(Def.TimeLimitSeconds))));
+		UZMBAudioSubsystem::Play2D(this, "pauta_nova");
 		AddChat(FString(), FText::Format(LOCTEXT("ChallengeChat", "Pauta do patrocinador: {0} (paga R$ {1})"), Text, FText::AsNumber(FMath::RoundToInt(Def.Reward))).ToString(), Gold, true);
 		break;
 	case ZR::EChallengeResult::Completed:
 		Money += Update.Reward;
 		State.Hype = FMath::Min(100.0f, State.Hype + Update.HypeBonus);
+		UZMBAudioSubsystem::Play2D(this, "pauta_ok");
 		Highlights.Add(LiveSeconds, Update.HypeBonus, std::string(TCHAR_TO_UTF8(*Text.ToString())));
 		AddPopup(FText::Format(LOCTEXT("ChallengeDone", "PAUTA CUMPRIDA  +R$ {0}"), FText::AsNumber(FMath::RoundToInt(Update.Reward))).ToString(), Gold);
 		AddChat(FString(), FText::Format(LOCTEXT("ChallengePaid", "O patrocinador pagou R$ {0}!"), FText::AsNumber(FMath::RoundToInt(Update.Reward))).ToString(), Gold, true);
@@ -458,6 +462,7 @@ void UZMBStreamSubsystem::Tick(float DeltaTime)
 	for (const ZR::FDonation& Donation : Donations)
 	{
 		Money += Donation.Amount;
+		UZMBAudioSubsystem::Play2D(this, "doacao");
 		const FString Donor = FakeChat ? UZMBGameData::ToFString(FakeChat->FakeUserName()) : FString(TEXT("anonimo"));
 		const ZR::FChatLine* Line = FakeChat ? FakeChat->Pick("doacao") : nullptr;
 		const FString Words = Line ? UZMBGameData::ToFString(bPortuguese ? Line->TextPt : Line->TextEn) : FString();

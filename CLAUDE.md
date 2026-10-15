@@ -26,6 +26,7 @@ funções, variáveis) ficam em inglês, como é o padrão do Unreal.
   - `Tools\Unreal\test.ps1 -Uproject Zombie.uproject -Filter Zombie` roda os testes de Automation.
   - `Tools\Unreal\jogar.ps1 [-Shot 8] [-Hour 21] [-Cam 3] [-Horde] [-Twitch canal]` joga ou tira print.
   - `Tools\Unreal\criar_materiais.ps1` cria os materiais do protótipo.
+  - `Tools\Unreal\importar_sons.ps1` importa `Audio/*.wav` (o jogo fica mudo sem isso).
 
 ## Rotinas em `.claude/skills/`
 
@@ -34,9 +35,10 @@ funções, variáveis) ficam em inglês, como é o padrão do Unreal.
 - `jogar-e-capturar`: abre o jogo, tira print e olha a imagem antes de afirmar algo visual.
 - `modelo-3d`: procurar antes, registrar depois.
 - `triar-playtest`: Issues "[Playtest]"; o commit que corrige diz "fecha #N".
+- `som-livre`: procurar, conferir a licença, tratar (`Tools/Audio/tratar_sons.py`), importar e registrar um som.
 
 As rotinas dos outros jogos (`achar-gargalo`, `ler-crash`, `publicar-na-steam`, `declaracao-ia`, `conferir-fato`,
-`som-livre`, `traduzir`, `ligar-unreal-mcp`) servem aqui do mesmo jeito. Copie de `Felipebonamigo/Detonauto` e adapte os
+`traduzir`, `ligar-unreal-mcp`) servem aqui do mesmo jeito. Copie de `Felipebonamigo/Detonauto` e adapte os
 caminhos quando a fase pedir. Unreal MCP deste jogo: **porta 8040**.
 
 ## Regras de trabalho

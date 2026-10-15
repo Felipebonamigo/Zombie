@@ -111,6 +111,8 @@ private:
 	TWeakObjectPtr<AZMBBuildPiece> BlockingPiece;
 	float BlockCheckTimer = 0.0f;
 	bool bBashing = false;
+	/** Até o próximo gemido [s] (sorteado; começa espalhado para a horda não gemer em coro). */
+	float GroanLeft = 0.0f;
 	float TrapSlowFactor = 1.0f;
 	float TrapSlowLeft = 0.0f;
 	TArray<FTransform> RestTransforms;

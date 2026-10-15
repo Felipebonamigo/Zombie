@@ -19,6 +19,7 @@
 #include "Rules/ZRDirector.h"
 #include "Rules/ZRHype.h"
 #include "Rules/ZRLocalGrid.h"
+#include "Rules/ZRSound.h"
 
 namespace ZR
 {
@@ -190,6 +191,8 @@ namespace ZR
 	void LoadChatLines(const std::string& Csv, std::vector<FChatLine>& Out, std::vector<std::string>& Errors);
 	/** Data/Pautas.csv: o evento tem que ser um id de EHypeEvent e a quantidade, pelo menos 1. */
 	void LoadChallenges(const std::string& Csv, std::vector<FChallengeDef>& Out, std::vector<std::string>& Errors);
+	/** Data/Sons.csv: arquivos separados por ";", só letras minúsculas, números e "_" (o nome vira asset no Unreal). */
+	void LoadSounds(const std::string& Csv, std::vector<FSoundDef>& Out, std::vector<std::string>& Errors);
 	/** Data/Construcoes.csv: o explosivo da armadilha tem que ser um id de Explosives (Explosivos.csv). */
 	void LoadBuildPieces(const std::string& Csv, const std::vector<FExplosiveType>& Explosives, std::vector<FBuildPieceType>& Out,
 		std::vector<std::string>& Errors);

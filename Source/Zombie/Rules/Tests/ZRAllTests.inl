@@ -14,3 +14,4 @@
 #include "Rules/Tests/ZRTestsChallenges.inl"
 #include "Rules/Tests/ZRTestsBase.inl"
 #include "Rules/Tests/ZRTestsLocalGrid.inl"
+#include "Rules/Tests/ZRTestsSound.inl"

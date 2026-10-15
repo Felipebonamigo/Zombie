@@ -1,5 +1,6 @@
 #include "Vehicles/ZMBCar.h"
 #include "Zombie.h"
+#include "Audio/ZMBAudioSubsystem.h"
 #include "Base/ZMBBuildPiece.h"
 #include "CoreGlobals.h"
 #include "Combat/ZMBTypes.h"
@@ -8,6 +9,7 @@
 #include "Stream/ZMBStreamSubsystem.h"
 #include "Zombies/ZMBZombie.h"
 #include "Camera/CameraComponent.h"
+#include "Components/AudioComponent.h"
 #include "Components/BoxComponent.h"
 #include "Components/SpotLightComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -151,6 +153,13 @@ void AZMBCar::Enter(AZMBCharacter* InDriver)
 	Driver = InDriver;
 	InDriver->SetDriving(this);
 	DriverController->Possess(this);
+	if (!EngineSound)
+	{
+		if (UZMBAudioSubsystem* Audio = UZMBAudioSubsystem::Get(this))
+		{
+			EngineSound = Audio->PlayLoop("carro_motor", Box);
+		}
+	}
 }
 
 void AZMBCar::ExitCar()
@@ -162,6 +171,11 @@ void AZMBCar::ExitCar()
 		return;
 	}
 	Driver.Reset();
+	if (EngineSound)
+	{
+		EngineSound->FadeOut(0.4f, 0.0f);
+		EngineSound = nullptr;
+	}
 	ThrottleInput = 0.0f;
 	SteerInput = 0.0f;
 	bHandbrake = false;
@@ -303,6 +317,13 @@ void AZMBCar::Tick(float DeltaSeconds)
 	const ZR::FCarConfig& Car = Data->Tuning().Car;
 	LastVelocity = Box->GetPhysicsLinearVelocity();
 	LastAngularVelocity = Box->GetPhysicsAngularVelocityInDegrees();
+	if (EngineSound)
+	{
+		// marcha lenta em 0,7 e o giro sobe com a velocidade e com o pé no acelerador
+		const float Speed01 = FMath::Clamp(static_cast<float>(LastVelocity.Size()) * KmhPerCmS / FMath::Max(Car.MaxSpeedKmh, 1.0f), 0.0f, 1.0f);
+		EngineSound->SetPitchMultiplier(0.7f + Speed01 * 1.1f + FMath::Abs(ThrottleInput) * 0.15f);
+		EngineSound->SetVolumeMultiplier(0.6f + FMath::Abs(ThrottleInput) * 0.4f);
+	}
 	for (int32 i = RecentPieceHits.Num() - 1; i >= 0; --i)
 	{
 		RecentPieceHits[i].Value -= DeltaSeconds;
@@ -412,6 +433,7 @@ void AZMBCar::HandleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, U
 		return;
 	}
 	RecentPieceHits.Add(TPair<TWeakObjectPtr<AZMBBuildPiece>, float>(Piece, 0.3f));
+	UZMBAudioSubsystem::Play(this, "carro_batida", Hit.ImpactPoint, FMath::Clamp(ApproachKmh / 60.0f, 0.4f, 1.3f));
 	// madeira cai acima de ~35 km/h de frente, o muro de sucata só acima de ~100 (base.dano_carro_multiplicador)
 	const float Damage = ApproachKmh * Car.RunOverDamagePerKmh * Data->Tuning().Base.VehicleDamageMultiplier;
 	if (Piece->TakeVehicleHit(Damage, Hit.ImpactPoint) && RestoredFrame != GFrameCounter)
@@ -443,6 +465,7 @@ void AZMBCar::HandleOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 	Context.Instigator = GetController();
 	Context.Cause = EZMBKillCause::Vehicle;
 	Zombie->TakeVehicleHit(SpeedKmh * Car.RunOverDamagePerKmh, Velocity, Context);
+	UZMBAudioSubsystem::Play(this, "impacto_carne", Zombie->GetActorLocation(), FMath::Clamp(SpeedKmh / 50.0f, 0.6f, 1.4f));
 	// cada atropelo rouba um pouco de velocidade
 	Box->SetPhysicsLinearVelocity(Velocity * 0.96f);
 }

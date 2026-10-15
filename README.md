@@ -29,6 +29,8 @@ Tudo em formas básicas da engine, para sentir o jogo; o visual realista vem por
   - Têm desmembramento por membro (a cabeça estoura, sem perna vira rastejante) e explodem em pedaços.
 - **Explosões em cadeia:** bujões, barris, carros abandonados e os zumbis-bujão.
 - **Carro dirigível,** que atropela.
+- **Som:** tiros, explosões, zumbis (gemido, ataque, morte, grito), base, carro e a live, com variação para não repetir;
+  gravações livres (CC0 e CC BY, créditos em `Data/Creditos.txt`).
 - **Base à Night of the Dead:** sucata (caixa do drone e carro desmanchado) e **modo construção** (X) com barricada de
   madeira, muro de sucata, estacas, arame farpado e **bujão armado**. A horda contorna a base e entra pela abertura (onde
   ficam as armadilhas); sem abertura, bate na barricada até quebrar. Carro rápido arromba. Dá para consertar e desmontar.
@@ -45,6 +47,7 @@ Tudo em formas básicas da engine, para sentir o jogo; o visual realista vem por
 
 ```powershell
 .\Tools\Unreal\build.ps1 -Uproject Zombie.uproject      # compila (editor fechado)
+.\Tools\Unreal\importar_sons.ps1                      # uma vez (e quando Audio/ mudar): importa os sons
 .\Tools\Unreal\jogar.ps1                                # abre o jogo
 .\Tools\Unreal\jogar.ps1 -Twitch seucanal               # com o chat da sua live na Twitch
 ```
@@ -65,8 +68,9 @@ Tools/Regras/testar.sh                 # regras puras (qualquer máquina com g++
 | Pasta | O quê |
 |---|---|
 | `Source/Zombie/Rules/` | Regras puras em C++ sem Unreal (testadas em qualquer lugar) |
-| `Source/Zombie/{Game,Player,Zombies,Combat,Base,Vehicles,Stream,UI}/` | O jogo no Unreal |
+| `Source/Zombie/{Game,Player,Zombies,Combat,Base,Audio,Vehicles,Stream,UI}/` | O jogo no Unreal |
 | `Data/` | Tabelas de ajuste em CSV ([`docs/dados.md`](docs/dados.md)) |
+| `Audio/` | Sons tratados (WAV, Git LFS), importados no PC por `Tools/Unreal/importar_sons.ps1` |
 | `Config/` | Renderização (Lumen, sombras virtuais, TSR), entrada e colisão |
 | `Tools/` | Testes das regras, scripts do PC e scripts Python do editor |
 | `docs/` | Design, regras, técnica, visual, roteiro e licenças |

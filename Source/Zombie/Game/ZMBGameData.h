@@ -45,6 +45,8 @@ public:
 	const std::vector<ZR::FHypeEventDef>& HypeEvents() const { return LoadedHypeEvents; }
 	const std::vector<ZR::FChatLine>& ChatLines() const { return LoadedChatLines; }
 	const std::vector<ZR::FChallengeDef>& Challenges() const { return LoadedChallenges; }
+	/** Sons (Data/Sons.csv); quem toca é o Audio/ZMBAudioSubsystem. */
+	const std::vector<ZR::FSoundDef>& Sounds() const { return LoadedSounds; }
 	/** Peças do modo construção, na ordem da tabela (Data/Construcoes.csv). */
 	const std::vector<ZR::FBuildPieceType>& BuildPieces() const { return LoadedBuildPieces; }
 
@@ -80,6 +82,7 @@ private:
 	std::vector<ZR::FChatLine> LoadedChatLines;
 	std::vector<ZR::FChallengeDef> LoadedChallenges;
 	std::vector<ZR::FBuildPieceType> LoadedBuildPieces;
+	std::vector<ZR::FSoundDef> LoadedSounds;
 	TArray<FString> Errors;
 
 	UPROPERTY(Transient)

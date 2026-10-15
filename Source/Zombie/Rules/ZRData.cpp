@@ -446,6 +446,71 @@ namespace ZR
 		}
 	}
 
+	void LoadSounds(const std::string& Csv, std::vector<FSoundDef>& Out, std::vector<std::string>& Errors)
+	{
+		Out.clear();
+		FCsvTable Table;
+		if (!ParseOrReport(Csv, "Sons.csv", Table, Errors))
+		{
+			return;
+		}
+		FRowReader Reader(Table, "Sons.csv", Errors);
+		if (!Reader.Require({"id", "arquivos", "volume", "variacao_tom", "alcance_m", "vozes_max", "espera_s", "laco", "interface"}))
+		{
+			return;
+		}
+		for (std::size_t Row = 0; Row < Table.Rows.size(); ++Row)
+		{
+			FSoundDef Sound;
+			Sound.Id = Reader.Text(Row, "id");
+			if (!AcceptId(Reader, Row, Sound.Id, Out))
+			{
+				continue;
+			}
+			// "a;b;c": cada nome vira o asset SW_<nome> no Unreal, então só minúsculas, números e "_"
+			const std::string Files = Reader.Text(Row, "arquivos");
+			bool bBadName = false;
+			std::size_t Start = 0;
+			while (Start <= Files.size() && !Files.empty())
+			{
+				const std::size_t End = std::min(Files.find(';', Start), Files.size());
+				std::string Name = Files.substr(Start, End - Start);
+				while (!Name.empty() && Name.front() == ' ')
+				{
+					Name.erase(Name.begin());
+				}
+				while (!Name.empty() && Name.back() == ' ')
+				{
+					Name.pop_back();
+				}
+				const bool bValid = !Name.empty() && std::all_of(Name.begin(), Name.end(), [](char C)
+				{
+					return (C >= 'a' && C <= 'z') || (C >= '0' && C <= '9') || C == '_';
+				});
+				if (!bValid)
+				{
+					Reader.Report(Row, "arquivos", "'" + Name + "' não é um nome de arquivo válido (minúsculas, números e _)");
+					bBadName = true;
+					break;
+				}
+				Sound.Files.push_back(Name);
+				Start = End + 1;
+			}
+			if (bBadName)
+			{
+				continue;
+			}
+			Sound.Volume = Reader.Float(Row, "volume", 0.0f, 4.0f, 1.0f);
+			Sound.PitchJitter = Reader.Float(Row, "variacao_tom", 0.0f, 0.5f, 0.05f);
+			Sound.RangeCm = Reader.Float(Row, "alcance_m", 1.0f, 2000.0f, 40.0f) * 100.0f;
+			Sound.MaxVoices = Reader.Int(Row, "vozes_max", 1, 64, 4);
+			Sound.CooldownSeconds = Reader.Float(Row, "espera_s", 0.0f, 60.0f, 0.0f);
+			Sound.bLoop = Reader.Bool(Row, "laco");
+			Sound.b2D = Reader.Bool(Row, "interface");
+			Out.push_back(Sound);
+		}
+	}
+
 	void LoadBuildPieces(const std::string& Csv, const std::vector<FExplosiveType>& Explosives, std::vector<FBuildPieceType>& Out,
 		std::vector<std::string>& Errors)
 	{

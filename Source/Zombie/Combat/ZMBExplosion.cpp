@@ -1,5 +1,6 @@
 #include "Combat/ZMBExplosion.h"
 #include "Zombie.h"
+#include "Audio/ZMBAudioSubsystem.h"
 #include "Base/ZMBBuildPiece.h"
 #include "Combat/ZMBExplosive.h"
 #include "Combat/ZMBFx.h"
@@ -88,6 +89,8 @@ namespace ZMBExplosion
 		}
 
 		AZMBFx::Explosion(World, Origin, Blast.OuterRadiusCm);
+		// o bujão (raio 8 m) toca no volume da tabela; o carro (11 m) mais alto, a granada (7 m) um pouco mais baixo
+		UZMBAudioSubsystem::Play(World, "explosao", Origin, FMath::Clamp(Blast.OuterRadiusCm / 800.0f, 0.7f, 1.4f));
 
 		// tremor de câmera pela distância até o jogador (mesmo fora do raio de dano)
 		if (!Player)

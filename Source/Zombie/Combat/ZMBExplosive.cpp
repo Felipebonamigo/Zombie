@@ -1,5 +1,6 @@
 #include "Combat/ZMBExplosive.h"
 #include "Zombie.h"
+#include "Audio/ZMBAudioSubsystem.h"
 #include "Combat/ZMBExplosion.h"
 #include "Game/ZMBGameData.h"
 #include "Components/PointLightComponent.h"
@@ -122,6 +123,7 @@ void AZMBExplosive::Ignite(int32 ChainDepth)
 		Explode();
 		return;
 	}
+	UZMBAudioSubsystem::Play(this, "chiado", GetActorLocation());
 	FuseLight = NewObject<UPointLightComponent>(this, TEXT("FuseLight"));
 	FuseLight->SetupAttachment(Body);
 	FuseLight->SetMobility(EComponentMobility::Movable);

@@ -1,0 +1,15 @@
+AO VIVO - créditos de terceiros
+
+Sons (licenças Creative Commons e OpenGameArt; a lista completa, com os CC0, está em docs/licencas.csv do projeto).
+Todos foram modificados para o jogo: cortados, convertidos para mono a 48 kHz e com o volume normalizado.
+
+- Sounds (c) by Michel Baradari apollo-music.de - Licensed under CC BY 3.0 http://creativecommons.org/licenses/by/3.0/ - Hosted on opengameart.org (CC-BY 3.0): "Chaingun, pistol, rifle, shotgun shots" https://opengameart.org/content/chaingun-pistol-rifle-shotgun-shots
+- Sounds (c) by Michel Baradari apollo-music.de - Licensed under CC BY 3.0 http://creativecommons.org/licenses/by/3.0/ - Hosted on opengameart.org (CC-BY 3.0): "2 metal weapon clicks" https://opengameart.org/content/2-metal-weapon-clicks
+- Sounds (c) by Michel Baradari apollo-music.de - Licensed under CC BY 3.0 http://creativecommons.org/licenses/by/3.0/ - Hosted on opengameart.org (CC-BY 3.0): "2 High Quality Explosions" https://opengameart.org/content/2-high-quality-explosions
+- Big low frequency explosion boom by Hansjörg Malthaner - http://opengameart.org/users/varkalandar - CC BY 4.0 https://creativecommons.org/licenses/by/4.0/ (CC-BY 4.0): "Big low frequency explosion boom" https://opengameart.org/content/big-low-frequency-explosion-boom
+- Additional Sound FX by Will Leamon (OGA-BY 3.0): "Fleshy Fight Sounds" https://opengameart.org/content/fleshy-fight-sounds
+- Car Engine Loop by Iwan 'qubodup' Gabovitch - CC BY 3.0 http://creativecommons.org/licenses/by/3.0/ - https://opengameart.org/content/car-engine-loop-96khz-4s (CC-BY 3.0): "Car Engine Loop 96kHz, 4s" https://opengameart.org/content/car-engine-loop-96khz-4s
+
+Sons em domínio público (CC0), com agradecimento:
+
+0new4y, AntumDeluge, ArcadeParty, Darsycho, EmoPreben, Independent.nu (enviado por qubodup), Joth, Kenney (Kenney Vleugels, www.kenney.nl), Nocturnal_Vanguard, Robin Lamb, SpringySpringo, Tabasco, Vinrax, artisticdude, bart, blacklodgegames, kurt, qubodup, rubberduck, themightyglider, zer0_sol.

@@ -1,5 +1,6 @@
 #include "Zombies/ZMBZombie.h"
 #include "Zombie.h"
+#include "Audio/ZMBAudioSubsystem.h"
 #include "Base/ZMBBuildPiece.h"
 #include "Combat/ZMBExplosion.h"
 #include "Combat/ZMBFx.h"
@@ -131,6 +132,7 @@ void AZMBZombie::InitZombie(const ZR::FZombieType& InType, const FString& InView
 void AZMBZombie::BeginPlay()
 {
 	Super::BeginPlay();
+	GroanLeft = FMath::FRandRange(0.5f, 8.0f);
 	if (Type.Id.empty())
 	{
 		// nasceu sem InitZombie (colocado à mão no mapa): vira um comum com os padrões
@@ -284,6 +286,14 @@ void AZMBZombie::Tick(float DeltaSeconds)
 	WobblePhase += DeltaSeconds;
 	Direction = Direction.RotateAngleAxis(FMath::Sin(WobblePhase * 1.7f) * 14.0f, FVector::UpVector);
 
+	// gemido de tempos em tempos (a tabela limita as vozes e o alcance: a horda vira um coro, não um estouro)
+	GroanLeft -= DeltaSeconds;
+	if (GroanLeft <= 0.0f)
+	{
+		GroanLeft = FMath::FRandRange(4.0f, 11.0f);
+		UZMBAudioSubsystem::Play(this, "zumbi_gemido", GetActorLocation() + FVector(0.0f, 0.0f, 60.0f));
+	}
+
 	// gritador: ao chegar a 25 m do jogador, para e grita uma vez, chamando a horda
 	if (Type.Id == "gritador" && !bScreamed && Distance < 2500.0f)
 	{
@@ -318,6 +328,7 @@ void AZMBZombie::Tick(float DeltaSeconds)
 			AttackCooldown = Type.AttackIntervalSeconds;
 			LungeTimer = 0.3f;
 			Barricade->TakeZombieHit(Type.AttackDamage * (Body.ArmsLeft() > 0 ? 1.0f : 0.5f), Me);
+			UZMBAudioSubsystem::Play(this, "zumbi_ataque", Me);
 		}
 		Animate(DeltaSeconds, 0.0f);
 		UpdateLabel();
@@ -335,6 +346,7 @@ void AZMBZombie::Tick(float DeltaSeconds)
 		// sem braços morde mais fraco
 		const float Damage = Type.AttackDamage * (Body.ArmsLeft() > 0 ? 1.0f : 0.5f);
 		UGameplayStatics::ApplyDamage(Target, Damage, nullptr, this, nullptr);
+		UZMBAudioSubsystem::Play(this, "zumbi_ataque", Me);
 	}
 
 	Animate(DeltaSeconds, GetVelocity().Size2D());
@@ -450,6 +462,7 @@ void AZMBZombie::Scream()
 {
 	bScreamed = true;
 	ScreamLeft = 1.6f;
+	UZMBAudioSubsystem::Play(this, "gritador_grito", GetActorLocation());
 	AZMBHordeDirector* Director = AZMBHordeDirector::Find(this);
 	const int32 Called = Director ? Director->CallHorde(GetActorLocation(), 5) : 0;
 	// sem ninguém para chamar (teto de vivos cheio), o grito não vira anúncio
@@ -583,6 +596,7 @@ void AZMBZombie::ApplyOutcome(const ZR::FHitOutcome& Outcome, const FVector& Ori
 	}
 	else if (SeveredCount > 0 && Context.Instigator.IsValid() && Context.Instigator->IsPlayerController())
 	{
+		UZMBAudioSubsystem::Play(this, "despedacar", GetActorLocation());
 		if (UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this))
 		{
 			Stream->ReportHype(ZR::EHypeEvent::Dismember, SeveredCount, GetActorLocation());
@@ -653,6 +667,7 @@ void AZMBZombie::Die(const ZR::FHitOutcome& Outcome, const FZMBHitContext& Conte
 	const FVector LastVelocity = GetVelocity();
 	Move->StopMovementImmediately();
 	Move->DisableMovement();
+	UZMBAudioSubsystem::Play(this, Outcome.bGibbed ? "despedacar" : "zumbi_morte", GetActorLocation());
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	if (Label)
 	{
@@ -716,6 +731,7 @@ void AZMBZombie::ArmTank(const FZMBHitContext& Context)
 		return;
 	}
 	bTankArmed = true;
+	UZMBAudioSubsystem::Play(this, "chiado", Tank ? Tank->GetComponentLocation() : GetActorLocation());
 	LastHit = Context;
 	bExplodePending = true;
 	// baleado chia um pouquinho (dá tempo de ver e correr); aceso por outra explosão estoura quase junto

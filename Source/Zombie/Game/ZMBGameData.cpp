@@ -96,6 +96,10 @@ void UZMBGameData::Reload()
 	{
 		ZR::LoadChatLines(Text, LoadedChatLines, RuleErrors);
 	}
+	if (LoadText(TEXT("Sons.csv"), Text))
+	{
+		ZR::LoadSounds(Text, LoadedSounds, RuleErrors);
+	}
 	if (LoadText(TEXT("Pautas.csv"), Text))
 	{
 		ZR::LoadChallenges(Text, LoadedChallenges, RuleErrors);

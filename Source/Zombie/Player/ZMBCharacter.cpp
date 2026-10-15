@@ -1,5 +1,6 @@
 #include "Player/ZMBCharacter.h"
 #include "Zombie.h"
+#include "Audio/ZMBAudioSubsystem.h"
 #include "Base/ZMBBuildPiece.h"
 #include "Combat/ZMBExplosive.h"
 #include "Combat/ZMBFx.h"
@@ -454,6 +455,7 @@ void AZMBCharacter::ReloadKey(const FInputActionValue& Value)
 	if (State.Magazine < Weapon->Magazine && State.Reserve > 0)
 	{
 		ReloadLeft = Weapon->ReloadSeconds;
+		UZMBAudioSubsystem::Play(this, "recarga", GetActorLocation());
 	}
 }
 
@@ -518,6 +520,7 @@ void AZMBCharacter::KickKey(const FInputActionValue& Value)
 		return;
 	}
 	KickCooldown = 0.6f;
+	UZMBAudioSubsystem::Play(this, "chute", GetActorLocation());
 	const ZR::FPlayerConfig& Player = Data->Tuning().Player;
 	const FVector Forward = GetActorForwardVector();
 	const FVector Center = GetActorLocation() + Forward * (Player.KickRangeCm * 0.6f);
@@ -616,6 +619,8 @@ void AZMBCharacter::SetSlowMo(bool bOn)
 	const UZMBGameData* Data = UZMBGameData::Get(this);
 	bSlowMo = bOn;
 	UGameplayStatics::SetGlobalTimeDilation(this, bOn && Data ? Data->Tuning().Player.SlowMoTimeDilation : 1.0f);
+	// o Dead Eye também se ouve: tudo mais grave e arrastado enquanto dura
+	UGameplayStatics::SetGlobalPitchModulation(this, bOn ? 0.65f : 1.0f, 0.2f);
 	if (bOn)
 	{
 		if (UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this))
@@ -643,6 +648,7 @@ void AZMBCharacter::InteractKey(const FInputActionValue& Value)
 		const UZMBGameData* Data = UZMBGameData::Get(this);
 		DismantleTarget = Wreck;
 		DismantleLeft = Data ? Data->Tuning().Base.DismantleSeconds : 2.5f;
+		UZMBAudioSubsystem::Play(this, "desmanche", Wreck->GetActorLocation());
 	}
 }
 
@@ -852,12 +858,18 @@ void AZMBCharacter::FireOnce()
 	FWeaponState& State = WeaponStates[CurrentWeapon];
 	if (State.Magazine <= 0)
 	{
+		if (State.Reserve <= 0)
+		{
+			UZMBAudioSubsystem::Play(this, "arma_vazia", GetActorLocation());
+		}
 		ReloadKey(FInputActionValue());
 		return;
 	}
 	--State.Magazine;
 	FireCooldown = 1.0f / FMath::Max(Weapon->ShotsPerSecond, 0.1f);
 	SinceShot = 0.0f;
+	// o som é "tiro_<id da arma>" (Data/Sons.csv)
+	UZMBAudioSubsystem::Play(this, ("tiro_" + Weapon->Id).c_str(), GetActorLocation());
 
 	// o tiro sai do centro da tela (a mira), começando na altura do personagem para não acertar nada entre ele e a câmera
 	const FVector ViewLocation = Camera->GetComponentLocation();
@@ -902,6 +914,7 @@ void AZMBCharacter::HandleBulletHit(const FHitResult& Hit, const FVector& Direct
 		Context.DistanceCm = FVector::Dist(GetActorLocation(), Hit.ImpactPoint);
 		const ZR::FHitOutcome Outcome = Zombie->TakeLimbHit(Component, Weapon.Damage, Hit.ImpactPoint, Direction * Weapon.Impulse, Context);
 		HitMarkerAge = 0.0f;
+		UZMBAudioSubsystem::Play(this, "impacto_carne", Hit.ImpactPoint);
 		if (Outcome.bHeadshotKill)
 		{
 			if (const UZMBGameData* Data = UZMBGameData::Get(this))
@@ -1409,6 +1422,10 @@ void AZMBCharacter::PlaceOrRepair()
 	{
 		const int32 Spent = Piece->Repair(Scrap);
 		Scrap -= Spent;
+		if (Spent > 0)
+		{
+			UZMBAudioSubsystem::Play(this, "construir", Piece->GetActorLocation());
+		}
 		if (Stream)
 		{
 			if (Spent > 0)
@@ -1439,6 +1456,7 @@ void AZMBCharacter::PlaceOrRepair()
 	}
 	Built->Setup(*Type, BuildRot90);
 	Scrap -= Type->Cost;
+	UZMBAudioSubsystem::Play(this, "construir", GhostCenter);
 	// a martelada faz barulho: construir chama zumbi
 	if (AZMBHordeDirector* Director = AZMBHordeDirector::Find(this))
 	{
@@ -1459,6 +1477,7 @@ void AZMBCharacter::DismantleAimed()
 		// bujão armado com o pavio aceso não se desmonta
 		return;
 	}
+	UZMBAudioSubsystem::Play(this, "desmanche", Piece->GetActorLocation());
 	AimedPiece = nullptr;
 	Scrap += Refund;
 	if (UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this))
@@ -1532,6 +1551,7 @@ void AZMBCharacter::UpdateDismantle(float DeltaSeconds)
 	}
 	const UZMBGameData* Data = UZMBGameData::Get(this);
 	AZMBFx::Debris(GetWorld(), Wreck->GetActorLocation(), 8, FLinearColor(0.2f, 0.2f, 0.21f), 350.0f);
+	UZMBAudioSubsystem::Play(this, "desmanche", Wreck->GetActorLocation());
 	Wreck->Destroy();
 	CancelDismantle();
 	AddScrap(Data ? Data->Tuning().Base.ScrapPerWreck : 25);

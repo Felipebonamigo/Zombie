@@ -1,5 +1,6 @@
 #include "Base/ZMBBuildPiece.h"
 #include "Zombie.h"
+#include "Audio/ZMBAudioSubsystem.h"
 #include "Combat/ZMBExplosion.h"
 #include "Combat/ZMBFx.h"
 #include "Combat/ZMBTypes.h"
@@ -291,6 +292,7 @@ void AZMBBuildPiece::TakeZombieHit(float Damage, const FVector& From)
 	FVector Toward = From - GetActorLocation();
 	Toward.Z = 0.0f;
 	AZMBFx::ImpactDust(GetWorld(), GetActorLocation() + Toward.GetClampedToMaxSize(Type.DepthCm * 0.5f + 10.0f), Toward.GetSafeNormal());
+	UZMBAudioSubsystem::Play(this, "barricada_pancada", GetActorLocation());
 	if (ZR::DamagePiece(State, Damage * Multiplier))
 	{
 		Break();
@@ -352,6 +354,7 @@ void AZMBBuildPiece::Arm(AController* DamageInstigator, int32 ChainDepth)
 	const ZR::FExplosiveType* Explosive = Data ? Data->FindExplosive(Type.ExplosiveId.c_str()) : nullptr;
 	PendingInstigator = DamageInstigator;
 	PendingChainDepth = ChainDepth;
+	UZMBAudioSubsystem::Play(this, "chiado", GetActorLocation());
 	// pavio curto: o clique do arame e já era (em cadeia "pipoca" como os bujões da rua)
 	FuseLeft = FMath::Max(0.05f, (Explosive ? Explosive->FuseSeconds : 0.9f) * (ChainDepth > 0 ? FMath::FRandRange(0.25f, 0.6f) : 0.4f));
 	SetActorTickEnabled(true);
@@ -389,6 +392,7 @@ void AZMBBuildPiece::Break()
 	bGone = true;
 	const FLinearColor Color = Looks.Num() > 0 ? Looks.Last().Color : UZMBGameData::ToLinear(Type.ColorRgb);
 	AZMBFx::Debris(GetWorld(), GetActorLocation(), IsBarricade() ? 10 : 5, Color, 500.0f);
+	UZMBAudioSubsystem::Play(this, "barricada_quebra", GetActorLocation());
 	if (IsBarricade())
 	{
 		if (UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this))

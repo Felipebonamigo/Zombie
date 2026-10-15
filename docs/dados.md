@@ -89,6 +89,21 @@ O rótulo é o texto que salta na tela.
   aparece como um bloco da cor da peça.
 - Linha com erro sai inteira (não aparece no modo construção) e o erro vai para o log.
 
+## `Sons.csv`
+
+`id,arquivos,volume,variacao_tom,alcance_m,vozes_max,espera_s,laco,interface`
+
+- `arquivos`: nomes sem extensão, separados por `;`, de `Audio/<nome>.wav` (só minúsculas, números e `_`: o nome vira o
+  asset `SW_<nome>` no Unreal). Vazio = o som fica mudo.
+- `variacao_tom`: o tom varia `1 ± isto`. `alcance_m`: além disso não toca. `vozes_max`: toques ao mesmo tempo.
+  `espera_s`: mínimo entre dois toques. `laco` = 1: toca sem fim, preso a algo (motor). `interface` = 1: sem posição.
+- Os ids que o código toca estão em `ZR::RequiredSoundIds()`; o teste de deriva cobra uma linha para cada.
+- Som novo: skill `som-livre` (procurar, conferir a licença, tratar com `Tools/Audio/tratar_sons.py`, registrar).
+
+## `Creditos.txt`
+
+O crédito que as licenças CC BY dos sons pedem. Vai junto no jogo empacotado (Zombie.Build.cs).
+
 ## `ChatFalso.csv`
 
 `categoria,texto_pt,texto_en`
