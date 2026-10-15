@@ -3,7 +3,7 @@
 Documento de passagem. Uma sessão nova do Claude (nuvem ou PC) lê este arquivo e o `CLAUDE.md` e consegue continuar sem
 o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 
-Última revisão: 14 out 2026 (primeira sessão, na nuvem; blocos 1, 2 e 3).
+Última revisão: 15 out 2026 (primeira sessão, na nuvem; blocos 1 a 4).
 
 ## Como o trabalho está dividido
 
@@ -17,7 +17,7 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 | Área | Onde | Estado |
 |---|---|---|
 | Design, estratégia viral, roteiro | `docs/design.md`, `docs/viralizar.md`, `docs/roadmap.md` | Versão 0.1, para o Felipe ler e decidir |
-| Regras puras: cidade, fluxo, corpo, explosão, hype, Diretor, dia e noite, chat, clipes, pautas, base, CSV | `Source/Zombie/Rules/` | **91 testes passando** na nuvem (g++ 13 e clang++, `-Wall -Wextra -Wshadow -Wconversion -Werror`, ASan e UBSan) |
+| Regras puras: cidade, fluxo (com custo extra), grade fina da base, corpo, explosão, hype, Diretor, dia e noite, chat, clipes, pautas, base, CSV | `Source/Zombie/Rules/` | **98 testes passando** na nuvem (g++ 13 e clang++, `-Wall -Wextra -Wshadow -Wconversion -Werror`, ASan e UBSan) |
 | Tabelas de ajuste | `Data/*.csv` | Carregam sem erro (testes `Deriva.*`) |
 | Projeto Unreal 5.8 | `Zombie.uproject`, `Config/`, `Source/` | Escrito na nuvem; **ainda não compilado**. Conferidor de C++ sem erros. Uma revisão independente das assinaturas da API achou 1 erro de compilação (include do material dinâmico) e 1 defeito (o carro não viraria: o `APawn` segue o yaw do controle por padrão); os dois foram corrigidos. A revisão do bloco 3 (base) não achou erro de compilação; achou 10 defeitos de comportamento (zumbi alto não via a barricada, mordida por cima dela, peça afundando na praça, mira do modo construção pegando o que estava atrás do jogador, entre outros), todos corrigidos |
 | Jogo de protótipo | `Source/Zombie/{Game,Player,Zombies,Combat,Base,Vehicles,Stream,UI}` | Cidade gerada, jogador, 7 tipos de zumbi (com o gritador), explosões, carro, Diretor, live com pautas do patrocinador, base com barricadas e armadilhas (modo construção, X), Twitch e HUD (lista no README) |
@@ -29,7 +29,7 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 
 1. `Tools\Unreal\build.ps1 -Uproject Zombie.uproject`. O C++ nunca foi compilado: espere alguns erros e corrija um por um.
    Cada erro que o conferidor deveria ter pego vira regra nova nele (skill `revisar-sem-compilar`, passo 6).
-2. `Tools\Unreal\test.ps1 -Uproject Zombie.uproject -Filter Zombie.Regras`: os mesmos 91 testes da nuvem.
+2. `Tools\Unreal\test.ps1 -Uproject Zombie.uproject -Filter Zombie.Regras`: os mesmos 98 testes da nuvem.
 3. `Tools\Unreal\criar_materiais.ps1`: materiais com aspereza e brilho; sem eles, o jogo usa o material básico da engine.
 4. Capturas: `jogar.ps1 -Shot 8`, `-Shot 8 -Hour 21` e `-Shot 8 -Cam 3`, em `docs/img/prototipo/`.
 5. O Felipe joga 15 minutos (`jogar.ps1`) e manda os problemas como Issues "[Playtest]".
@@ -49,6 +49,9 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
   a sucata do começo (60) e a do carro desmanchado (25) dão ritmo? O zumbi travado bate na barricada e quem chega de lado
   dá a volta? As estacas derrubam (perna arrancada vira rastejante)? Pular a barricada de madeira (1,1 m) funciona?
   Bujão armado no meio da horda vira cadeia?
+- Base com abertura: feche uma rua com barricadas e deixe um vão com estacas. A horda que vem de longe dá a volta e entra
+  pelo vão? Sem vão, ela vem e bate? O zumbi segue o campo fino sem andar em zigue-zague? Carro a 60 km/h arromba a
+  barricada de madeira e segue; no muro de sucata, para.
 
 ## Decisões pendentes do Felipe
 
@@ -57,10 +60,12 @@ nível de gore.
 
 ## Pendências conhecidas
 
-- Jogo empacotado: `Data/` ainda não é copiada no pacote (`DirectoriesToAlwaysStageAsNonUFS`); sem ela, valem os padrões do
-  código. No editor e no `-game` não afeta.
-- Base: o campo de fluxo da horda ignora as barricadas (perto, a 15 m, o zumbi vai direto e bate nelas; rua inteira fechada
-  ainda não faz a horda contornar pelo quarteirão). O carro não quebra barricada (para nela). As armadilhas não têm som.
+- Jogo empacotado: `Data/*.csv` entra solta no pacote pelo `RuntimeDependencies` do `Zombie.Build.cs`; falta empacotar no
+  PC e conferir que `Zombie/Data/` aparece ao lado do executável (o Detonauto tem a mesma pendência).
+- Base: a horda só contorna a base dentro da grade fina (64 m em volta do jogador); de longe, segue a rua da cidade. Portas
+  e janelas de prédio ainda não trancam.
+- **O jogo não tem som nenhum ainda** (tiro, explosão, zumbi, armadilha, música). É a próxima coisa que mais muda a
+  sensação; precisa da rotina `som-livre` (copiar do Detonauto) e de sons com licença livre.
 - Manchas de sangue e poeira de impacto não contam no orçamento de pedaços (`mundo.pedacos_max`). A mancha não tem Tick e
   só 30% dos acertos deixam uma; medir com horda grande.
 

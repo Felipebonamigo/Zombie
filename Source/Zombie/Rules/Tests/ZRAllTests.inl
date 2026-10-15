@@ -13,3 +13,4 @@
 // depois de ZRTestsData.inl: usa ReadDataFile e ExpectNoErrors de lá
 #include "Rules/Tests/ZRTestsChallenges.inl"
 #include "Rules/Tests/ZRTestsBase.inl"
+#include "Rules/Tests/ZRTestsLocalGrid.inl"

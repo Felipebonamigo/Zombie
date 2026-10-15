@@ -18,6 +18,7 @@
 #include "Rules/ZRDayNight.h"
 #include "Rules/ZRDirector.h"
 #include "Rules/ZRHype.h"
+#include "Rules/ZRLocalGrid.h"
 
 namespace ZR
 {
@@ -163,6 +164,8 @@ namespace ZR
 		FCarConfig Car;
 		FChallengeConfig Challenge;
 		FBaseConfig Base;
+		/** A grade fina em volta do jogador, onde a horda vê as barricadas. */
+		FLocalGridConfig HordeGrid;
 		/** Zumbis com o nome de espectadores vivos ao mesmo tempo. */
 		int MaxNamedZombies = 12;
 		/** Pedaços soltos (membros e entulho) no mundo ao mesmo tempo. */

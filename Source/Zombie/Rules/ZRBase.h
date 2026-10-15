@@ -84,6 +84,8 @@ namespace ZR
 		float ZombieDamageMultiplier = 1.0f;
 		/** Multiplica o dano de explosão na peça. */
 		float BlastDamageMultiplier = 0.5f;
+		/** Carro batendo na peça: dano = km/h x carro.atropelo_dano_por_kmh x isto. */
+		float VehicleDamageMultiplier = 2.0f;
 		/** Barulho de construir uma peça (a martelada chama zumbi). */
 		float BuildNoise = 3.0f;
 	};

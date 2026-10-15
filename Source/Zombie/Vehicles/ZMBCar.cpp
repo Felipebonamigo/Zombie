@@ -1,5 +1,6 @@
 #include "Vehicles/ZMBCar.h"
 #include "Zombie.h"
+#include "Base/ZMBBuildPiece.h"
 #include "Combat/ZMBTypes.h"
 #include "Game/ZMBGameData.h"
 #include "Player/ZMBCharacter.h"
@@ -129,6 +130,9 @@ void AZMBCar::BeginPlay()
 	}
 	Box->SetCenterOfMass(FVector(0.0f, 0.0f, -35.0f));
 	Box->OnComponentBeginOverlap.AddDynamic(this, &AZMBCar::HandleOverlap);
+	// batida em barricada (bloqueio de física, não sobreposição): precisa do aviso de colisão do corpo
+	Box->SetNotifyRigidBodyCollision(true);
+	Box->OnComponentHit.AddDynamic(this, &AZMBCar::HandleHit);
 }
 
 float AZMBCar::GetSpeedKmh() const
@@ -296,6 +300,8 @@ void AZMBCar::Tick(float DeltaSeconds)
 		return;
 	}
 	const ZR::FCarConfig& Car = Data->Tuning().Car;
+	LastVelocity = Box->GetPhysicsLinearVelocity();
+	PieceHitCooldown -= DeltaSeconds;
 	const FTransform Frame = Box->GetComponentTransform();
 	const FVector Up = Frame.GetUnitAxis(EAxis::Z);
 	const FVector Forward = Frame.GetUnitAxis(EAxis::X);
@@ -370,6 +376,31 @@ void AZMBCar::Tick(float DeltaSeconds)
 	const float NewYawRate = FMath::FInterpTo(CurrentYawRate, TargetYawRate, DeltaSeconds, 8.0f);
 	AngularVelocity += Up * (NewYawRate - CurrentYawRate);
 	Box->SetPhysicsAngularVelocityInDegrees(AngularVelocity);
+}
+
+void AZMBCar::HandleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse,
+	const FHitResult& Hit)
+{
+	AZMBBuildPiece* Piece = Cast<AZMBBuildPiece>(OtherActor);
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	if (!Piece || !Data || Piece->IsGone() || PieceHitCooldown > 0.0f)
+	{
+		return;
+	}
+	const ZR::FCarConfig& Car = Data->Tuning().Car;
+	const float SpeedKmh = static_cast<float>(LastVelocity.Size()) * KmhPerCmS;
+	if (SpeedKmh < Car.RunOverMinKmh)
+	{
+		return;
+	}
+	PieceHitCooldown = 0.3f;
+	// madeira cai acima de ~35 km/h, o muro de sucata só acima de ~100 (base.dano_carro_multiplicador)
+	const float Damage = SpeedKmh * Car.RunOverDamagePerKmh * Data->Tuning().Base.VehicleDamageMultiplier;
+	if (Piece->TakeVehicleHit(Damage))
+	{
+		// arrombou: o choque da física já parou o carro neste quadro; devolve o embalo, menos um quarto (cena de filme)
+		Box->SetPhysicsLinearVelocity(LastVelocity * 0.75f);
+	}
 }
 
 void AZMBCar::HandleOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,

@@ -64,6 +64,11 @@ base.folga_jogador_cm,50,cm,Não constrói com o jogador a menos disso da peça
 base.dano_zumbi_multiplicador,1,vezes,Multiplica o ataque do zumbi quando ele bate numa peça
 base.dano_explosao_multiplicador,0.5,vezes,Multiplica o dano de explosão numa peça
 base.barulho_construir,3,barulho,Barulho de construir uma peça (a martelada chama zumbi)
+base.dano_carro_multiplicador,2,vezes,"Carro batendo numa peça: dano = km/h x carro.atropelo_dano_por_kmh x isto (madeira cai acima de ~35 km/h, o muro acima de ~100)"
+base.horda_grade_cm,6400,cm,Lado da grade fina em volta do jogador onde a horda enxerga as barricadas
+base.horda_resolucao_cm,100,cm,Tamanho de uma célula da grade fina
+base.horda_raio_zumbi_cm,40,cm,A barricada cresce isto na grade fina (o caminho não raspa nela)
+base.horda_custo_barricada,400,custo (10 = uma célula),"Desvio que a horda aceita para não quebrar barricada (400 = 40 m): com abertura mais perto, ela dá a volta"
 dia.duracao_s,1440,s,Um dia inteiro de 24 h em tempo real (24 min)
 dia.hora_inicio,17,h,Hora em que o jogo começa (luz dourada de fim de tarde)
 dia.noite_comeca,19.5,h,Hora em que a noite começa

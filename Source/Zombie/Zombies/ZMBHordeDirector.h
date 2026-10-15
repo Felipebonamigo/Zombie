@@ -2,6 +2,8 @@
 // SpawnMin..SpawnMax do jogador, de preferência fora da vista da câmera, com o tipo sorteado pelo peso do dia ou da noite.
 // Mantém o campo de fluxo da cidade (ZR::FFlowField) apontando para o jogador, some com zumbi que ficou longe demais,
 // começa a Noite da Horda e atende os pedidos do chat (zumbi com nome, horda, esquadrão do bujão, entrega por drone).
+// Com barricada por perto, mantém também um campo fino (1 m) em volta do jogador, em que a barricada custa caro: a horda
+// contorna a base e entra pela abertura, ou vem e bate se não houver (ZR::MakeLocalGrid).
 
 #pragma once
 
@@ -10,6 +12,7 @@
 #include "Rules/ZRData.h"
 #include "Rules/ZRDirector.h"
 #include "Rules/ZRFlowField.h"
+#include "Rules/ZRLocalGrid.h"
 #include "ZMBHordeDirector.generated.h"
 
 class AZMBWorldBuilder;
@@ -29,8 +32,11 @@ public:
 
 	virtual void Tick(float DeltaSeconds) override;
 
-	/** Direção (no plano) para o zumbi seguir a rua até o jogador. Falso fora das ruas ou sem caminho. */
-	bool FlowDirection(const FVector& From, FVector& OutDirection) const;
+	/**
+	 * Direção (no plano) para o zumbi seguir até o jogador: pelo campo fino quando há barricada perto e ele está dentro da
+	 * grade; senão, com bAllowCity, pela rua da cidade (grossa demais perto do jogador). Falso: vá direto no jogador.
+	 */
+	bool FlowDirection(const FVector& From, FVector& OutDirection, bool bAllowCity) const;
 
 	void ReportDamageTaken(float Amount);
 	void ReportExplosion(const FVector& Where, float Noise);
@@ -60,6 +66,7 @@ private:
 	bool PickSpawnLocation(FVector& OutLocation, float MinCm, float MaxCm, bool bPreferHidden);
 	const ZR::FZombieType* PickType(bool bNightNow) const;
 	void UpdateFlow();
+	void UpdateLocalFlow(float DeltaSeconds);
 	void ConsumeChatActions();
 	void Cleanup();
 
@@ -72,6 +79,14 @@ private:
 	int32 FlowTargetX = -1;
 	int32 FlowTargetY = -1;
 	float FlowAge = 0.0f;
+
+	/** Campo fino em volta do jogador; só existe com barricada perto. */
+	ZR::FLocalGrid LocalGrid;
+	ZR::FFlowField LocalFlow;
+	bool bLocalActive = false;
+	int32 LocalPlayerX = -1;
+	int32 LocalPlayerY = -1;
+	float LocalAge = 0.0f;
 
 	float PendingDamage = 0.0f;
 	int32 PendingKillsNear = 0;

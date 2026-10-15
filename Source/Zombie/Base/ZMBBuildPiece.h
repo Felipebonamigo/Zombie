@@ -41,6 +41,8 @@ public:
 	void TakeBlast(float Damage, AController* DamageInstigator, int32 ChainDepth);
 	/** Tiro do jogador: só o bujão armado reage (acende). */
 	void TakeBullet(AController* DamageInstigator);
+	/** Carro batendo (dano já com o multiplicador da base). Verdadeiro se arrombou. */
+	bool TakeVehicleHit(float Damage);
 
 	/** Conserta o que a sucata pagar (ZR::RepairPiece). Devolve a sucata gasta. */
 	int32 Repair(int32 Scrap);

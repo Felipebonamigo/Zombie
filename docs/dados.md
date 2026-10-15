@@ -23,7 +23,7 @@ que falta usa o padrão do código e aparece como aviso no log. Grupos:
 | `cidade.` | Tamanho da cidade, quarteirões, praia e mar, praças, andares e tamanho da célula (seção 2) |
 | `chat.` | Rodada de votação, votos mínimos, espera do `!zumbi` e zumbis com nome ao mesmo tempo (seção 9) |
 | `pauta.` | Espera da primeira pauta, intervalo entre pautas e audiência mínima (seção 11) |
-| `base.` | Sucata (começo, caixa, carro), desmanche, conserto, desmonte, alcance, grade, teto de peças, dano nas peças e barulho (seção 12) |
+| `base.` | Sucata (começo, caixa, carro), desmanche, conserto, desmonte, alcance, grade, teto de peças, dano nas peças (zumbi, explosão, carro), barulho e a grade fina em que a horda contorna a base (`base.horda_*`) (seção 12) |
 | `dia.` | Duração do dia, hora inicial, noite e Noite da Horda (seção 7) |
 | `camera.` | As três distâncias da terceira pessoa, a mira, a primeira pessoa e o modo inicial |
 | `jogador.` | Vida, velocidades, fôlego, chute, mira lenta (foco), arremesso, sobra de vida e cura sozinha |
@@ -99,6 +99,6 @@ Falas do chat simulado. As categorias (`ZR::FakeChatCategories()`) são `inicio`
 
 ## Jogo empacotado
 
-`Data/` fica na raiz do projeto. Para o jogo empacotado, a pasta ainda precisa entrar em
-`DirectoriesToAlwaysStageAsNonUFS` (pendente, como no Detonauto). Sem os arquivos, o jogo roda com os padrões do código e
-avisa no HUD.
+`Data/` fica na raiz do projeto e o jogo lê de `FPaths::ProjectDir()/Data`. No pacote, os `Data/*.csv` vão soltos, fora
+do `.pak`, pelo `RuntimeDependencies` do `Zombie.Build.cs` (14/10/2026; falta conferir num pacote de verdade no PC). Sem
+os arquivos, o jogo roda com os padrões do código e avisa no HUD.

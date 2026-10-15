@@ -1,5 +1,6 @@
 #include "Zombies/ZMBHordeDirector.h"
 #include "Zombie.h"
+#include "Base/ZMBBuildPiece.h"
 #include "Combat/ZMBPickup.h"
 #include "Combat/ZMBTypes.h"
 #include "Game/ZMBGameData.h"
@@ -9,6 +10,7 @@
 #include "Zombies/ZMBZombie.h"
 #include "Camera/PlayerCameraManager.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "GameFramework/Pawn.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -97,6 +99,7 @@ void AZMBHordeDirector::Tick(float DeltaSeconds)
 	Cleanup();
 	UpdateFlow();
 	FlowAge += DeltaSeconds;
+	UpdateLocalFlow(DeltaSeconds);
 
 	const bool bNightNow = Builder->IsNightNow();
 	if (bNightNow && !bNight)
@@ -220,9 +223,110 @@ void AZMBHordeDirector::UpdateFlow()
 	Flow.Build(Plan.WalkableMask(), Plan.Width, Plan.Height, CellX, CellY);
 }
 
-bool AZMBHordeDirector::FlowDirection(const FVector& From, FVector& OutDirection) const
+void AZMBHordeDirector::UpdateLocalFlow(float DeltaSeconds)
 {
-	if (!Builder || !Flow.IsValid())
+	LocalAge += DeltaSeconds;
+	const APawn* Player = UGameplayStatics::GetPlayerPawn(this, 0);
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	if (!Player || !Builder || !Data)
+	{
+		bLocalActive = false;
+		return;
+	}
+	const FVector Origin = Builder->GetOrigin();
+	const FVector PlayerLocal = Player->GetActorLocation() - Origin;
+	const float PlayerX = static_cast<float>(PlayerLocal.X);
+	const float PlayerY = static_cast<float>(PlayerLocal.Y);
+	int CellX = -1;
+	int CellY = -1;
+	const bool bSameCell = bLocalActive && LocalGrid.ToCell(PlayerX, PlayerY, CellX, CellY) && CellX == LocalPlayerX && CellY == LocalPlayerY;
+	// refaz a cada meio segundo (barricada nova ou quebrada) e quando o jogador muda de célula
+	if (LocalAge < 0.5f && (!bLocalActive || bSameCell))
+	{
+		return;
+	}
+	LocalAge = 0.0f;
+	const ZR::FLocalGridConfig& Config = Data->Tuning().HordeGrid;
+	const float Reach = Config.SizeCm * 0.75f;
+	std::vector<ZR::FFootprint> Barricades;
+	for (TActorIterator<AZMBBuildPiece> It(GetWorld()); It; ++It)
+	{
+		if (It->IsBarricade() && !It->IsGone() && FVector::Dist2D(It->GetActorLocation(), Player->GetActorLocation()) < Reach)
+		{
+			Barricades.push_back(It->Footprint(Origin));
+		}
+	}
+	// sem barricada perto, a grade fina não muda nada: os zumbis seguem como antes (direto, perto do jogador)
+	if (Barricades.empty())
+	{
+		bLocalActive = false;
+		return;
+	}
+	LocalGrid = ZR::MakeLocalGrid(Builder->GetPlan(), Builder->GetCellSize(), PlayerX, PlayerY, Config, Barricades);
+	if (!LocalGrid.ToCell(PlayerX, PlayerY, CellX, CellY))
+	{
+		bLocalActive = false;
+		return;
+	}
+	LocalPlayerX = CellX;
+	LocalPlayerY = CellY;
+	// jogador fora do chão andável (na calçada colada no prédio): o alvo vira a célula andável mais perto
+	int TargetX = CellX;
+	int TargetY = CellY;
+	const auto WalkableAt = [this](int X, int Y)
+	{
+		return X >= 0 && Y >= 0 && X < LocalGrid.Width && Y < LocalGrid.Height
+			&& LocalGrid.Walkable[static_cast<size_t>(Y * LocalGrid.Width + X)] != 0;
+	};
+	for (int Radius = 1; Radius <= 4 && !WalkableAt(TargetX, TargetY); ++Radius)
+	{
+		for (int Dy = -Radius; Dy <= Radius && !WalkableAt(TargetX, TargetY); ++Dy)
+		{
+			for (int Dx = -Radius; Dx <= Radius; ++Dx)
+			{
+				if (WalkableAt(CellX + Dx, CellY + Dy))
+				{
+					TargetX = CellX + Dx;
+					TargetY = CellY + Dy;
+					break;
+				}
+			}
+		}
+	}
+	LocalFlow.Build(LocalGrid.Walkable, LocalGrid.ExtraCost, LocalGrid.Width, LocalGrid.Height, TargetX, TargetY);
+	bLocalActive = LocalFlow.IsValid();
+}
+
+bool AZMBHordeDirector::FlowDirection(const FVector& From, FVector& OutDirection, bool bAllowCity) const
+{
+	if (!Builder)
+	{
+		return false;
+	}
+	if (bLocalActive)
+	{
+		const FVector Local = From - Builder->GetOrigin();
+		int LocalX = 0;
+		int LocalY = 0;
+		int AheadX = 0;
+		int AheadY = 0;
+		// dois passos à frente: o caminho de 8 direções fica menos serrilhado; no alvo não há passo (vai direto)
+		if (LocalGrid.ToCell(static_cast<float>(Local.X), static_cast<float>(Local.Y), LocalX, LocalY)
+			&& LocalFlow.LookAhead(LocalX, LocalY, 2, AheadX, AheadY))
+		{
+			float AimX = 0.0f;
+			float AimY = 0.0f;
+			LocalGrid.CellCenter(AheadX, AheadY, AimX, AimY);
+			FVector Delta = Builder->GetOrigin() + FVector(AimX, AimY, 0.0f) - From;
+			Delta.Z = 0.0f;
+			OutDirection = Delta.GetSafeNormal();
+			if (!OutDirection.IsNearlyZero())
+			{
+				return true;
+			}
+		}
+	}
+	if (!bAllowCity || !Flow.IsValid())
 	{
 		return false;
 	}

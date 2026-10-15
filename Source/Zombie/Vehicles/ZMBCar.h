@@ -51,6 +51,11 @@ private:
 	void ExitKey(const FInputActionValue& Value);
 	void ResetKey(const FInputActionValue& Value);
 
+	/** Batida na barricada: rápido, arromba e passa (Base/ZMBBuildPiece.h). */
+	UFUNCTION()
+	void HandleHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse,
+		const FHitResult& Hit);
+
 	UFUNCTION()
 	void HandleOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 		bool bFromSweep, const FHitResult& SweepResult);
@@ -96,6 +101,10 @@ private:
 
 	TWeakObjectPtr<AZMBCharacter> Driver;
 	TArray<FVector> WheelMounts;
+	/** Velocidade no começo do quadro (antes do choque da física), para medir a batida e devolver o embalo ao arrombar. */
+	FVector LastVelocity = FVector::ZeroVector;
+	/** Uma batida em peça por vez: o choque gera vários contatos no mesmo instante. */
+	float PieceHitCooldown = 0.0f;
 	float ThrottleInput = 0.0f;
 	float SteerInput = 0.0f;
 	bool bHandbrake = false;

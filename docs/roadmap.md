@@ -6,7 +6,7 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
 ## Fase 0 — Protótipo jogável (agora)
 
 - [x] Design, estratégia viral e contrato das regras (`design.md`, `viralizar.md`, `regras-de-jogo.md`)
-- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2, 91 com o bloco 3) (g++ e clang++, avisos como erro,
+- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2, 91 com o bloco 3, 98 com o bloco 4) (g++ e clang++, avisos como erro,
   sanitizers)
 - [x] Projeto Unreal 5.8 em C++ escrito:
   - cidade gerada, jogador com 4 câmeras, 3 armas, granada, bujão, chute e mira lenta;
@@ -19,6 +19,8 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
 - [x] Bloco 3, adiantado da fase 4: a base do Night of the Dead. Sucata (caixa do drone e carro desmanchado), modo
   construção (X) com barricada de madeira, muro de sucata, estacas, arame farpado e bujão armado; o zumbi travado bate na
   barricada até quebrar; conserto e desmonte
+- [x] Bloco 4: a horda contorna a base (campo fino de 1 m em volta do jogador, barricada cara mas passável) e entra pela
+  abertura; o carro rápido arromba barricada; `Data/` vai no jogo empacotado
 - [ ] **Compilar no PC** (skill `verificar`) e corrigir o que o compilador apontar
 - [ ] `Zombie.Regras` verde no Unreal (os mesmos 76 testes)
 - [ ] Capturas de dia, de noite e no modo celular (`jogar.ps1`) em `docs/img/prototipo/`
@@ -51,8 +53,9 @@ satisfatório e a live dá vontade de subir o hype.
 ## Fase 4 — Sobrevivência e base (2 a 3 meses)
 
 Saque, comida e água, ferimentos, sobreviventes resgatados e progressão por seguidores. Já adiantados no protótipo: a
-base com barricadas e armadilhas (bloco 3) e as pautas da live (bloco 2). Falta na base: a horda contornar rua fechada
-pelo campo de fluxo, o carro quebrar barricada, portas e janelas de prédio para trancar e peças de verdade (acervo-3d).
+base com barricadas e armadilhas (blocos 3 e 4: a horda contorna a base e entra pela abertura; o carro arromba
+barricada) e as pautas da live (bloco 2). Falta na base: portas e janelas de prédio para trancar e peças de verdade
+(acervo-3d).
 
 ## Fase 5 — Live 2.0 (1 mês, em paralelo)
 

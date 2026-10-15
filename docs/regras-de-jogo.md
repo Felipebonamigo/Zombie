@@ -27,8 +27,10 @@ Testes: `Sorteio.*`.
 
 - Dijkstra na grade a partir do alvo (o jogador): custo 10 na ortogonal e 14 na diagonal. A **diagonal não corta quina**:
   as duas ortogonais precisam estar livres.
-- Cada zumbi anda para a vizinha de menor custo. Um único cálculo serve a todos os zumbis. O Unreal recalcula quando o
-  jogador muda de célula ou a cada 3 s.
+- Cada zumbi anda para a vizinha que sai mais barato: o custo restante dela mais o passo mais o custo extra de entrar
+  nela. Um único cálculo serve a todos os zumbis. O Unreal recalcula quando o jogador muda de célula ou a cada 3 s.
+- **Custo extra** (opcional, por célula): entrar na célula custa também o extra dela. É como a barricada vira "cara, mas
+  passa" (seção 12).
 - Alvo bloqueado deixa o campo inválido; o zumbi vai direto no jogador.
 - Testes: `Fluxo.*`.
 
@@ -151,6 +153,13 @@ O "dia constrói, noite sobrevive" do Night of the Dead. Peças em `Data/Constru
 - **Barricada:** segura zumbi e jogador. A de madeira tem 1,1 m e o jogador pula; o zumbi não pula. O zumbi colado nela
   na direção do jogador não morde por cima: quase parado (abaixo de 30% da velocidade dele), para e bate (o ataque dele
   vezes `base.dano_zumbi_multiplicador`) até ela cair; quem chega de lado escorrega e dá a volta. Explosão tira o dano dela vezes `base.dano_explosao_multiplicador`.
+  Carro acima de `carro.atropelo_min_kmh` tira `km/h x carro.atropelo_dano_por_kmh x base.dano_carro_multiplicador`; se
+  ela cai, o carro passa com três quartos da velocidade (a madeira cai acima de ~35 km/h, o muro acima de ~100).
+- **A horda contorna a base:** com barricada a até 48 m do jogador, o Diretor faz uma grade fina de 64 x 64 m (células de
+  1 m) em volta dele. Prédio, mar e fora da planta bloqueiam; a barricada, crescida 40 cm (o raio do zumbi), custa 400 a
+  mais (o mesmo que andar 40 m). O zumbi dentro da grade segue esse campo, mirando dois passos à frente: se a abertura
+  da base fica a menos de 40 m de desvio, ele dá a volta e entra por ela (onde ficam as armadilhas); se não, vem e bate.
+  Fora da grade, segue a rua da cidade; sem barricada perto, nada muda. Números em `base.horda_*`.
   Estágios para o visual: inteira (acima de 2/3 da vida), avariada (acima de 1/3), quase caindo, quebrada.
 - **Armadilha:** o jogador e a bala passam. Cada zumbi em cima leva `dano_por_s` (nas pernas ou no corpo) e anda na fração
   `lentidao` da velocidade. A armadilha gasta com o dano que causa (`desgaste`; 0 = não gasta). O abate conta para a live
@@ -163,4 +172,5 @@ O "dia constrói, noite sobrevive" do Night of the Dead. Peças em `Data/Constru
 - **Barulho:** construir uma peça faz barulho (`base.barulho_construir`) e desmanchar carro, o dobro: chama zumbi pelo
   Diretor.
 
-Testes: `Base.*`, `Dados.ConstrucaoComErroEhApontada` e `Deriva.ConstrucoesCarregamEFazemSentido`.
+Testes: `Base.*`, `GradeFina.*`, `Fluxo.BarricadaCaraFazAHordaDarAVolta`, `Fluxo.SemDesvioAHordaVemBaterNaBarricada`,
+`Dados.ConstrucaoComErroEhApontada` e `Deriva.ConstrucoesCarregamEFazemSentido`.

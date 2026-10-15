@@ -629,6 +629,11 @@ namespace ZR
 			F("base.dano_zumbi_multiplicador", T.Base.ZombieDamageMultiplier, 0.0f, 100.0f);
 			F("base.dano_explosao_multiplicador", T.Base.BlastDamageMultiplier, 0.0f, 100.0f);
 			F("base.barulho_construir", T.Base.BuildNoise, 0.0f, 1000.0f);
+			F("base.dano_carro_multiplicador", T.Base.VehicleDamageMultiplier, 0.0f, 100.0f);
+			F("base.horda_grade_cm", T.HordeGrid.SizeCm, 1000.0f, 20000.0f);
+			F("base.horda_resolucao_cm", T.HordeGrid.ResolutionCm, 25.0f, 500.0f);
+			F("base.horda_raio_zumbi_cm", T.HordeGrid.InflateCm, 0.0f, 200.0f);
+			I("base.horda_custo_barricada", T.HordeGrid.BarricadeCost, 0.0f, 100000.0f);
 
 			F("dia.duracao_s", T.Day.DayLengthSeconds, 10.0f, 86400.0f);
 			F("dia.hora_inicio", T.Day.StartHour, 0.0f, 23.99f);

@@ -267,9 +267,10 @@ void AZMBZombie::Tick(float DeltaSeconds)
 	}
 	GetCharacterMovement()->MaxWalkSpeed = Speed;
 
-	// longe: segue a rua pelo campo de fluxo; perto (ou fora da grade, num beco): direto no jogador
+	// longe: segue a rua pelo campo de fluxo; com barricada perto, o campo fino contorna a base; perto (ou fora da grade,
+	// num beco): direto no jogador
 	FVector Direction = FVector::ZeroVector;
-	if (Distance < 1500.0f || !Director || !Director->FlowDirection(Me, Direction))
+	if (!Director || !Director->FlowDirection(Me, Direction, Distance >= 1500.0f))
 	{
 		Direction = ToTarget.GetSafeNormal();
 	}

@@ -60,7 +60,7 @@ Versão 0.1, 14 out 2026. Base: Unreal Engine 5.8, C++, um módulo (`Zombie`), W
 | Pedaços com física (sangue e entulho) | até 220 | `mundo.pedacos_max`; os novos não nascem acima disso |
 | Luzes pontuais | 64 postes (só à noite) + efeitos curtos | Sem sombra |
 | Cidade | ~25 x 30 células; componentes instanciados (uma chamada por cor) | `cidade.*` |
-| Peças da base | até 40 | `base.pecas_max`; armadilha olha quem está em cima 10 vezes por segundo; zumbi procura barricada na frente 4 vezes por segundo (varredura curta) |
+| Peças da base | até 40 | `base.pecas_max`; armadilha olha quem está em cima 10 vezes por segundo; zumbi procura barricada na frente 4 vezes por segundo (varredura curta); com barricada perto, a grade fina (64 x 64 células) é refeita a cada 0,5 s e quando o jogador muda de célula (um Dijkstra de ~4 mil células) |
 
 Meta de quadro: 16,7 ms (60 fps) no perfil alvo. A primeira medição fica para a sessão do PC (skill `achar-gargalo`).
 

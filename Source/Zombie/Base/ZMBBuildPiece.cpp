@@ -306,6 +306,21 @@ void AZMBBuildPiece::TakeBlast(float Damage, AController* DamageInstigator, int3
 	Break();
 }
 
+bool AZMBBuildPiece::TakeVehicleHit(float Damage)
+{
+	if (bGone || FuseLeft >= 0.0f || !IsBarricade())
+	{
+		return false;
+	}
+	if (ZR::DamagePiece(State, Damage))
+	{
+		Break();
+		return true;
+	}
+	UpdateLook();
+	return false;
+}
+
 void AZMBBuildPiece::TakeBullet(AController* DamageInstigator)
 {
 	if (bGone || FuseLeft >= 0.0f || !Type.IsExplosive())

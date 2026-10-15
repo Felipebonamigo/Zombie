@@ -30,8 +30,8 @@ Tudo em formas básicas da engine, para sentir o jogo; o visual realista vem por
 - **Explosões em cadeia:** bujões, barris, carros abandonados e os zumbis-bujão.
 - **Carro dirigível,** que atropela.
 - **Base à Night of the Dead:** sucata (caixa do drone e carro desmanchado) e **modo construção** (X) com barricada de
-  madeira, muro de sucata, estacas, arame farpado e **bujão armado**. O zumbi travado bate na barricada até quebrar; dá para
-  consertar e desmontar.
+  madeira, muro de sucata, estacas, arame farpado e **bujão armado**. A horda contorna a base e entra pela abertura (onde
+  ficam as armadilhas); sem abertura, bate na barricada até quebrar. Carro rápido arromba. Dá para consertar e desmontar.
 - **Diretor da horda** no estilo Left 4 Dead (tensão, pico e respiro), noite com mais zumbis e **Noite da Horda** a cada 3
   noites.
 - **A live:**

@@ -4,7 +4,8 @@
 // Contrato: docs/regras-de-jogo.md, seção 3.
 //
 // Custo 10 na ortogonal e 14 na diagonal; a diagonal só vale se as duas ortogonais do canto forem andáveis (não corta
-// quina de prédio).
+// quina de prédio). Com ExtraCost, entrar numa célula custa também o extra dela: é assim que a barricada vira "caro, mas
+// passa" (a horda dá a volta se o desvio custar menos que quebrar; senão, vem e bate).
 
 #pragma once
 
@@ -19,11 +20,18 @@ namespace ZR
 		/** Walkable: 1 andável, 0 bloqueado; Width x Height, linha a linha. Alvo bloqueado deixa tudo inalcançável. */
 		void Build(const std::vector<std::uint8_t>& Walkable, int InWidth, int InHeight, int TargetX, int TargetY);
 
+		/** Como Build, e entrar na célula i custa também ExtraCost[i] (vazio = nada a mais; negativo conta como zero). */
+		void Build(const std::vector<std::uint8_t>& Walkable, const std::vector<int>& ExtraCost, int InWidth, int InHeight, int TargetX,
+			int TargetY);
+
 		/** Custo até o alvo, ou -1 (bloqueado, fora da grade ou sem caminho). */
 		int CostAt(int X, int Y) const;
 
 		/** A vizinha com menor custo. Falso no alvo, fora da grade ou sem caminho. */
 		bool StepToward(int X, int Y, int& OutX, int& OutY) const;
+
+		/** Até Steps passos de StepToward a partir de (X, Y), parando no alvo. Falso se nem o primeiro passo existe. */
+		bool LookAhead(int X, int Y, int Steps, int& OutX, int& OutY) const;
 
 		/** Vetor unitário da célula até a próxima (X para leste, Y para o sul). Falso como StepToward. */
 		bool Direction(int X, int Y, double& OutDx, double& OutDy) const;
@@ -44,5 +52,7 @@ namespace ZR
 		bool bValid = false;
 		std::vector<std::uint8_t> Open;
 		std::vector<int> Cost;
+		/** O custo extra de cada célula (vazio = nenhum), guardado para o passo pagar o extra de entrar na vizinha. */
+		std::vector<int> Extra;
 	};
 }

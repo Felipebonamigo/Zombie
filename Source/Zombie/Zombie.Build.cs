@@ -16,5 +16,9 @@ public class Zombie : ModuleRules
 
 		// Um módulo só, com subpastas (Rules, Game, Player...): os includes são "Rules/ZRHype.h", "Player/ZMBCharacter.h" etc.
 		PublicIncludePaths.Add(ModuleDirectory);
+
+		// Data/*.csv vai junto no jogo empacotado, solta (fora do .pak): o UZMBGameData lê do disco em FPaths::ProjectDir()/Data,
+		// e no editor e no -game já lê da pasta do projeto. Sem isto o pacote rodaria com os padrões do código.
+		RuntimeDependencies.Add("$(ProjectDir)/Data/*.csv", StagedFileType.NonUFS);
 	}
 }
