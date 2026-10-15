@@ -6,7 +6,7 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
 ## Fase 0 — Protótipo jogável (agora)
 
 - [x] Design, estratégia viral e contrato das regras (`design.md`, `viralizar.md`, `regras-de-jogo.md`)
-- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2, 91 com o bloco 3, 105 com o bloco 4, 112 com o bloco 5, 118 com o bloco 6, 119 com a revisão do som, 126 com o bloco 7) (g++ e clang++, avisos como erro,
+- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2, 91 com o bloco 3, 105 com o bloco 4, 112 com o bloco 5, 118 com o bloco 6, 119 com a revisão do som, 126 com o bloco 7, 132 com o bloco 8) (g++ e clang++, avisos como erro,
   sanitizers)
 - [x] Projeto Unreal 5.8 em C++ escrito:
   - cidade gerada, jogador com 4 câmeras, 3 armas, granada, bujão, chute e mira lenta;
@@ -27,8 +27,10 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
   na tela "A LIVE CAIU"
 - [x] Bloco 7, adiantado da fase 4: saque. Lixeira, mochila de folião, isopor do ambulante e viatura largada espalhados
   pela cidade (`Data/Saque.csv` e `SaqueItens.csv`); segurar E revira, faz barulho e rende munição, granada, vida ou sucata
+- [x] Bloco 8, adiantado da fase 5: filtro de palavras do Modo Streamer (`Data/FiltroPalavras.csv`, `chat.filtro`) no
+  texto, no apelido e no nome do `!zumbi` vindos da Twitch
 - [ ] **Compilar no PC** (skill `verificar`) e corrigir o que o compilador apontar
-- [ ] `Zombie.Regras` verde no Unreal (os mesmos testes da nuvem; 126 hoje)
+- [ ] `Zombie.Regras` verde no Unreal (os mesmos testes da nuvem; 132 hoje)
 - [ ] Capturas de dia, de noite e no modo celular (`jogar.ps1`) em `docs/img/prototipo/`
 - [ ] **Primeiro playtest do Felipe** (15 min) e lista de problemas como Issues "[Playtest]"
 

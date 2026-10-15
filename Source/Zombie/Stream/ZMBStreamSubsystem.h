@@ -111,6 +111,8 @@ private:
 	void TickFakeChat(float DeltaTime);
 	void HandleChallenge(const ZR::FChallengeUpdate& Update);
 	void HandleMilestone(int32 Index);
+	/** Modo Streamer: o apelido com palavra proibida aparece como "espectador" (no chat e em cima do zumbi). */
+	FString CleanViewerName(const FString& User) const;
 	const ZR::FHypeEventDef* EventDef(ZR::EHypeEvent Event) const;
 
 	ZR::FHypeConfig Config;

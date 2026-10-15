@@ -43,7 +43,8 @@ Streamer grande jogando = milhões vendo. O AO VIVO é feito para a live deles r
 - **`!zumbi`:** nasce um zumbi com o nome de quem digitou. Todo espectador quer ver o "seu" zumbi explodir, e isso enche o
   chat.
 - **Votação a cada 30 s** (`!horda`, `!bujao`, `!caixa`): o chat sente que manda na live.
-- **Modo Streamer:** sem música com direitos autorais, com filtro de palavras e sangue ajustável.
+- **Modo Streamer:** sem música com direitos autorais, com filtro de palavras (no protótipo desde o bloco 8: texto,
+  apelido e nome do `!zumbi` passam pelo filtro) e sangue ajustável (depende da decisão sobre o gore).
 - Depois: YouTube Live e TikTok LIVE, Twitch Drops (cosméticos) e uma extensão da Twitch com placar do chat.
 
 ## 4. O Brasil como vantagem

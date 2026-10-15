@@ -271,3 +271,24 @@ Lugares para revirar espalhados pela cidade (`Data/Saque.csv`), com o que cada u
 
 Testes: `Saque.*`, `Dados.SaqueComErroEhApontado` e `Deriva.SaqueCarregaETodoLugarRendeAlgo` (as tabelas carregam, todo
 lugar rende alguma coisa e a cidade das tabelas tem espaço para pelo menos 90% dos lugares pedidos).
+
+## 16. Filtro de palavras do Modo Streamer (`ZRFilter.h`)
+
+Com `chat.filtro` = 1 (o padrão), o que vem do chat da Twitch passa pelo filtro antes de aparecer na tela. Isso vale
+para o texto da mensagem, o apelido de quem escreveu e o nome do zumbi do `!zumbi`. O comando é lido do texto original. O
+chat simulado não passa pelo filtro: as falas são nossas, e o teste de deriva garante que nenhuma é pega.
+
+- **Termos** (`Data/FiltroPalavras.csv`): palavra inteira ou, com `*` no fim, começo de palavra (`fod*` pega "foda",
+  "fodase", "fodido"). O streamer pode acrescentar linhas.
+- **Normalização:** minúsculas, sem acento, `0 1 3 4 5 7 @ $` viram `o i e a s t a s`, pontuação no meio sai
+  ("p.o.r.r.a") e letra repetida conta uma vez ("porrrra"). Termo com letra dobrada (`nigg*`, `porra`) compara o prefixo e
+  o nome colado com a repetição limitada a 2, para não encolher e pegar palavra inocente ("night", "diaspora").
+- **Texto:** só as letras da palavra pega viram `*` ("PORRA!!!" vira "*****!!!"); o resto da frase fica igual. Palavra
+  que só contém um termo não é pega ("cuidado", "computador").
+- **Apelido e nome do zumbi:** com termo inteiro, ou colado a partir de 4 letras ("xXporraXx"), aparece "espectador".
+  Termo curto colado não conta ("cuca_beludo" passa).
+- A Twitch já segura mensagens pelo AutoMod e pelos termos bloqueados do canal; este filtro é a segunda camada, para o
+  que aparece dentro do jogo e na gravação.
+
+Testes: `Filtro.*`, `Dados.FiltroComErroEhApontado` e `Deriva.FiltroDePalavrasCarregaEPegaOBasico` (a lista carrega,
+pega o básico e não pega nenhuma fala do chat simulado nem os comandos do jogo).

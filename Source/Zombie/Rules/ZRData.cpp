@@ -556,6 +556,47 @@ namespace ZR
 		}
 	}
 
+	void LoadFilterTerms(const std::string& Csv, std::vector<std::string>& Out, std::vector<std::string>& Errors)
+	{
+		Out.clear();
+		FCsvTable Table;
+		if (!ParseOrReport(Csv, "FiltroPalavras.csv", Table, Errors))
+		{
+			return;
+		}
+		FRowReader Reader(Table, "FiltroPalavras.csv", Errors);
+		if (!Reader.Require({"termo"}))
+		{
+			return;
+		}
+		// repetido conta depois de normalizar ("PORRA" e "porra" são o mesmo termo)
+		std::vector<std::string> Seen;
+		for (std::size_t Row = 0; Row < Table.Rows.size(); ++Row)
+		{
+			const std::string Term = Reader.Text(Row, "termo");
+			const bool bPrefix = !Term.empty() && Term.back() == '*';
+			const std::string Stem = bPrefix ? Term.substr(0, Term.size() - 1) : Term;
+			if (Stem.find('*') != std::string::npos)
+			{
+				Reader.Report(Row, "termo", "'" + Term + "': o * só vale no fim (começa com)");
+				continue;
+			}
+			const std::string Key = NormalizeForFilter(Stem) + (bPrefix ? "*" : "");
+			if (Key.empty() || Key == "*")
+			{
+				Reader.Report(Row, "termo", "'" + Term + "' não tem letra");
+				continue;
+			}
+			if (std::find(Seen.begin(), Seen.end(), Key) != Seen.end())
+			{
+				Reader.Report(Row, "termo", "'" + Term + "' repete outro termo");
+				continue;
+			}
+			Seen.push_back(Key);
+			Out.push_back(Term);
+		}
+	}
+
 	void LoadLootSpots(const std::string& Csv, std::vector<FLootSpotType>& Out, std::vector<std::string>& Errors)
 	{
 		Out.clear();
@@ -831,6 +872,8 @@ namespace ZR
 			F("resumo.nota_b_espectadores", T.Grade.BViewers, 0.0f, 1.0e9f);
 			F("resumo.nota_a_espectadores", T.Grade.AViewers, 0.0f, 1.0e9f);
 			F("resumo.nota_s_espectadores", T.Grade.SViewers, 0.0f, 1.0e9f);
+
+			I("chat.filtro", T.ChatFilterOn, 0.0f, 1.0f);
 
 			F("saque.alcance_cm", T.Loot.RangeCm, 20.0f, 2000.0f);
 			F("saque.espacamento_cm", T.Loot.MinSpacingCm, 0.0f, 20000.0f);

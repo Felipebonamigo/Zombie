@@ -17,3 +17,4 @@
 #include "Rules/Tests/ZRTestsSound.inl"
 #include "Rules/Tests/ZRTestsLive.inl"
 #include "Rules/Tests/ZRTestsLoot.inl"
+#include "Rules/Tests/ZRTestsFilter.inl"

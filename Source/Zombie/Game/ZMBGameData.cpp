@@ -101,6 +101,12 @@ void UZMBGameData::Reload()
 	{
 		ZR::LoadMilestones(Text, LoadedMilestones, RuleErrors);
 	}
+	if (LoadText(TEXT("FiltroPalavras.csv"), Text))
+	{
+		std::vector<std::string> Terms;
+		ZR::LoadFilterTerms(Text, Terms, RuleErrors);
+		LoadedWordFilter.Set(Terms);
+	}
 	// os itens apontam para os lugares: lugares primeiro
 	if (LoadText(TEXT("Saque.csv"), Text))
 	{

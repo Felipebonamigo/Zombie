@@ -434,8 +434,23 @@ void UZMBStreamSubsystem::ConsumeChatActions(TArray<FZMBChatAction>& Out)
 
 void UZMBStreamSubsystem::HandleTwitchMessage(const FZMBTwitchMessage& Message)
 {
-	AddChat(Message.User, Message.Text, Message.Color, false);
-	HandleCommand(Message.User, std::string(TCHAR_TO_UTF8(*Message.Text)));
+	const std::string Raw(TCHAR_TO_UTF8(*Message.Text));
+	// Modo Streamer: o que aparece na tela passa pelo filtro; o comando é lido do texto original
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	const bool bFilter = Data && Data->Tuning().ChatFilterOn != 0;
+	const FString Shown = bFilter ? UZMBGameData::ToFString(Data->WordFilter().Mask(Raw)) : Message.Text;
+	AddChat(CleanViewerName(Message.User), Shown, Message.Color, false);
+	HandleCommand(Message.User, Raw);
+}
+
+FString UZMBStreamSubsystem::CleanViewerName(const FString& User) const
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	if (Data && Data->Tuning().ChatFilterOn != 0 && Data->WordFilter().IsOffensiveName(std::string(TCHAR_TO_UTF8(*User))))
+	{
+		return LOCTEXT("HiddenViewer", "espectador").ToString();
+	}
+	return User;
 }
 
 void UZMBStreamSubsystem::HandleCommand(const FString& User, const std::string& Text)
@@ -448,7 +463,7 @@ void UZMBStreamSubsystem::HandleCommand(const FString& User, const std::string& 
 		{
 			FZMBChatAction Action;
 			Action.Kind = EZMBChatActionKind::NamedZombie;
-			Action.ViewerName = User;
+			Action.ViewerName = CleanViewerName(User);
 			PendingActions.Add(Action);
 		}
 	}

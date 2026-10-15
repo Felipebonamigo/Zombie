@@ -21,7 +21,7 @@ que falta usa o padrão do código e aparece como aviso no log. Grupos:
 | `hype.` | Combo, variedade, queda, espectadores, seguidores e doações (`regras-de-jogo.md`, seção 5) |
 | `diretor.` | Ritmo da horda, tetos de zumbis vivos, noite, horda e barulho (seção 6) |
 | `cidade.` | Tamanho da cidade, quarteirões, praia e mar, praças, andares, recuo das fachadas (calçada e beco) e tamanho da célula (seção 2) |
-| `chat.` | Rodada de votação, votos mínimos, espera do `!zumbi` e zumbis com nome ao mesmo tempo (seção 9) |
+| `chat.` | Rodada de votação, votos mínimos, espera do `!zumbi`, zumbis com nome ao mesmo tempo (seção 9) e o filtro de palavras do Modo Streamer (seção 16) |
 | `pauta.` | Espera da primeira pauta, intervalo entre pautas e audiência mínima (seção 11) |
 | `base.` | Sucata (começo, caixa, carro), desmanche, conserto, desmonte, alcance, grade, teto de peças, dano nas peças (zumbi, explosão, carro), barulho e a grade fina em que a horda contorna a base (`base.horda_*`) (seção 12) |
 | `dia.` | Duração do dia, hora inicial, noite e Noite da Horda (seção 7) |
@@ -103,6 +103,16 @@ O rótulo é o texto que salta na tela.
 - Os ids que o código toca estão em `ZR::RequiredSoundIds()`; o teste de deriva cobra uma linha para cada, e uma
   `tiro_<id>` para cada arma de `Armas.csv`.
 - Som novo: skill `som-livre` (procurar, conferir a licença, tratar com `Tools/Audio/tratar_sons.py`, registrar).
+
+## `FiltroPalavras.csv`
+
+`termo,idioma`
+
+- Os termos do filtro do Modo Streamer (`regras-de-jogo.md`, seção 16): palavra inteira ou, com `*` no fim, começo de
+  palavra. Acento, maiúscula e letra repetida não importam ("PORRA" repete "porra" e é erro).
+- Prefixo curto pega palavra comum: `put*` pegaria "put" e `viad*` pegaria "viaduto". Nesses casos, liste as palavras
+  inteiras. O teste de deriva acusa se o filtro pegar uma fala do chat simulado.
+- `chat.filtro` = 0 em `Ajustes.csv` desliga o filtro.
 
 ## `Saque.csv`
 

@@ -50,6 +50,7 @@ chat.rodada_s,30,s,Duração de cada rodada de votação do chat
 chat.votos_min,3,votos,Votos mínimos para uma opção do chat vencer
 chat.zumbi_espera_s,60,s,Espera de cada espectador entre dois !zumbi
 chat.zumbis_com_nome_max,12,zumbis,Zumbis com nome de espectador vivos ao mesmo tempo
+chat.filtro,1,0 ou 1,"Modo Streamer: o que vem da Twitch (texto, apelido, nome do !zumbi) passa pelo filtro de Data/FiltroPalavras.csv"
 pauta.primeira_espera_s,45,s,Tempo até a primeira pauta de patrocinador
 pauta.intervalo_s,40,s,Intervalo entre o fim de uma pauta e o começo da próxima
 pauta.espectadores_min,10,espectadores,Patrocinador só manda pauta com pelo menos esta audiência

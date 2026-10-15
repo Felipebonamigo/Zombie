@@ -53,6 +53,8 @@ public:
 	const std::vector<ZR::FSoundDef>& Sounds() const { return LoadedSounds; }
 	/** Peças do modo construção, na ordem da tabela (Data/Construcoes.csv). */
 	const std::vector<ZR::FBuildPieceType>& BuildPieces() const { return LoadedBuildPieces; }
+	/** Filtro de palavras do Modo Streamer (Data/FiltroPalavras.csv; ligado por chat.filtro). */
+	const ZR::FWordFilter& WordFilter() const { return LoadedWordFilter; }
 	/** Lugares de saque (Data/Saque.csv) e o que cada um rende (Data/SaqueItens.csv). */
 	const std::vector<ZR::FLootSpotType>& LootSpots() const { return LoadedLootSpots; }
 	const std::vector<ZR::FLootItemDef>& LootItems() const { return LoadedLootItems; }
@@ -93,6 +95,7 @@ private:
 	std::vector<ZR::FMilestoneDef> LoadedMilestones;
 	std::vector<ZR::FLootSpotType> LoadedLootSpots;
 	std::vector<ZR::FLootItemDef> LoadedLootItems;
+	ZR::FWordFilter LoadedWordFilter;
 	TArray<FString> Errors;
 	int32 ReloadCount = 0;
 

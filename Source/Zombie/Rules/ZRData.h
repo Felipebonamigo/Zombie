@@ -17,6 +17,7 @@
 #include "Rules/ZRCityPlan.h"
 #include "Rules/ZRDayNight.h"
 #include "Rules/ZRDirector.h"
+#include "Rules/ZRFilter.h"
 #include "Rules/ZRHype.h"
 #include "Rules/ZRLive.h"
 #include "Rules/ZRLocalGrid.h"
@@ -177,6 +178,8 @@ namespace ZR
 		FLootConfig Loot;
 		/** Zumbis com o nome de espectadores vivos ao mesmo tempo. */
 		int MaxNamedZombies = 12;
+		/** Modo Streamer: 1 = o que vem da Twitch passa pelo filtro de palavras antes de aparecer. */
+		int ChatFilterOn = 1;
 		/** Pedaços soltos (membros e entulho) no mundo ao mesmo tempo. */
 		int MaxGibs = 220;
 		/** Segundos que um cadáver fica antes de sumir. */
@@ -203,6 +206,8 @@ namespace ZR
 	void LoadMilestones(const std::string& Csv, std::vector<FMilestoneDef>& Out, std::vector<std::string>& Errors);
 	/** Data/Sons.csv: arquivos separados por ";", só letras minúsculas, números e "_" (o nome vira asset no Unreal). */
 	void LoadSounds(const std::string& Csv, std::vector<FSoundDef>& Out, std::vector<std::string>& Errors);
+	/** Data/FiltroPalavras.csv: os termos do filtro do Modo Streamer ("fod*" = começa com). */
+	void LoadFilterTerms(const std::string& Csv, std::vector<std::string>& Out, std::vector<std::string>& Errors);
 	/** Data/Saque.csv: os lugares de saque (onde = calcada ou rua). */
 	void LoadLootSpots(const std::string& Csv, std::vector<FLootSpotType>& Out, std::vector<std::string>& Errors);
 	/** Data/SaqueItens.csv: o local tem que ser um id de Spots (Saque.csv) e o item, um de LootItemId. */
