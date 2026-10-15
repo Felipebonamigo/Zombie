@@ -467,7 +467,7 @@ void AZMBHUD::DrawHelp(float Scale)
 		TEXT("Botão esq. atirar   Botão dir. mirar   R recarregar   1 2 3 armas"),
 		TEXT("F chute   G granada   H joga bujão (atire nele no ar!)   Q mira lenta"),
 		TEXT("E entrar/sair do carro   C distância da câmera   V primeira pessoa (celular)"),
-		TEXT("X construir (clique constrói ou conserta, R gira, 1 a 5 peça, F desmonta)   segurar E desmancha carro"),
+		TEXT("X construir (clique constrói ou conserta, R gira, 1 a 5 peça, F desmonta)   segurar E revira lixo e desmancha carro"),
 		TEXT("B clipar o melhor lance   N horda (teste)   T +3 horas (teste)   F1 esconde"),
 	};
 	const float LineHeight = 22.0f * Scale;
@@ -501,13 +501,27 @@ void AZMBHUD::DrawBuild(float Scale)
 		DrawShadowedText(Text, Color, (Canvas->ClipX - Width) * 0.5f, Y, Font, TextScale);
 	};
 
-	// desmanchando um carro (segurando E): barra no meio da tela; perto de um, a dica
+	// revirando um lugar de saque ou desmanchando um carro (segurando E): barra no meio da tela; perto de um, a dica
+	const float Search = Player->GetSearch01();
 	const float Dismantle = Player->GetDismantle01();
-	if (Dismantle >= 0.0f)
+	if (Search >= 0.0f)
+	{
+		const float BarWidth = 260.0f * Scale;
+		Centered(FText::Format(LOCTEXT("Searching", "REVIRANDO: {0}"), FText::FromString(Player->GetSearchName().ToUpper())).ToString(), FLinearColor::White,
+			Canvas->ClipY * 0.58f, Medium, 1.1f * Scale);
+		DrawBar((Canvas->ClipX - BarWidth) * 0.5f, Canvas->ClipY * 0.58f + 30.0f * Scale, BarWidth, 14.0f * Scale, Search, Gold);
+	}
+	else if (Dismantle >= 0.0f)
 	{
 		const float BarWidth = 260.0f * Scale;
 		Centered(LOCTEXT("Dismantling", "DESMANCHANDO O CARRO").ToString(), FLinearColor::White, Canvas->ClipY * 0.58f, Medium, 1.1f * Scale);
 		DrawBar((Canvas->ClipX - BarWidth) * 0.5f, Canvas->ClipY * 0.58f + 30.0f * Scale, BarWidth, 14.0f * Scale, Dismantle, Gold);
+	}
+	else if (!Player->GetLootHint().IsEmpty() && !Player->IsBuildMode())
+	{
+		// o E revira antes de desmanchar: a dica segue a mesma ordem
+		Centered(FText::Format(LOCTEXT("SearchHint", "segure E: revirar {0}"), FText::FromString(Player->GetLootHint())).ToString(), Soft,
+			Canvas->ClipY * 0.6f, Small, 1.1f * Scale);
 	}
 	else if (Player->IsWreckNearby() && !Player->IsBuildMode())
 	{

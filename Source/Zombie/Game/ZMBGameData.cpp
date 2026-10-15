@@ -101,6 +101,15 @@ void UZMBGameData::Reload()
 	{
 		ZR::LoadMilestones(Text, LoadedMilestones, RuleErrors);
 	}
+	// os itens apontam para os lugares: lugares primeiro
+	if (LoadText(TEXT("Saque.csv"), Text))
+	{
+		ZR::LoadLootSpots(Text, LoadedLootSpots, RuleErrors);
+	}
+	if (LoadText(TEXT("SaqueItens.csv"), Text))
+	{
+		ZR::LoadLootItems(Text, LoadedLootSpots, LoadedLootItems, RuleErrors);
+	}
 	if (LoadText(TEXT("Sons.csv"), Text))
 	{
 		ZR::LoadSounds(Text, LoadedSounds, RuleErrors);

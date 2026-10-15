@@ -16,3 +16,4 @@
 #include "Rules/Tests/ZRTestsLocalGrid.inl"
 #include "Rules/Tests/ZRTestsSound.inl"
 #include "Rules/Tests/ZRTestsLive.inl"
+#include "Rules/Tests/ZRTestsLoot.inl"

@@ -53,6 +53,9 @@ public:
 	const std::vector<ZR::FSoundDef>& Sounds() const { return LoadedSounds; }
 	/** Peças do modo construção, na ordem da tabela (Data/Construcoes.csv). */
 	const std::vector<ZR::FBuildPieceType>& BuildPieces() const { return LoadedBuildPieces; }
+	/** Lugares de saque (Data/Saque.csv) e o que cada um rende (Data/SaqueItens.csv). */
+	const std::vector<ZR::FLootSpotType>& LootSpots() const { return LoadedLootSpots; }
+	const std::vector<ZR::FLootItemDef>& LootItems() const { return LoadedLootItems; }
 
 	const ZR::FZombieType* FindZombie(const char* Id) const;
 	const ZR::FExplosiveType* FindExplosive(const char* Id) const;
@@ -88,6 +91,8 @@ private:
 	std::vector<ZR::FBuildPieceType> LoadedBuildPieces;
 	std::vector<ZR::FSoundDef> LoadedSounds;
 	std::vector<ZR::FMilestoneDef> LoadedMilestones;
+	std::vector<ZR::FLootSpotType> LoadedLootSpots;
+	std::vector<ZR::FLootItemDef> LoadedLootItems;
 	TArray<FString> Errors;
 	int32 ReloadCount = 0;
 

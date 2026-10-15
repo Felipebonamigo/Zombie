@@ -243,3 +243,31 @@ que o jogador posta.
 
 Testes: `Marco.*`, `Resumo.*`, `Dados.MarcoForaDeOrdemOuRepetidoEhErro` e `Deriva.MarcosCarregamEOPrimeiroEhAlcancavel`
 (a tabela carrega e o primeiro marco fica acima dos seguidores do começo).
+
+## 15. Saque (`ZRLoot.h`)
+
+Lugares para revirar espalhados pela cidade (`Data/Saque.csv`), com o que cada um rende em `Data/SaqueItens.csv`:
+
+| Lugar | Onde | Segurar E | Rende (mais comum primeiro) | Barulho | Volta a render |
+|---|---|---|---|---|---|
+| Lixeira | calçada | 2 s | sucata, nada, curativo, munição | 3 | em 2 dias |
+| Mochila de folião | rua | 1,2 s | curativo, munição, granada, nada | 0 | não |
+| Isopor do ambulante | calçada | 1,5 s | água e energético (vida), nada, sucata | 1 | não |
+| Viatura largada | rua | 3,5 s | munição, granada, curativo (dois sorteios) | 5 | não |
+
+- **Revirar:** segurar E a até `saque.alcance_cm` (160 cm) da borda do lugar. Andar (mais de 1,5 m/s), se afastar,
+  apanhar, entrar no carro ou morrer solta. O carro dirigível perto tem prioridade no E; depois vem o saque e por fim o
+  desmanche do carro batido.
+- **O que sai:** `rolagens` sorteios na tabela de itens do lugar, cada linha com a chance do seu `peso` (a linha `nada`
+  também conta) e a quantidade entre `min` e `max`. Munição é em pentes cheios de cada arma; curativo cura até a vida
+  cheia (passa do teto da cura sozinha); sucata vai para a base.
+- **Revirado:** o lugar escurece e fica vazio; com `renova_dias`, volta a render depois desses dias (`dia.*`).
+- **Barulho:** ao terminar, o `barulho` do lugar vai para o Diretor, como um tiro (a tampa da lixeira e o porta-malas
+  chamam zumbis).
+- **Onde ficam:** "calçada" na faixa entre a rua e a fachada, de frente para a rua, longe das quinas; "rua" estacionado
+  numa célula de rua, no sentido dela. Nada a menos de `saque.longe_do_comeco_cm` (6 m) do começo, nada a menos de
+  `saque.espacamento_cm` (8 m) de outro lugar, sempre em chão. A mesma semente dá os mesmos lugares.
+- O chat comenta o saque bom (`saque` em `ChatFalso.csv`).
+
+Testes: `Saque.*`, `Dados.SaqueComErroEhApontado` e `Deriva.SaqueCarregaETodoLugarRendeAlgo` (as tabelas carregam, todo
+lugar rende alguma coisa e a cidade das tabelas tem espaço para pelo menos 90% dos lugares pedidos).

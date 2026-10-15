@@ -23,6 +23,7 @@ Teclado e mouse, e controle (Xbox ou Steam Deck). Todos são criados em código 
 | Distância da câmera (longe e alta, média, perto) | C | Direcional para cima |
 | Primeira pessoa, "modo celular" | V | Direcional para baixo |
 | Modo construção (liga e desliga) | X | Clique no analógico direito |
+| Revirar lixeira, mochila, isopor ou viatura (saque) | E (segurar perto dele) | Y (segurar) |
 | Desmanchar carro batido em sucata | E (segurar ao lado dele) | Y (segurar) |
 | Clipar o melhor lance (print com o HUD) | B | Botão View |
 | Mostrar ou esconder a ajuda | F1 | Botão Menu |

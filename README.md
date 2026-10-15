@@ -29,6 +29,8 @@ Tudo em formas básicas da engine, para sentir o jogo; o visual realista vem por
   - Têm desmembramento por membro (a cabeça estoura, sem perna vira rastejante) e explodem em pedaços.
 - **Explosões em cadeia:** bujões, barris, carros abandonados e os zumbis-bujão.
 - **Carro dirigível,** que atropela.
+- **Saque:** lixeiras, mochilas de folião largadas no bloco, isopores de ambulante e viaturas para revirar (segurar E);
+  faz barulho e chama a horda.
 - **Som:** tiros, explosões, zumbis (gemido, ataque, morte, grito), base, carro e a live, com variação para não repetir;
   gravações livres (CC0 e CC BY, créditos em `Data/Creditos.txt`).
 - **Base à Night of the Dead:** sucata (caixa do drone e carro desmanchado) e **modo construção** (X) com barricada de

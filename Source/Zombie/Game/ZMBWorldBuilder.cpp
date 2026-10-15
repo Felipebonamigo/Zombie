@@ -1,6 +1,7 @@
 #include "Game/ZMBWorldBuilder.h"
 #include "Zombie.h"
 #include "Combat/ZMBExplosive.h"
+#include "Loot/ZMBLootSpot.h"
 #include "Game/ZMBGameData.h"
 #include "Vehicles/ZMBCar.h"
 #include "Components/DirectionalLightComponent.h"
@@ -172,6 +173,7 @@ void AZMBWorldBuilder::Build(std::uint64_t Seed)
 	BuildBlocks();
 	BuildStreetFurniture();
 	SpawnProps(Seed);
+	SpawnLoot(Seed);
 	Clock = 0.0;
 	UpdateSky();
 	UE_LOG(LogZombie, Display, TEXT("Porto Brasa: %d x %d células de %.0f m, %d prédios, %d praças, semente %llu"), Plan.Width, Plan.Height,
@@ -489,6 +491,38 @@ void AZMBWorldBuilder::SpawnProps(std::uint64_t Seed)
 		const FVector Where = StartLocation + Along * (900.0f + i * 700.0f) * (i % 2 == 0 ? 1.0f : -1.0f) + FVector(0.0f, 0.0f, 40.0f);
 		World->SpawnActor<AZMBCar>(AZMBCar::StaticClass(), Where, FRotator(0.0f, StartRotation.Yaw + 90.0f, 0.0f), Params);
 	}
+}
+
+void AZMBWorldBuilder::SpawnLoot(std::uint64_t Seed)
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	UWorld* World = GetWorld();
+	if (!Data || !World)
+	{
+		return;
+	}
+	const std::vector<ZR::FLootSpotType>& Types = Data->LootSpots();
+	const FVector StartOnPlan = StartLocation - Origin;
+	const std::vector<ZR::FLootPlace> Places = ZR::PlaceLoot(Plan, CellSize, Types, Data->Tuning().Loot, Seed + 3,
+		static_cast<float>(StartOnPlan.X), static_cast<float>(StartOnPlan.Y));
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	for (const ZR::FLootPlace& Place : Places)
+	{
+		if (Place.Type < 0 || Place.Type >= static_cast<int32>(Types.size()))
+		{
+			continue;
+		}
+		const ZR::FLootSpotType& Type = Types[static_cast<size_t>(Place.Type)];
+		// na calçada fica em cima do meio-fio; na rua, no asfalto
+		const float Floor = Type.Where == ZR::ELootWhere::Sidewalk ? SidewalkHeight : 0.0f;
+		const FVector Where = Origin + FVector(Place.X, Place.Y, Floor);
+		if (AZMBLootSpot* Spot = World->SpawnActor<AZMBLootSpot>(AZMBLootSpot::StaticClass(), Where, FRotator(0.0f, Place.Yaw, 0.0f), Params))
+		{
+			Spot->Setup(Type);
+		}
+	}
+	UE_LOG(LogZombie, Display, TEXT("Porto Brasa: %d lugares de saque"), static_cast<int32>(Places.size()));
 }
 
 float AZMBWorldBuilder::GetHour() const

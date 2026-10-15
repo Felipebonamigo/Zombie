@@ -556,6 +556,105 @@ namespace ZR
 		}
 	}
 
+	void LoadLootSpots(const std::string& Csv, std::vector<FLootSpotType>& Out, std::vector<std::string>& Errors)
+	{
+		Out.clear();
+		FCsvTable Table;
+		if (!ParseOrReport(Csv, "Saque.csv", Table, Errors))
+		{
+			return;
+		}
+		FRowReader Reader(Table, "Saque.csv", Errors);
+		if (!Reader.Require({"id", "nome_pt", "nome_en", "onde", "busca_s", "rolagens", "barulho", "quantidade", "renova_dias",
+				"largura_cm", "profundidade_cm", "altura_cm", "cor"}))
+		{
+			return;
+		}
+		for (std::size_t Row = 0; Row < Table.Rows.size(); ++Row)
+		{
+			const std::size_t ErrorsBefore = Errors.size();
+			FLootSpotType Spot;
+			Spot.Id = Reader.Text(Row, "id");
+			if (!AcceptId(Reader, Row, Spot.Id, Out))
+			{
+				continue;
+			}
+			const std::string Where = Reader.Text(Row, "onde");
+			if (Where == "rua")
+			{
+				Spot.Where = ELootWhere::Road;
+			}
+			else if (Where != "calcada")
+			{
+				Reader.Report(Row, "onde", "'" + Where + "' não é calcada ou rua");
+				continue;
+			}
+			Spot.NamePt = Reader.Text(Row, "nome_pt");
+			Spot.NameEn = Reader.Text(Row, "nome_en");
+			Spot.SearchSeconds = Reader.Float(Row, "busca_s", 0.1f, 60.0f, 2.0f);
+			Spot.Rolls = Reader.Int(Row, "rolagens", 1, 20, 1);
+			Spot.Noise = Reader.Float(Row, "barulho", 0.0f, 100.0f, 0.0f);
+			Spot.Count = Reader.Int(Row, "quantidade", 0, 1000, 0);
+			Spot.RefillDays = Reader.Int(Row, "renova_dias", 0, 365, 0);
+			Spot.WidthCm = Reader.Float(Row, "largura_cm", 10.0f, 2000.0f, 60.0f);
+			Spot.DepthCm = Reader.Float(Row, "profundidade_cm", 10.0f, 2000.0f, 60.0f);
+			Spot.HeightCm = Reader.Float(Row, "altura_cm", 5.0f, 1000.0f, 100.0f);
+			Spot.ColorRgb = Reader.Color(Row, "cor", 0x556655);
+			// linha com erro sai inteira: lugar pela metade na cidade confunde mais que lugar faltando
+			if (Errors.size() != ErrorsBefore)
+			{
+				continue;
+			}
+			Out.push_back(Spot);
+		}
+	}
+
+	void LoadLootItems(const std::string& Csv, const std::vector<FLootSpotType>& Spots, std::vector<FLootItemDef>& Out,
+		std::vector<std::string>& Errors)
+	{
+		Out.clear();
+		FCsvTable Table;
+		if (!ParseOrReport(Csv, "SaqueItens.csv", Table, Errors))
+		{
+			return;
+		}
+		FRowReader Reader(Table, "SaqueItens.csv", Errors);
+		if (!Reader.Require({"local", "item", "peso", "min", "max"}))
+		{
+			return;
+		}
+		for (std::size_t Row = 0; Row < Table.Rows.size(); ++Row)
+		{
+			const std::size_t ErrorsBefore = Errors.size();
+			FLootItemDef Def;
+			Def.Spot = Reader.Text(Row, "local");
+			if (FindById(Spots, Def.Spot) == nullptr)
+			{
+				Reader.Report(Row, "local", "'" + Def.Spot + "' não é um id de Saque.csv");
+				continue;
+			}
+			const std::string Item = Reader.Text(Row, "item");
+			if (!ParseLootItem(Item, Def.Item))
+			{
+				Reader.Report(Row, "item", "'" + Item + "' não é nada, municao, granada, bujao, curativo ou sucata");
+				continue;
+			}
+			Def.Weight = Reader.Float(Row, "peso", 0.0f, 1.0e6f, 1.0f);
+			Def.Min = Reader.Int(Row, "min", 0, 100000, 1);
+			Def.Max = Reader.Int(Row, "max", 0, 100000, 1);
+			if (Errors.size() != ErrorsBefore)
+			{
+				continue;
+			}
+			if (Def.Min > Def.Max)
+			{
+				Reader.Report(Row, "min", "maior que max");
+				continue;
+			}
+			Out.push_back(Def);
+		}
+	}
+
 	void LoadBuildPieces(const std::string& Csv, const std::vector<FExplosiveType>& Explosives, std::vector<FBuildPieceType>& Out,
 		std::vector<std::string>& Errors)
 	{
@@ -732,6 +831,10 @@ namespace ZR
 			F("resumo.nota_b_espectadores", T.Grade.BViewers, 0.0f, 1.0e9f);
 			F("resumo.nota_a_espectadores", T.Grade.AViewers, 0.0f, 1.0e9f);
 			F("resumo.nota_s_espectadores", T.Grade.SViewers, 0.0f, 1.0e9f);
+
+			F("saque.alcance_cm", T.Loot.RangeCm, 20.0f, 2000.0f);
+			F("saque.espacamento_cm", T.Loot.MinSpacingCm, 0.0f, 20000.0f);
+			F("saque.longe_do_comeco_cm", T.Loot.AvoidStartCm, 0.0f, 100000.0f);
 
 			I("base.sucata_inicio", T.Base.StartScrap, 0.0f, 100000.0f);
 			I("base.sucata_por_caixa", T.Base.ScrapPerCrate, 0.0f, 100000.0f);

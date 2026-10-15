@@ -1,0 +1,5 @@
+id,nome_pt,nome_en,onde,busca_s,rolagens,barulho,quantidade,renova_dias,largura_cm,profundidade_cm,altura_cm,cor,descricao
+lixeira,lixeira,trash bin,calcada,2,1,3,40,2,70,60,110,#2F4A2F,"Contêiner de lixo na calçada: muita sucata, às vezes um curativo; a tampa de metal faz barulho. Volta a render em 2 dias"
+mochila,mochila de folião,reveler's backpack,rua,1.2,1,0,20,0,45,30,30,#7A2E8C,"Largada no meio da rua quando o bloco correu: curativo, munição e às vezes granada"
+isopor,isopor do ambulante,street vendor's cooler,calcada,1.5,1,1,15,0,60,40,45,#E8EEF2,"Água e energético gelados: vida"
+viatura,viatura largada,abandoned police car,rua,3.5,2,5,6,0,460,190,150,#D9DEE4,"Porta-malas da polícia: munição e granadas, duas vezes; demora e faz barulho"

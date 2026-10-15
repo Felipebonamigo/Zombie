@@ -28,6 +28,7 @@ que falta usa o padrão do código e aparece como aviso no log. Grupos:
 | `camera.` | As três distâncias da terceira pessoa, a mira, a primeira pessoa e o modo inicial |
 | `jogador.` | Vida, velocidades, fôlego, chute, mira lenta (foco), arremesso, sobra de vida, cura sozinha e tempo para voltar à live |
 | `resumo.` | Pico de espectadores que dá cada nota do resumo da live (C, B, A e S; seção 14) |
+| `saque.` | Alcance do E, distância mínima entre lugares de saque e quanto longe do começo eles ficam (seção 15) |
 | `carro.` | Massa, suspensão, motor, freio, esterço, aderência e atropelo (unidades do Unreal) |
 | `mundo.` | Cadáver, pedaços soltos, distância de sumir e de nascer, explosivos e carros nas ruas |
 
@@ -103,6 +104,25 @@ O rótulo é o texto que salta na tela.
   `tiro_<id>` para cada arma de `Armas.csv`.
 - Som novo: skill `som-livre` (procurar, conferir a licença, tratar com `Tools/Audio/tratar_sons.py`, registrar).
 
+## `Saque.csv`
+
+`id,nome_pt,nome_en,onde,busca_s,rolagens,barulho,quantidade,renova_dias,largura_cm,profundidade_cm,altura_cm,cor`
+
+- Os lugares de saque (`regras-de-jogo.md`, seção 15). `onde`: `calcada` (entre a rua e a fachada) ou `rua`.
+- `busca_s`: segurando E. `rolagens`: sorteios na tabela de itens. `barulho`: vai para o Diretor ao terminar.
+  `quantidade`: quantos na cidade (menos, se faltar espaço). `renova_dias`: 0 = revirado fica vazio.
+- `largura_cm` é ao longo de para onde o lugar olha (a rua), `profundidade_cm` de lado; abaixo de 60 cm de altura dá para
+  passar por cima. Id novo aparece como uma caixa da cor e do tamanho da linha.
+- Linha com erro sai inteira e o erro vai para o log.
+
+## `SaqueItens.csv`
+
+`local,item,peso,min,max`
+
+- `local`: um id de `Saque.csv`. `item`: `nada`, `municao` (pentes cheios de cada arma), `granada`, `bujao`, `curativo`
+  (pontos de vida) ou `sucata`. A chance de cada linha é o `peso` dividido pela soma dos pesos do lugar.
+- `min` e `max`: a quantidade sorteada (inteira). `min` maior que `max` é erro.
+
 ## `Marcos.csv`
 
 `id,seguidores,texto_pt,texto_en,sucata,granadas,bujoes,caixa,hype_bonus`
@@ -123,8 +143,8 @@ O crédito que as licenças CC BY dos sons pedem. Vai junto no jogo empacotado (
 
 Falas do chat simulado. As categorias (`ZR::FakeChatCategories()`) são `inicio`, `abate`, `cabeca`, `explosao`, `cadeia`,
 `atropelo`, `desmembrou`, `dano`, `quase_morte`, `calmo`, `doacao`, `horda`, `noite`, `mira_lenta`, `zumbi_do_chat`,
-`barricada` (uma barricada caiu), `armadilha` (abate por armadilha) e `marco` (meta de seguidores batida), com pelo
-menos 2 falas cada. Sem emoji: o HUD de protótipo não desenha emoji.
+`barricada` (uma barricada caiu), `armadilha` (abate por armadilha), `marco` (meta de seguidores batida) e `saque` (achou coisa boa revirando), com
+pelo menos 2 falas cada. Sem emoji: o HUD de protótipo não desenha emoji.
 
 ## Jogo empacotado
 

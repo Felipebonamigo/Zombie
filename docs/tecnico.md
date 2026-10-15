@@ -32,13 +32,14 @@ Versão 0.1, 14 out 2026. Base: Unreal Engine 5.8, C++, um módulo (`Zombie`), W
 
 | Pasta | Classe | Papel |
 |---|---|---|
-| `Rules/` | `ZR::` | Hype, corpo, explosão, Diretor, fluxo, cidade, dia e noite, chat, clipes, CSV e tabelas |
+| `Rules/` | `ZR::` | Hype, corpo, explosão, Diretor, fluxo, cidade, dia e noite, chat, clipes, base, som, marcos, saque, CSV e tabelas |
 | `Game/` | `UZMBGameData` | Lê `Data/*.csv` e guarda os materiais de cor compartilhados |
-| `Game/` | `AZMBWorldBuilder` | Monta a cidade de protótipo, o céu, o sol e a lua, a neblina e o pós-processo |
+| `Game/` | `AZMBWorldBuilder` | Monta a cidade de protótipo (com os lugares de saque), o céu, o sol e a lua, a neblina e o pós-processo |
 | `Game/` | `AZMBGameMode` | Liga tudo num mapa vazio; opções de linha de comando para captura |
 | `Player/` | `AZMBCharacter` | Câmeras, armas, chute, arremesso, mira lenta, carro e clipe |
 | `Zombies/` | `AZMBZombie`, `AZMBHordeDirector` | Corpo por membros; onde e quando nascem; fluxo; pedidos do chat |
 | `Combat/` | `AZMBExplosive`, `ZMBExplosion`, `AZMBFx`, `AZMBPickup` | Explosivos, explosão, efeitos provisórios, caixa do drone |
+| `Loot/` | `AZMBLootSpot` | Lugar de saque (lixeira, mochila, isopor, viatura): revirar com E, escurece vazio |
 | `Base/` | `AZMBBuildPiece` | Barricada e armadilha construídas: colisão, golpes, conserto, desmonte e o bujão armado |
 | `Audio/` | `UZMBAudioSubsystem` | Toca os sons de `Data/Sons.csv` (variação, vozes, alcance); motor em laço |
 | `Vehicles/` | `AZMBCar` | Carro de suspensão por raios (protótipo) |

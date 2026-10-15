@@ -57,6 +57,9 @@ resumo.nota_c_espectadores,25,espectadores,"Nota C no resumo da live (pico de es
 resumo.nota_b_espectadores,100,espectadores,Nota B no resumo da live
 resumo.nota_a_espectadores,500,espectadores,Nota A no resumo da live
 resumo.nota_s_espectadores,2000,espectadores,Nota S no resumo da live (a live viralizou)
+saque.alcance_cm,160,cm,"Até onde o E alcança um lugar de saque, contado da borda dele"
+saque.espacamento_cm,800,cm,Distância mínima entre dois lugares de saque na cidade
+saque.longe_do_comeco_cm,600,cm,Nenhum lugar de saque a menos disso do começo do jogador
 base.sucata_inicio,60,sucata,Sucata no começo do jogo (paga três barricadas de madeira)
 base.sucata_por_caixa,40,sucata,Sucata em cada caixa da entrega por drone
 base.sucata_por_carro,25,sucata,Sucata de desmanchar um carro batido (segurar E ao lado dele)

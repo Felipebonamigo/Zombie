@@ -6,7 +6,7 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
 ## Fase 0 — Protótipo jogável (agora)
 
 - [x] Design, estratégia viral e contrato das regras (`design.md`, `viralizar.md`, `regras-de-jogo.md`)
-- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2, 91 com o bloco 3, 105 com o bloco 4, 112 com o bloco 5, 118 com o bloco 6, 119 com a revisão do som) (g++ e clang++, avisos como erro,
+- [x] Regras puras com 68 testes passando na nuvem (76 com o bloco 2, 91 com o bloco 3, 105 com o bloco 4, 112 com o bloco 5, 118 com o bloco 6, 119 com a revisão do som, 126 com o bloco 7) (g++ e clang++, avisos como erro,
   sanitizers)
 - [x] Projeto Unreal 5.8 em C++ escrito:
   - cidade gerada, jogador com 4 câmeras, 3 armas, granada, bujão, chute e mira lenta;
@@ -25,8 +25,10 @@ das horas semanais do Felipe (pendência do estúdio) e do Detonauto, que começ
   abertura; o carro rápido arromba barricada; `Data/` vai no jogo empacotado
 - [x] Bloco 6: marcos de seguidores (`Data/Marcos.csv`, com o presente do chat) e o resumo da live com nota de S a D
   na tela "A LIVE CAIU"
+- [x] Bloco 7, adiantado da fase 4: saque. Lixeira, mochila de folião, isopor do ambulante e viatura largada espalhados
+  pela cidade (`Data/Saque.csv` e `SaqueItens.csv`); segurar E revira, faz barulho e rende munição, granada, vida ou sucata
 - [ ] **Compilar no PC** (skill `verificar`) e corrigir o que o compilador apontar
-- [ ] `Zombie.Regras` verde no Unreal (os mesmos testes da nuvem; 119 hoje)
+- [ ] `Zombie.Regras` verde no Unreal (os mesmos testes da nuvem; 126 hoje)
 - [ ] Capturas de dia, de noite e no modo celular (`jogar.ps1`) em `docs/img/prototipo/`
 - [ ] **Primeiro playtest do Felipe** (15 min) e lista de problemas como Issues "[Playtest]"
 
@@ -56,7 +58,8 @@ satisfatório e a live dá vontade de subir o hype.
 
 ## Fase 4 — Sobrevivência e base (2 a 3 meses)
 
-Saque, comida e água, ferimentos, sobreviventes resgatados e progressão por seguidores. Já adiantados no protótipo: a
+Saque, comida e água, ferimentos, sobreviventes resgatados e progressão por seguidores. Já adiantados no protótipo: o
+saque na rua (bloco 7; falta o de dentro dos prédios), os marcos de seguidores (bloco 6), a
 base com barricadas e armadilhas (blocos 3 e 4: a horda contorna a base e entra pela abertura; o carro arromba
 barricada) e as pautas da live (bloco 2). Falta na base: portas e janelas de prédio para trancar e peças de verdade
 (acervo-3d).

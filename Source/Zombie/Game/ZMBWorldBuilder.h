@@ -62,6 +62,8 @@ private:
 	void BuildBlocks();
 	void BuildStreetFurniture();
 	void SpawnProps(std::uint64_t Seed);
+	/** Lixeiras, mochilas, isopores e viaturas para revirar (Rules/ZRLoot.h). */
+	void SpawnLoot(std::uint64_t Seed);
 	void UpdateSky();
 
 	UPROPERTY(VisibleAnywhere, Category="Sky")

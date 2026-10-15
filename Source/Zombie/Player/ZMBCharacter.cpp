@@ -8,6 +8,7 @@
 #include "Game/ZMBGameData.h"
 #include "Game/ZMBGameMode.h"
 #include "Game/ZMBWorldBuilder.h"
+#include "Loot/ZMBLootSpot.h"
 #include "Stream/ZMBStreamSubsystem.h"
 #include "Vehicles/ZMBCar.h"
 #include "Zombies/ZMBHordeDirector.h"
@@ -640,7 +641,16 @@ void AZMBCharacter::InteractKey(const FInputActionValue& Value)
 	if (AZMBCar* Nearest = FindNearbyCar())
 	{
 		CancelDismantle();
+		CancelSearch();
 		Nearest->Enter(this);
+		return;
+	}
+	// segurar E perto de uma lixeira, mochila, isopor ou viatura revira (saque vem antes do desmanche: está colado nele)
+	if (AZMBLootSpot* Spot = FindLootSpot())
+	{
+		SearchTarget = Spot;
+		SearchLeft = Spot->GetType().SearchSeconds;
+		UZMBAudioSubsystem::Play(this, "desmanche", Spot->GetActorLocation(), 0.5f);
 		return;
 	}
 	// sem carro para dirigir perto: segurar E ao lado de um carro batido desmancha ele em sucata
@@ -656,6 +666,7 @@ void AZMBCharacter::InteractKey(const FInputActionValue& Value)
 void AZMBCharacter::InteractOff(const FInputActionValue& Value)
 {
 	CancelDismantle();
+	CancelSearch();
 }
 
 void AZMBCharacter::SetDriving(AZMBCar* Car)
@@ -667,6 +678,7 @@ void AZMBCharacter::SetDriving(AZMBCar* Car)
 	{
 		SetBuildMode(false);
 		CancelDismantle();
+		CancelSearch();
 		SetSlowMo(false);
 		GetCharacterMovement()->DisableMovement();
 		SetActorEnableCollision(false);
@@ -763,8 +775,9 @@ float AZMBCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEv
 	}
 	Health = FMath::Max(0.0f, Health - Applied);
 	SinceDamage = 0.0f;
-	// apanhou, soltou o carro que estava desmanchando
+	// apanhou, soltou o carro que estava desmanchando e o lixo que estava revirando
 	CancelDismantle();
+	CancelSearch();
 	AddTrauma(0.2f + Applied / 60.0f);
 	if (AZMBHordeDirector* Director = AZMBHordeDirector::Find(this))
 	{
@@ -794,6 +807,7 @@ void AZMBCharacter::Die()
 	SetSlowMo(false);
 	SetBuildMode(false);
 	CancelDismantle();
+	CancelSearch();
 	const UZMBGameData* Data = UZMBGameData::Get(this);
 	RespawnLeft = Data ? Data->Tuning().Player.RespawnSeconds : 8.0f;
 	GetCharacterMovement()->DisableMovement();
@@ -1001,6 +1015,7 @@ void AZMBCharacter::Tick(float DeltaSeconds)
 		FireOnce();
 	}
 	UpdateDismantle(DeltaSeconds);
+	UpdateSearch(DeltaSeconds);
 	if (bBuildMode)
 	{
 		UpdateBuild();
@@ -1578,6 +1593,160 @@ void AZMBCharacter::CancelDismantle()
 {
 	DismantleTarget = nullptr;
 	DismantleLeft = 0.0f;
+}
+
+// --- saque --------------------------------------------------------------------------------------------------------------
+
+int32 AZMBCharacter::CurrentDay() const
+{
+	const AZMBGameMode* GameMode = AZMBGameMode::Get(this);
+	const AZMBWorldBuilder* Builder = GameMode ? GameMode->GetBuilder() : nullptr;
+	return Builder ? Builder->GetDayIndex() : 0;
+}
+
+AZMBLootSpot* AZMBCharacter::FindLootSpot() const
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	float Best = Data ? Data->Tuning().Loot.RangeCm : 160.0f;
+	AZMBLootSpot* Nearest = nullptr;
+	const int32 Day = CurrentDay();
+	const FVector Here = GetActorLocation();
+	for (TActorIterator<AZMBLootSpot> It(GetWorld()); It; ++It)
+	{
+		// o iterador é barato com algumas dezenas de lugares; corta pelo centro antes de medir a borda
+		if (FVector::DistSquared2D(It->GetActorLocation(), Here) > FMath::Square(Best + 600.0f) || !It->CanSearch(Day))
+		{
+			continue;
+		}
+		const float Distance = It->DistanceTo(Here);
+		if (Distance <= Best)
+		{
+			Best = Distance;
+			Nearest = *It;
+		}
+	}
+	return Nearest;
+}
+
+void AZMBCharacter::UpdateSearch(float DeltaSeconds)
+{
+	LootScanTimer -= DeltaSeconds;
+	if (LootScanTimer <= 0.0f)
+	{
+		LootScanTimer = 0.25f;
+		// com um carro dirigível perto, o E entra nele: aí a dica do saque mentiria
+		const AZMBLootSpot* Near = bDead || bDriving || FindNearbyCar() ? nullptr : FindLootSpot();
+		LootHint = Near ? Near->GetDisplayName() : FString();
+	}
+	AZMBLootSpot* Spot = SearchTarget.Get();
+	if (!Spot)
+	{
+		return;
+	}
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	const float Range = Data ? Data->Tuning().Loot.RangeCm : 160.0f;
+	const int32 Day = CurrentDay();
+	// solta se sair andando, se afastar ou se o lugar já não render (outro jogador, um dia virou)
+	if (!Spot->CanSearch(Day) || Spot->DistanceTo(GetActorLocation()) > Range + 100.0f || GetVelocity().Size2D() > 150.0f)
+	{
+		CancelSearch();
+		return;
+	}
+	SearchLeft -= DeltaSeconds;
+	if (SearchLeft > 0.0f)
+	{
+		return;
+	}
+	const FString Name = Spot->GetDisplayName();
+	const ZR::FLootResult Loot = Spot->Search(Day);
+	const float Noise = Spot->GetType().Noise;
+	const FVector Where = Spot->GetActorLocation();
+	CancelSearch();
+	ApplyLoot(Loot, Name);
+	if (!Loot.IsEmpty())
+	{
+		UZMBAudioSubsystem::Play(this, "caixa", Where);
+	}
+	// tampa de lixeira e porta-malas fazem barulho
+	if (Noise > 0.0f)
+	{
+		if (AZMBHordeDirector* Director = AZMBHordeDirector::Find(this))
+		{
+			Director->ReportNoise(Noise);
+		}
+	}
+}
+
+void AZMBCharacter::CancelSearch()
+{
+	SearchTarget = nullptr;
+	SearchLeft = 0.0f;
+}
+
+float AZMBCharacter::GetSearch01() const
+{
+	const AZMBLootSpot* Spot = SearchTarget.Get();
+	if (!Spot)
+	{
+		return -1.0f;
+	}
+	const float Total = FMath::Max(Spot->GetType().SearchSeconds, 0.01f);
+	return FMath::Clamp(1.0f - SearchLeft / Total, 0.0f, 1.0f);
+}
+
+FString AZMBCharacter::GetSearchName() const
+{
+	const AZMBLootSpot* Spot = SearchTarget.Get();
+	return Spot ? Spot->GetDisplayName() : FString();
+}
+
+void AZMBCharacter::ApplyLoot(const ZR::FLootResult& Loot, const FString& SpotName)
+{
+	TArray<FString> Gains;
+	if (Loot.AmmoPacks > 0)
+	{
+		if (const UZMBGameData* Data = UZMBGameData::Get(this))
+		{
+			const std::vector<ZR::FWeaponType>& Weapons = Data->Weapons();
+			for (int32 i = 0; i < WeaponStates.Num() && i < static_cast<int32>(Weapons.size()); ++i)
+			{
+				WeaponStates[i].Reserve += Weapons[static_cast<size_t>(i)].Magazine * Loot.AmmoPacks;
+			}
+		}
+		Gains.Add(FText::Format(LOCTEXT("LootAmmo", "+{0} PENTE POR ARMA"), FText::AsNumber(Loot.AmmoPacks)).ToString());
+	}
+	if (Loot.Grenades > 0)
+	{
+		Grenades += Loot.Grenades;
+		Gains.Add(FText::Format(LOCTEXT("LootGrenades", "+{0} GRANADA"), FText::AsNumber(Loot.Grenades)).ToString());
+	}
+	if (Loot.Bombs > 0)
+	{
+		Bombs += Loot.Bombs;
+		Gains.Add(FText::Format(LOCTEXT("LootBombs", "+{0} BUJÃO"), FText::AsNumber(Loot.Bombs)).ToString());
+	}
+	if (Loot.Health > 0.0f)
+	{
+		// curativo cura acima do teto da cura sozinha, até a vida cheia
+		Health = FMath::Min(GetMaxHealth(), Health + Loot.Health);
+		Gains.Add(FText::Format(LOCTEXT("LootHealth", "+{0} VIDA"), FText::AsNumber(FMath::RoundToInt(Loot.Health))).ToString());
+	}
+	if (Loot.Scrap > 0)
+	{
+		Scrap += Loot.Scrap;
+		Gains.Add(FText::Format(LOCTEXT("LootScrap", "+{0} SUCATA"), FText::AsNumber(Loot.Scrap)).ToString());
+	}
+	UZMBStreamSubsystem* Stream = UZMBStreamSubsystem::Get(this);
+	if (!Stream)
+	{
+		return;
+	}
+	const FString What = Gains.Num() > 0 ? FString::Join(Gains, TEXT(", ")) : LOCTEXT("LootNothing", "NADA AQUI").ToString();
+	Stream->ShowToast(FString::Printf(TEXT("%s: %s"), *SpotName.ToUpper(), *What));
+	if (Gains.Num() > 0)
+	{
+		Stream->React("saque");
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

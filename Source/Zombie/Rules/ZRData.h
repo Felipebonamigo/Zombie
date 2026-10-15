@@ -20,6 +20,7 @@
 #include "Rules/ZRHype.h"
 #include "Rules/ZRLive.h"
 #include "Rules/ZRLocalGrid.h"
+#include "Rules/ZRLoot.h"
 #include "Rules/ZRSound.h"
 
 namespace ZR
@@ -172,6 +173,8 @@ namespace ZR
 		FGradeConfig Grade;
 		/** A grade fina em volta do jogador, onde a horda vê as barricadas. */
 		FLocalGridConfig HordeGrid;
+		/** Alcance do E e espalhamento dos lugares de saque. */
+		FLootConfig Loot;
 		/** Zumbis com o nome de espectadores vivos ao mesmo tempo. */
 		int MaxNamedZombies = 12;
 		/** Pedaços soltos (membros e entulho) no mundo ao mesmo tempo. */
@@ -200,6 +203,11 @@ namespace ZR
 	void LoadMilestones(const std::string& Csv, std::vector<FMilestoneDef>& Out, std::vector<std::string>& Errors);
 	/** Data/Sons.csv: arquivos separados por ";", só letras minúsculas, números e "_" (o nome vira asset no Unreal). */
 	void LoadSounds(const std::string& Csv, std::vector<FSoundDef>& Out, std::vector<std::string>& Errors);
+	/** Data/Saque.csv: os lugares de saque (onde = calcada ou rua). */
+	void LoadLootSpots(const std::string& Csv, std::vector<FLootSpotType>& Out, std::vector<std::string>& Errors);
+	/** Data/SaqueItens.csv: o local tem que ser um id de Spots (Saque.csv) e o item, um de LootItemId. */
+	void LoadLootItems(const std::string& Csv, const std::vector<FLootSpotType>& Spots, std::vector<FLootItemDef>& Out,
+		std::vector<std::string>& Errors);
 	/** Data/Construcoes.csv: o explosivo da armadilha tem que ser um id de Explosives (Explosivos.csv). */
 	void LoadBuildPieces(const std::string& Csv, const std::vector<FExplosiveType>& Explosives, std::vector<FBuildPieceType>& Out,
 		std::vector<std::string>& Errors);

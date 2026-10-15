@@ -8,6 +8,7 @@
 //   C distância da câmera, V primeira pessoa, B clipar o melhor lance, F1 ajuda. Teste: N chama a horda, T avança 3 horas.
 //   Base (à Night of the Dead): X liga o modo construção (clique constrói ou conserta, R gira, roda ou 1 a 5 escolhe a peça,
 //   F desmonta); segurar E ao lado de um carro batido desmancha ele em sucata.
+//   Saque: segurar E perto de uma lixeira, mochila, isopor ou viatura revira e leva o que tiver (Data/Saque.csv).
 //
 // Tudo que é regra (dano no membro, hype, Diretor) mora nas regras puras; aqui é entrada, câmera, mira e efeitos.
 
@@ -26,6 +27,7 @@ class UInputMappingContext;
 class AZMBCar;
 class AZMBBuildPiece;
 class AZMBExplosive;
+class AZMBLootSpot;
 struct FInputActionValue;
 
 UCLASS()
@@ -91,6 +93,12 @@ public:
 	float GetDismantle01() const;
 	/** Há um carro batido perto o bastante para desmanchar (dica no HUD). */
 	bool IsWreckNearby() const { return bWreckNearby; }
+	/** Andamento do saque, 0 a 1 (negativo = não está revirando nada). */
+	float GetSearch01() const;
+	/** Nome do lugar de saque perto (dica "segure E: revirar ..."), vazio se não há nenhum. */
+	const FString& GetLootHint() const { return LootHint; }
+	/** Nome do lugar sendo revirado agora. */
+	FString GetSearchName() const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -139,6 +147,15 @@ private:
 	AZMBCar* FindNearbyCar() const;
 	void UpdateDismantle(float DeltaSeconds);
 	void CancelDismantle();
+
+	// --- saque ---
+	/** O lugar de saque ainda cheio mais perto, ao alcance do E (saque.alcance_cm da borda dele), ou nulo. */
+	AZMBLootSpot* FindLootSpot() const;
+	void UpdateSearch(float DeltaSeconds);
+	void CancelSearch();
+	/** Põe no bolso o que o lugar rendeu e mostra numa linha só ("LIXEIRA: +8 SUCATA, +12 VIDA"). */
+	void ApplyLoot(const ZR::FLootResult& Loot, const FString& SpotName);
+	int32 CurrentDay() const;
 
 	void FireOnce();
 	void HandleBulletHit(const FHitResult& Hit, const FVector& Direction, const ZR::FWeaponType& Weapon);
@@ -232,4 +249,8 @@ private:
 	float DismantleLeft = 0.0f;
 	float WreckScanTimer = 0.0f;
 	bool bWreckNearby = false;
+	TWeakObjectPtr<AZMBLootSpot> SearchTarget;
+	float SearchLeft = 0.0f;
+	float LootScanTimer = 0.0f;
+	FString LootHint;
 };
