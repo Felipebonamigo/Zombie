@@ -214,7 +214,8 @@ cumprida, o marco de seguidores e o clipe.
 
 Testes: `Som.*`, `Dados.SomComErroEhApontado` e `Deriva.SonsTemOsQueOCodigoTocaEOsArquivosSaoWavMono48k` (todo id do
 código tem linha, toda arma de `Armas.csv` tem o seu `tiro_<id>`; todo arquivo é WAV PCM 16 bits mono 48 kHz, até 6 s, ou
-12 s em laço).
+12 s em laço) e `Deriva.LicencasLegiveisECitamTodoSom` (`docs/licencas.csv` abre com as 10 colunas em toda linha,
+`gerado_por_ia` é sim ou não e todo arquivo de som é citado).
 
 ## 14. Marcos de seguidores e resumo da live (`ZRLive.h`)
 

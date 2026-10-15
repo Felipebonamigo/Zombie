@@ -263,3 +263,61 @@ ZR_TEST(DerivaSons, "Deriva.SonsTemOsQueOCodigoTocaEOsArquivosSaoWavMono48k")
 	}
 	ZR_EXPECT(Files >= 40);
 }
+
+ZR_TEST(DerivaLicencas, "Deriva.LicencasLegiveisECitamTodoSom")
+{
+	// nenhum asset entra sem uma linha em docs/licencas.csv (CLAUDE.md): a planilha tem que abrir certa e citar cada som
+	ZRTest::FContext Docs;
+	Docs.DataDir = T.DataDir + "/../docs";
+	std::string Text;
+	std::string Sounds;
+	if (!ReadDataFile(Docs, "licencas.csv", Text) || !ReadDataFile(T, "Sons.csv", Sounds))
+	{
+		T.Fail("não abri docs/licencas.csv ou Data/Sons.csv");
+		return;
+	}
+	ZR::FCsvTable Table;
+	std::string Error;
+	if (!ZR::ParseCsv(Text, Table, Error))
+	{
+		T.Fail("docs/licencas.csv: " + Error);
+		return;
+	}
+	const int Ai = Table.Column("gerado_por_ia");
+	const int What = Table.Column("arquivo_ou_pacote");
+	ZR_EXPECT(Ai >= 0 && What >= 0 && Table.Column("licenca") >= 0);
+	if (Ai < 0 || What < 0)
+	{
+		return;
+	}
+	std::string Cited;
+	for (std::size_t Row = 0; Row < Table.Rows.size(); ++Row)
+	{
+		const std::vector<std::string>& Cells = Table.Rows[Row];
+		if (Cells.size() != Table.Header.size())
+		{
+			T.Fail("docs/licencas.csv linha " + std::to_string(Table.RowLines[Row]) + ": " + std::to_string(Cells.size()) + " colunas em vez de "
+				+ std::to_string(Table.Header.size()) + " (vírgula sem aspas?)");
+			continue;
+		}
+		const std::string& Flag = Cells[static_cast<std::size_t>(Ai)];
+		if (Flag != "sim" && Flag != "não")
+		{
+			T.Fail("docs/licencas.csv linha " + std::to_string(Table.RowLines[Row]) + ": gerado_por_ia '" + Flag + "' não é sim ou não");
+		}
+		Cited += Cells[static_cast<std::size_t>(What)] + "\n";
+	}
+	std::vector<ZR::FSoundDef> Defs;
+	std::vector<std::string> Errors;
+	ZR::LoadSounds(Sounds, Defs, Errors);
+	for (const ZR::FSoundDef& Def : Defs)
+	{
+		for (const std::string& File : Def.Files)
+		{
+			if (Cited.find(File) == std::string::npos)
+			{
+				T.Fail("docs/licencas.csv não cita Audio/" + File + ".wav");
+			}
+		}
+	}
+}
