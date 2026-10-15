@@ -86,7 +86,7 @@ AZMBCharacter::AZMBCharacter()
 	struct FPartSpec
 	{
 		const TCHAR* Name;
-		UStaticMesh* Mesh;
+		UStaticMesh* Shape;
 		FVector Location;
 		FRotator Rotation;
 		FVector Scale;
@@ -106,7 +106,7 @@ AZMBCharacter::AZMBCharacter()
 	{
 		UStaticMeshComponent* Part = CreateDefaultSubobject<UStaticMeshComponent>(Spec.Name);
 		Part->SetupAttachment(Capsule);
-		Part->SetStaticMesh(Spec.Mesh);
+		Part->SetStaticMesh(Spec.Shape);
 		Part->SetRelativeLocation(Spec.Location);
 		Part->SetRelativeRotation(Spec.Rotation);
 		Part->SetRelativeScale3D(Spec.Scale);

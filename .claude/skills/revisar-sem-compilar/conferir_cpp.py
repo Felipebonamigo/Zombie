@@ -3,9 +3,10 @@
 
 Pega os erros mecânicos que mais quebram o build no PC: .generated.h fora do lugar, GENERATED_BODY
 faltando, ponteiro de UObject sem UPROPERTY (o coletor de lixo apaga), macro *_API errada, método
-definido no .cpp sem declaração no .h, include do projeto que não existe e módulo do motor que falta
-no *.Build.cs. Não substitui a compilação: no fim diz se o PC precisa fechar o editor ou se o Live
-Coding basta.
+definido no .cpp sem declaração no .h, include do projeto que não existe, módulo do motor que falta
+no *.Build.cs e sombra de nome nos métodos (C4456, C4457 e C4458, que o Unreal trata como erro).
+Não substitui a compilação: no fim diz se o PC precisa fechar o editor ou se o Live Coding basta.
+Teste do próprio conferidor: teste_conferir.py, na mesma pasta.
 
 Uso (na raiz do repositório):
   python3 .claude/skills/revisar-sem-compilar/conferir_cpp.py            # o que mudou desde o HEAD
@@ -254,6 +255,220 @@ def conferir_cpp(caminho, limpo, raiz_repo, achados):
             achados.append(('ERRO', caminho, linha_de(limpo, m.start()), f'{classe}::{metodo} definido aqui e não declarado em {os.path.basename(cab)}'))
 
 
+
+# --- sombra de nome (C4456, C4457, C4458) ---------------------------------------------------------------------------
+# O MSVC acusa variável local ou parâmetro com o nome de um membro da classe (C4458), local com o nome de um parâmetro
+# (C4457) e local com o nome de outro local de um escopo de fora (C4456); o Unreal trata os três como erro. Caso real:
+# um "Parts" local num método do AZMBCharacter, que tem o membro Parts (Zombie, 15/10/2026).
+
+# Membros das bases do Unreal que viram nome de variável com facilidade (privados também contam: a busca de nome acha).
+MEMBROS_DA_BASE = {
+    'AActor': {'RootComponent', 'Tags', 'Instigator', 'Owner', 'Children', 'Layers', 'InputComponent',
+               'CustomTimeDilation', 'InitialLifeSpan', 'PrimaryActorTick'},
+    'APawn': {'Controller', 'PlayerState', 'BaseEyeHeight', 'LastHitBy', 'AutoPossessPlayer', 'AutoPossessAI',
+              'AIControllerClass'},
+    'ACharacter': {'Mesh', 'CharacterMovement', 'CapsuleComponent', 'JumpMaxCount', 'JumpCurrentCount',
+                   'JumpKeyHoldTime', 'JumpMaxHoldTime', 'CrouchedEyeHeight'},
+    'AHUD': {'Canvas', 'DebugCanvas', 'PlayerOwner', 'bShowHUD', 'bShowDebugInfo'},
+    'AGameModeBase': {'GameState', 'GameSession', 'DefaultPawnClass', 'HUDClass', 'PlayerControllerClass',
+                      'PlayerStateClass', 'GameStateClass', 'SpectatorClass', 'OptionsString'},
+    'AController': {'PlayerState', 'Pawn', 'Character', 'ControlRotation', 'StartSpot'},
+    'APlayerController': {'Player', 'PlayerCameraManager', 'MyHUD', 'PlayerInput'},
+    'UActorComponent': {'PrimaryComponentTick', 'ComponentTags'},
+    'USceneComponent': {'Mobility', 'ComponentVelocity', 'AttachParent', 'AttachChildren'},
+}
+CADEIA_DA_BASE = {
+    'APawn': 'AActor', 'ACharacter': 'APawn', 'AHUD': 'AActor', 'AGameModeBase': 'AActor', 'AGameMode': 'AGameModeBase',
+    'AController': 'AActor', 'APlayerController': 'AController', 'AAIController': 'AController', 'AWheeledVehiclePawn': 'APawn',
+    'USceneComponent': 'UActorComponent', 'UPrimitiveComponent': 'USceneComponent',
+}
+
+PALAVRAS_NAO_TIPO = {'return', 'delete', 'new', 'throw', 'goto', 'case', 'else', 'do', 'using', 'typedef', 'break',
+                     'continue', 'sizeof', 'default', 'public', 'private', 'protected', 'operator', 'co_return',
+                     'co_yield', 'co_await', 'template', 'friend', 'namespace', 'static_assert', 'decltype'}
+
+DECLARACAO = re.compile(
+    r'\s*(?:(?:const|constexpr|static|unsigned|signed|volatile|mutable|typename|class|struct)\s+)*'
+    r'(?P<tipo>[A-Za-z_][\w]*(?:::[A-Za-z_]\w*)*(?:\s*<[^;{}()]*>)?(?:::[A-Za-z_]\w*)*)'
+    r'(?:\s+const)?\s*(?:[*&]+\s*(?:const\s+)?)*\s*(?<=[\s*&>])(?P<nome>[A-Za-z_]\w*)\s*(?P<depois>=(?!=)|;|:(?!:)|\(|\{|\[|,|\))')
+
+
+def nomes_dos_parametros(lista):
+    """Nomes dos parâmetros de 'const FVector& Where, float Scale = 1.0f' (os sem nome ficam de fora)."""
+    nomes, nivel, atual = [], 0, ''
+    for c in lista + ',':
+        if c in '(<[{':
+            nivel += 1
+        elif c in ')>]}':
+            nivel -= 1
+        if c == ',' and nivel == 0:
+            parte = atual.split('=')[0].strip()
+            m = re.search(r'[\s*&]([A-Za-z_]\w*)\s*(\[[^\]]*\])?$', parte)
+            if m and m.group(1) not in ('void', 'const') and len(parte.split()) >= 2 or (m and re.search(r'[*&]', parte)):
+                nomes.append(m.group(1))
+            atual = ''
+        else:
+            atual += c
+    return nomes
+
+
+def membros_das_classes(limpo_cab):
+    """{classe: (base, {membros})} das classes e structs do cabeçalho (só as variáveis, não os métodos)."""
+    saida = {}
+    for decl in re.finditer(r'\b(class|struct)\s+(?:\w+_API\s+)?(\w+)\s*(?:final\s*)?(?::\s*(?:public|protected|private)\s+([\w:]+))?[^;{]*\{', limpo_cab):
+        nome, base = decl.group(2), decl.group(3)
+        bloco = corpo_de(limpo_cab, decl.end() - 1)
+        if not bloco:
+            continue
+        abre, fecha = bloco
+        membros, nivel, atual = set(), 0, ''
+        for c in limpo_cab[abre + 1:fecha]:
+            if c == '{':
+                nivel += 1
+                if nivel == 1:
+                    atual = '{'  # corpo de método inline ou tipo aninhado: a declaração não é membro
+            elif c == '}':
+                nivel -= 1
+                if nivel == 0:
+                    atual = ''
+                continue
+            if nivel > 0:
+                continue
+            if c == ';':
+                frase = re.sub(r'\b(public|protected|private)\s*:', ' ', atual)
+                frase = re.sub(r'\b(U[A-Z]+|GENERATED_\w+)\s*\((?:[^()]|\([^()]*\))*\)', ' ', frase)
+                antes = re.split(r'=(?!=)', frase, maxsplit=1)[0]
+                if '{' not in frase and '(' not in antes and not re.search(r'\b(using|typedef|friend|enum|static_assert)\b', frase) \
+                        and not re.match(r'^\s*(class|struct)\s+\w+\s*$', antes):
+                    m = re.search(r'([A-Za-z_]\w*)\s*(?::\s*\d+\s*)?(?:\[[^\]]*\])?\s*$', antes)
+                    if m and len(antes.split()) >= 2:
+                        membros.add(m.group(1))
+                atual = ''
+            else:
+                atual += c
+        saida[nome] = (base, membros)
+    return saida
+
+
+def membros_herdados(base):
+    nomes, vistos = {}, set()
+    while base and base not in vistos:
+        vistos.add(base)
+        for n in MEMBROS_DA_BASE.get(base, ()):
+            nomes.setdefault(n, base)
+        base = CADEIA_DA_BASE.get(base)
+    return nomes
+
+
+def conferir_sombras(caminho, limpo, classes, achados):
+    for m in re.finditer(r'^[\w:<>,\s\*&]*?\b(\w+)::(~?\w+)\s*\(', limpo, re.M):
+        classe, metodo = m.group(1), m.group(2)
+        if classe not in classes:
+            continue
+        base, membros = classes[classe]
+        herdados = membros_herdados(base)
+        # a lista de parâmetros, balanceada
+        nivel, j = 0, m.end() - 1
+        while j < len(limpo):
+            if limpo[j] == '(':
+                nivel += 1
+            elif limpo[j] == ')':
+                nivel -= 1
+                if nivel == 0:
+                    break
+            j += 1
+        resto = limpo[j + 1:j + 200]
+        corpo_m = re.match(r'\s*(?:const\s*)?(?:override\s*)?(?:noexcept\s*)?(?::[^{;]*)?\{', resto)
+        if not corpo_m:
+            continue
+        parametros = nomes_dos_parametros(limpo[m.end():j])
+        linha_assinatura = linha_de(limpo, m.start(1))
+        for p in parametros:
+            if p in membros:
+                achados.append(('ERRO', caminho, linha_assinatura, f'parâmetro {p} esconde o membro {classe}::{p} (C4457/C4458: troque o nome)'))
+            elif p in herdados:
+                achados.append(('ERRO', caminho, linha_assinatura, f'parâmetro {p} esconde o membro herdado de {herdados[p]} (C4458: troque o nome)'))
+        bloco = corpo_de(limpo, j + 1 + corpo_m.end() - 1)
+        if bloco:
+            conferir_corpo(caminho, limpo, bloco[0], bloco[1], classe, membros, herdados, set(parametros), achados)
+
+
+def conferir_corpo(caminho, limpo, abre, fecha, classe, membros, herdados, parametros, achados):
+    """Anda pelo corpo com uma pilha de escopos; corpo de lambda é pulado (escopo à parte)."""
+    escopos = [set()]
+    pendentes = set()  # declarados no if/for/while/switch: valem no bloco que vem
+    i = abre + 1
+    inicio_frase = True
+    while i < fecha:
+        c = limpo[i]
+        if c == '{':
+            # lambda: ](...) [mutable] [-> tipo] {  — pula o corpo inteiro
+            antes = limpo[max(abre, i - 300):i]
+            if re.search(r'\]\s*(\([^()]*(?:\([^()]*\)[^()]*)*\))?\s*(mutable\s*)?(->\s*[\w:<>*&\s]+)?\s*$', antes):
+                fim = corpo_de(limpo, i)
+                i = (fim[1] if fim else fecha) + 1
+                inicio_frase = False
+                continue
+            # struct ou class local: os campos dela não são variáveis locais; com nome de membro, só um aviso
+            if re.search(r'\b(struct|class)\s+\w+\s*(?:final\s*)?(?::[^{;]*)?$', antes):
+                fim = corpo_de(limpo, i)
+                fim_i = fim[1] if fim else fecha
+                for campo in re.finditer(r'([A-Za-z_]\w*)\s*(?:=[^;]*)?;', limpo[i + 1:fim_i]):
+                    nome = campo.group(1)
+                    if nome in membros or nome in herdados:
+                        dono = f'{classe}::{nome}' if nome in membros else f'{herdados[nome]}::{nome}'
+                        achados.append(('AVISO', caminho, linha_de(limpo, i + 1 + campo.start()), f'campo {nome} da struct local tem o nome de {dono}: o MSVC pode acusar C4458 (melhor trocar)'))
+                i = fim_i + 1
+                inicio_frase = False
+                continue
+            escopos.append(set(pendentes))
+            pendentes = set()
+            i += 1
+            inicio_frase = True
+            continue
+        if c == '}':
+            if len(escopos) > 1:
+                escopos.pop()
+            i += 1
+            inicio_frase = True
+            continue
+        if c == ';':
+            pendentes = set() if not re.search(r'\bfor\s*\([^)]*$', limpo[max(abre, i - 200):i]) else pendentes
+            i += 1
+            inicio_frase = True
+            continue
+        cond = re.match(r'(if|for|while|switch)\s*\(', limpo[i:i + 12]) if (i == 0 or not (limpo[i - 1].isalnum() or limpo[i - 1] == '_')) else None
+        if cond:
+            i += cond.end()
+            inicio_frase = True
+            # a declaração da condição vai para o bloco que vem
+            d = DECLARACAO.match(limpo, i)
+            if d and d.group('tipo') not in PALAVRAS_NAO_TIPO and d.group('depois') in ('=', ':', ';'):
+                registrar(caminho, limpo, i, d.group('nome'), escopos, pendentes, classe, membros, herdados, parametros, achados, pendente=True)
+                i = d.end('nome')
+            continue
+        if inicio_frase and not c.isspace():
+            d = DECLARACAO.match(limpo, i)
+            if d and d.group('tipo') not in PALAVRAS_NAO_TIPO and d.group('depois') in ('=', ';', '(', '{', '[', ':'):
+                registrar(caminho, limpo, i, d.group('nome'), escopos, pendentes, classe, membros, herdados, parametros, achados)
+                i = d.end('nome')
+            inicio_frase = False
+            continue
+        i += 1
+
+
+def registrar(caminho, limpo, pos, nome, escopos, pendentes, classe, membros, herdados, parametros, achados, pendente=False):
+    linha = linha_de(limpo, pos)
+    if nome in membros:
+        achados.append(('ERRO', caminho, linha, f'{nome} esconde o membro {classe}::{nome} (C4458: troque o nome)'))
+    elif nome in herdados:
+        achados.append(('ERRO', caminho, linha, f'{nome} esconde o membro herdado de {herdados[nome]} (C4458: troque o nome)'))
+    elif nome in parametros:
+        achados.append(('ERRO', caminho, linha, f'{nome} esconde o parâmetro {nome} (C4457: troque o nome)'))
+    elif any(nome in e for e in escopos[:-1]) or (pendente and nome in escopos[-1]):
+        achados.append(('ERRO', caminho, linha, f'{nome} esconde outra declaração local de um escopo de fora (C4456: troque o nome)'))
+    (pendentes if pendente else escopos[-1]).add(nome)
+
 def conferir_includes(caminho, texto, modulo_pasta, modulo, achados):
     if not modulo_pasta:
         return
@@ -307,6 +522,10 @@ def main():
                 mudou_reflexao = True
         else:
             conferir_cpp(caminho, limpo, raiz, achados)
+            cab = os.path.splitext(caminho)[0] + '.h'
+            if os.path.exists(cab) and os.sep + 'Rules' + os.sep not in os.sep + caminho:
+                classes = membros_das_classes(sem_comentarios(open(cab, encoding='utf-8', errors='replace').read()))
+                conferir_sombras(caminho, limpo, classes, achados)
         conferir_includes(caminho, texto, pasta, modulo, achados)
     ordem = {'ERRO': 0, 'AVISO': 1, 'NOTA': 2}
     for nivel, caminho, linha, msg in sorted(achados, key=lambda x: (ordem[x[0]], x[1], x[2])):

@@ -1,6 +1,6 @@
 ---
 name: revisar-sem-compilar
-description: 'Confere o C++ do Unreal do Zombie (AO VIVO) antes do commit, porque a nuvem não compila: roda o conferidor (generated.h, GENERATED_BODY, UPROPERTY, *_API, .h × .cpp, includes e Build.cs), revisa à mão o que ele não pega (sombra de nome, assinaturas da API) e diz ao PC o que compilar. Use ao mexer em .h ou .cpp de Source/Zombie fora de Rules/, antes de commitar C++, ou quando o Felipe disser "vai compilar?", "confere o C++" ou "o build quebrou".'
+description: 'Confere o C++ do Unreal do Zombie (AO VIVO) antes do commit, porque a nuvem não compila: roda o conferidor (generated.h, GENERATED_BODY, UPROPERTY, *_API, .h × .cpp, includes, Build.cs e sombra de nome nos métodos), revisa à mão o que ele não pega (assinaturas da API) e diz ao PC o que compilar. Use ao mexer em .h ou .cpp de Source/Zombie fora de Rules/, antes de commitar C++, ou quando o Felipe disser "vai compilar?", "confere o C++" ou "o build quebrou".'
 ---
 # Revisar o C++ sem compilar
 
@@ -18,6 +18,7 @@ As regras puras (`Source/Zombie/Rules/`) **compilam na nuvem**: para elas vale `
    python3 .claude/skills/revisar-sem-compilar/conferir_cpp.py --todos            # todo o C++
    ```
    Sai com 1 se achou ERRO. ERRO se conserta antes do commit; AVISO se lê e decide; NOTA lembra o que conferir à mão.
+   Mexeu no conferidor? Rode o teste dele: `python3 .claude/skills/revisar-sem-compilar/teste_conferir.py`.
 2. Revise à mão, nos trechos que mudou, a lista "O que o conferidor não pega".
 3. Para mudança grande (classe nova, API do Unreal que o projeto ainda não usa), peça uma revisão independente a um
    subagente: ele procura erro de compilação com as assinaturas reais da API, usando o Detonauto
@@ -30,8 +31,11 @@ As regras puras (`Source/Zombie/Rules/`) **compilam na nuvem**: para elas vale `
 
 ## O que o conferidor não pega
 
-- **Sombra de nome:** variável local ou parâmetro com o nome de um membro da classe ou de uma base do Unreal (um `Controller`
-  num método de `APawn`, um `Camera` num `AZMBCharacter`). O MSVC acusa C4458 e o Unreal trata como **erro**.
+- **Sombra de nome, fora do que o conferidor vê:** ele confere os métodos `Classe::Metodo` dos `.cpp` (parâmetro ou local
+  com nome de membro da classe, C4458; local com nome de parâmetro, C4457; local escondendo outro local de fora, C4456),
+  mas não olha dentro de lambda, função solta nem método inline do `.h`, e das bases do Unreal só conhece os membros
+  mais comuns (`MEMBROS_DA_BASE`: `Controller`, `Mesh`, `Canvas`...). Nesses lugares, confira à mão: o Unreal trata
+  sombra como **erro**.
 - Assinatura igual no .h e no .cpp (`const`, referência, `override`); handler de `AddDynamic` com a assinatura exata do
   delegate e `UFUNCTION()`.
 - `FMath::Min`, `Max`, `Clamp` e `RandRange` com tipos misturados (`int32` com `size_t`, `float` com `double`): o template
