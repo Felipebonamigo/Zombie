@@ -25,6 +25,29 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 | Scripts do PC | `Tools/Unreal/*.ps1`, `criar_materiais.py` | Copiados e adaptados do Detonauto; `jogar.ps1` e `criar_materiais` são novos e nunca rodaram |
 | Rotinas do Claude | `.claude/skills/` | `verificar`, `revisar-sem-compilar`, `jogar-e-capturar`, `modelo-3d`, `triar-playtest` |
 
+## Realismo (16 out 2026, sessão do PC; roteiro em `docs/realismo-roteiro.md`)
+
+- **Compila e roda no PC.** `build.ps1` passou; `importar_sons.ps1` (65 sons) e `criar_materiais.ps1` rodaram (os dois
+  devolvem código 1 por causa de erro de Python de plugin experimental da engine ao abrir, mas o log traz "OK" e os
+  `.uasset` existem, em `Content/Zombie/`, no LFS).
+- **Passo 0, a régua:** como a cidade é montada em código (não há `.umap`), o `L_Lookdev` virou a opção `-ZMBLookdev=1..4`
+  do jogo (`jogar.ps1 -Lookdev N`): ângulo fixo (rua, orla, mar, leste), 17,5 h, relógio parado, sem horda, câmera de
+  primeira pessoa. `Tools\Unreal\capturar_lookdev.ps1 -Passo X -Quando antes|depois [-Hour 21]` tira as quatro e guarda em
+  `docs/img/realismo/`. Não há `criar_lookdev.py`: não há mapa para criar.
+- **Passo 1, luz e céu:** hora dourada (o sol esquenta de 35° para baixo e a neblina ganha o halo do sol), lua mais forte
+  (0,3 para 0,5), bloom menor (0,55 para 0,35), exposição de celular (adapta mais rápido), saturação sem o corte do
+  protótipo, mar mais azul-esverdeado. **Faróis dos carros largados apagados** (só acendem com o jogador dirigindo): acesos,
+  estouravam o chão em volta, de dia e de noite. Capturas `2026-10-16-1-luz-depois-*` contra `0-base-antes-*`, olhadas.
+- **Medição** (`ZMBPerf` do `jogar.ps1`, sem vsync nem limite, 1600x900, RTX 4070 Ti, rua vazia): média de 3 a 6 ms
+  (160 a 310 fps) antes e depois, bem dentro dos 16,7 ms. Pior quadro de 5 a 12 ms; uma vez em cada rodada aparecem
+  engasgos de 70 ms a 3,7 s no primeiro uso de um ângulo novo (compilação de shader, não do passo). **Falta medir com a
+  horda de 80** e em resolução maior; sem isso o orçamento do passo 1 não está provado para a hora do combate.
+- **Diversão e visual:** o fim de tarde agora tem cara de filmado (luz laranja, sombras longas, céu quente) e a noite ficou
+  legível e azulada; a diversão não mudou, só o clima.
+- Pendências vistas nas capturas: o mar mal aparece (a praia é larga e a água, uma faixa fina no horizonte); o céu do
+  meio-dia ainda não foi olhado; neblina por zona (orla úmida, centro com fumaça) e luz de poste mais forte ficam para
+  quando a cidade tiver as malhas do City Sample.
+
 ## Próximo passo (sessão do PC)
 
 1. `Tools\Unreal\build.ps1 -Uproject Zombie.uproject`. O C++ nunca foi compilado: espere alguns erros e corrija um por um.

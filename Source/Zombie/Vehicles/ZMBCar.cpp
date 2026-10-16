@@ -322,6 +322,14 @@ void AZMBCar::ResetKey(const FInputActionValue& Value)
 void AZMBCar::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	// faróis só acesos com o jogador dirigindo: carro largado com farol aceso estourava o chão em volta (4000 cd, de dia e de noite)
+	for (USpotLightComponent* Light : Headlights)
+	{
+		if (Light)
+		{
+			Light->SetVisibility(Driver.IsValid());
+		}
+	}
 	const UZMBGameData* Data = UZMBGameData::Get(this);
 	if (!Data || DeltaSeconds <= 0.0f)
 	{

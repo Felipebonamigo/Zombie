@@ -89,8 +89,13 @@ AZMBWorldBuilder::AZMBWorldBuilder()
 	Post.AutoExposureMinBrightness = -1.5f;
 	Post.bOverride_AutoExposureMaxBrightness = true;
 	Post.AutoExposureMaxBrightness = 15.0f;
+	// cÃ¢mera de celular: o olho do celular se adapta rÃ¡pido ao entrar e sair da sombra
+	Post.bOverride_AutoExposureSpeedUp = true;
+	Post.AutoExposureSpeedUp = 4.0f;
+	Post.bOverride_AutoExposureSpeedDown = true;
+	Post.AutoExposureSpeedDown = 2.0f;
 	Post.bOverride_BloomIntensity = true;
-	Post.BloomIntensity = 0.55f;
+	Post.BloomIntensity = 0.35f;
 	Post.bOverride_VignetteIntensity = true;
 	Post.VignetteIntensity = 0.35f;
 	Post.bOverride_FilmGrainIntensity = true;
@@ -98,7 +103,7 @@ AZMBWorldBuilder::AZMBWorldBuilder()
 	Post.bOverride_SceneFringeIntensity = true;
 	Post.SceneFringeIntensity = 0.2f;
 	Post.bOverride_ColorSaturation = true;
-	Post.ColorSaturation = FVector4(0.9, 0.92, 0.95, 1.0);
+	Post.ColorSaturation = FVector4(1.0, 1.0, 1.02, 1.0);
 	Post.bOverride_ColorContrast = true;
 	Post.ColorContrast = FVector4(1.08, 1.08, 1.08, 1.0);
 	Post.bOverride_ColorGainShadows = true;
@@ -230,7 +235,7 @@ void AZMBWorldBuilder::BuildGround()
 	Block(TEXT("SeaFloor"), FVector(CenterX, SeaStartY + 40000.0f, -400.0f), FVector(Width * 6.0f, 80000.0f, 100.0f),
 		Data->ColorMaterial(FLinearColor(0.12f, 0.1f, 0.07f), 0.95f), false, false);
 	Block(TEXT("Water"), FVector(CenterX, SeaStartY + 40000.0f, -25.0f), FVector(Width * 6.0f, 80000.0f, 10.0f),
-		Data->ColorMaterial(FLinearColor(0.008f, 0.035f, 0.05f), 0.04f), false, false);
+		Data->ColorMaterial(FLinearColor(0.02f, 0.1f, 0.13f), 0.08f), false, false);
 
 	// paredes invisíveis: o jogador não sai da cidade nem entra no mar
 	const float WallHeight = 3000.0f;
@@ -586,7 +591,14 @@ void AZMBWorldBuilder::UpdateSky()
 	Sun->SetWorldRotation(FRotator(-Elevation, Azimuth, 0.0f));
 	Moon->SetWorldRotation(FRotator(Elevation, Azimuth + 180.0f, 0.0f));
 	Sun->SetIntensity(10.0f * FMath::Clamp(Elevation / 8.0f + 0.15f, 0.0f, 1.0f));
-	Moon->SetIntensity(0.3f * FMath::Clamp(-Elevation / 8.0f, 0.0f, 1.0f));
+	Moon->SetIntensity(0.5f * FMath::Clamp(-Elevation / 8.0f, 0.0f, 1.0f));
+
+	// hora dourada: do sol a 35 graus para baixo a luz esquenta (branco quente -> laranja) e a neblina ganha o brilho
+	// do sol (espalhamento direcional), que vira o halo dourado do fim de tarde
+	const float Golden = (Elevation > 0.0f) ? 1.0f - FMath::SmoothStep(8.0f, 35.0f, Elevation) : 0.0f;
+	Sun->SetLightColor(FMath::Lerp(FLinearColor(1.0f, 0.95f, 0.88f), FLinearColor(1.0f, 0.62f, 0.32f), Golden));
+	Fog->SetDirectionalInscatteringColor(FLinearColor(1.0f, 0.55f, 0.25f) * (0.25f * Golden));
+	Fog->SetDirectionalInscatteringExponent(12.0f);
 
 	const bool bNight = ZR::IsNight(Day, Hour);
 	if (bNight != bLightsOn)
