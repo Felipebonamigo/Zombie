@@ -18,6 +18,7 @@ param(
     [double]$Hour = -1,
     [ValidateRange(-1, 3)][int]$Cam = -1,
     [switch]$Horde,
+    [ValidateRange(0, 4)][int]$Lookdev = 0,   # cena de aparência: ângulo fixo 1 a 4, 17,5 h, relógio parado, sem horda
     [double]$Shot = 0,
     [string]$Twitch,
     [int]$ResX = 1600,
@@ -43,6 +44,7 @@ $argList = @("`"$($ctx.Uproject)`"", '-game', '-windowed', "-ResX=$ResX", "-ResY
 if ($Hour -ge 0) { $argList += "-ZMBHour=$($Hour.ToString([Globalization.CultureInfo]::InvariantCulture))" }
 if ($Cam -ge 0) { $argList += "-ZMBCam=$Cam" }
 if ($Horde) { $argList += '-ZMBHorde' }
+if ($Lookdev -gt 0) { $argList += "-ZMBLookdev=$Lookdev" }
 if ($Twitch) { $argList += "-ZMBTwitch=$Twitch" }
 if ($Shot -gt 0) { $argList += "-ZMBShot=$($Shot.ToString([Globalization.CultureInfo]::InvariantCulture))" }
 if ($Exec) { $argList += "-ExecCmds=`"$($Exec -join ',')`"" }
@@ -70,6 +72,8 @@ if (-not $found) {
     exit 1
 }
 Write-Host "PRINT: $($found.FullName)"
+$perf = Select-String -LiteralPath $log -Pattern 'ZMBPerf:' -SimpleMatch | Select-Object -Last 1
+if ($perf) { Write-Host $perf.Line }
 $errors = Select-String -LiteralPath $log -Pattern 'Error:|Fatal' -SimpleMatch:$false | Select-Object -First 10
 if ($errors) {
     Write-Host '--- erros no log ---'

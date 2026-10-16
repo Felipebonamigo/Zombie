@@ -569,6 +569,10 @@ void AZMBWorldBuilder::SetHour(float Hour)
 void AZMBWorldBuilder::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	if (bFrozen)
+	{
+		return;
+	}
 	Clock += DeltaSeconds;
 	UpdateSky();
 }

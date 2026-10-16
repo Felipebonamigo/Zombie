@@ -7,6 +7,7 @@
 #include "Engine/World.h"
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerStart.h"
+#include "Misc/App.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "UnrealClient.h"
@@ -31,6 +32,7 @@ void AZMBGameMode::InitGame(const FString& MapName, const FString& Options, FStr
 	int32 Seed = 2026;
 	FParse::Value(CommandLine, TEXT("ZMBSeed="), Seed);
 	FParse::Value(CommandLine, TEXT("ZMBShot="), ShotAt);
+	FParse::Value(CommandLine, TEXT("ZMBLookdev="), LookdevAngle);
 
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -38,14 +40,17 @@ void AZMBGameMode::InitGame(const FString& MapName, const FString& Options, FStr
 	if (Builder)
 	{
 		Builder->Build(static_cast<std::uint64_t>(Seed));
-		float Hour = -1.0f;
-		if (FParse::Value(CommandLine, TEXT("ZMBHour="), Hour) && Hour >= 0.0f)
+		float Hour = LookdevAngle > 0 ? 17.5f : -1.0f;
+		FParse::Value(CommandLine, TEXT("ZMBHour="), Hour);
+		if (Hour >= 0.0f)
 		{
 			Builder->SetHour(Hour);
 		}
+		Builder->SetFrozen(LookdevAngle > 0);
 	}
 	Director = GetWorld()->SpawnActor<AZMBHordeDirector>(AZMBHordeDirector::StaticClass(), FTransform::Identity, Params);
-	if (Director)
+	// cena de aparência: rua vazia e relógio parado; sem Setup o Diretor não faz nada
+	if (Director && LookdevAngle <= 0)
 	{
 		Director->Setup(Builder);
 	}
@@ -80,14 +85,39 @@ void AZMBGameMode::StartPlay()
 void AZMBGameMode::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+	if (LookdevAngle > 0 && !bLookdevPlaced && Builder)
+	{
+		APlayerController* PlayerController = GetWorld()->GetFirstPlayerController();
+		if (PlayerController && PlayerController->GetPawn())
+		{
+			// quatro ângulos fixos a partir do começo: rua (norte), orla (oeste), mar (sul) e leste
+			static const float Yaws[] = {-90.0f, 180.0f, 90.0f, 0.0f};
+			PlayerController->GetPawn()->SetActorLocation(Builder->GetStartLocation());
+			PlayerController->SetControlRotation(FRotator(0.0f, Yaws[(LookdevAngle - 1) & 3], 0.0f));
+			bLookdevPlaced = true;
+		}
+	}
 	if (ShotAt <= 0.0f)
 	{
 		return;
 	}
 	Elapsed += DeltaSeconds;
+	// desempenho: média e pior quadro dos 3 s até a captura (o orçamento é 16,7 ms; rode com r.VSync 0 e t.MaxFPS 0)
+	if (!bShotTaken && Elapsed >= 3.0f)
+	{
+		const double FrameMs = FApp::GetDeltaTime() * 1000.0;
+		PerfSumMs += FrameMs;
+		PerfWorstMs = FMath::Max(PerfWorstMs, FrameMs);
+		++PerfFrames;
+	}
 	if (!bShotTaken && Elapsed >= ShotAt)
 	{
 		bShotTaken = true;
+		if (PerfFrames > 0)
+		{
+			UE_LOG(LogZombie, Display, TEXT("ZMBPerf: %lld quadros, média %.2f ms (%.0f fps), pior %.2f ms"), PerfFrames, PerfSumMs / PerfFrames,
+				1000.0 * PerfFrames / PerfSumMs, PerfWorstMs);
+		}
 		FScreenshotRequest::RequestScreenshot(TEXT("zmb-shot"), true, false);
 		UE_LOG(LogZombie, Display, TEXT("ZMBShot: captura pedida aos %.1f s"), Elapsed);
 	}

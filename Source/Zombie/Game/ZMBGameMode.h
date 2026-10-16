@@ -7,6 +7,7 @@
 //   -ZMBCam=0..3       câmera inicial (0 perto, 1 média, 2 longe e alta, 3 primeira pessoa)
 //   -ZMBHorde          começa com uma horda
 //   -ZMBShot=S         tira um print aos S segundos e fecha o jogo (zmb-shot.png em Saved/Screenshots)
+//   -ZMBLookdev=1..4   cena de aparência: ângulo fixo (1 rua, 2 orla, 3 mar, 4 leste), 17,5 h, relógio parado, sem horda
 //   -ZMBTwitch=canal   lê o chat de um canal da Twitch (Stream/ZMBTwitchChat)
 
 #pragma once
@@ -50,6 +51,11 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<APlayerStart> Start;
 
+	double PerfSumMs = 0.0;
+	double PerfWorstMs = 0.0;
+	int64 PerfFrames = 0;
+	int32 LookdevAngle = 0;
+	bool bLookdevPlaced = false;
 	float ShotAt = -1.0f;
 	float Elapsed = 0.0f;
 	bool bShotTaken = false;

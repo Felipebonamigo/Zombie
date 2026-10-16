@@ -55,6 +55,8 @@ public:
 	/** Avança o relógio (tecla de teste T, opção -ZMBHour). */
 	void SkipHours(float Hours);
 	void SetHour(float Hour);
+	/** Para o relógio (cena de aparência: a mesma luz em todas as capturas). */
+	void SetFrozen(bool bInFrozen) { bFrozen = bInFrozen; }
 
 private:
 	UInstancedStaticMeshComponent* NewInstances(const TCHAR* Name, UStaticMesh* Mesh, UMaterialInterface* Material, bool bCollision);
@@ -99,4 +101,5 @@ private:
 	std::uint64_t CitySeed = 1;
 	double Clock = 0.0;
 	bool bLightsOn = false;
+	bool bFrozen = false;
 };
