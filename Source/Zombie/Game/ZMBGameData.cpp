@@ -122,6 +122,8 @@ void UZMBGameData::Reload()
 	}
 	CityMeshCache.Reset();
 	MissingCityMeshes.Reset();
+	SurfaceCache.Reset();
+	MissingSurfaces.Reset();
 	if (LoadText(TEXT("Sons.csv"), Text))
 	{
 		ZR::LoadSounds(Text, LoadedSounds, RuleErrors);
@@ -253,6 +255,46 @@ UMaterialInterface* UZMBGameData::ColorMaterial(const FLinearColor& Color, float
 	Material->SetVectorParameterValue(TEXT("Color"), Color);
 	Material->SetScalarParameterValue(TEXT("Roughness"), Roughness);
 	Material->SetScalarParameterValue(TEXT("Metallic"), Metallic);
+	Materials.Add(Key, Material);
+	return Material;
+}
+
+UMaterialInterface* UZMBGameData::SurfaceMaterial(const TCHAR* Name, const FLinearColor& Tint, const FLinearColor& Fallback, float FallbackRoughness)
+{
+	const FString Path = FString::Printf(TEXT("/Game/Externo/PolyHaven/Superficies/Materials/MI_%s"), Name);
+	UMaterialInterface* Parent = nullptr;
+	if (const TObjectPtr<UMaterialInterface>* Cached = SurfaceCache.Find(Path))
+	{
+		Parent = Cached->Get();
+	}
+	else if (!MissingSurfaces.Contains(Path))
+	{
+		Parent = LoadObject<UMaterialInterface>(nullptr, *Path, nullptr, LOAD_NoWarn | LOAD_Quiet);
+		if (Parent)
+		{
+			SurfaceCache.Add(Path, Parent);
+		}
+		else
+		{
+			MissingSurfaces.Add(Path);
+			UE_LOG(LogZombie, Warning, TEXT("SuperfÃ­cie %s ausente (textura fora do git; rode criar_superficies.ps1): vale a cor lisa"), *Path);
+		}
+	}
+	if (!Parent)
+	{
+		return ColorMaterial(Fallback, FallbackRoughness);
+	}
+	const FString Key = FString::Printf(TEXT("T:%s:%.3f,%.3f,%.3f"), Name, Tint.R, Tint.G, Tint.B);
+	if (const TObjectPtr<UMaterialInstanceDynamic>* Found = Materials.Find(Key))
+	{
+		return Found->Get();
+	}
+	UMaterialInstanceDynamic* Material = UMaterialInstanceDynamic::Create(Parent, this);
+	if (!Material)
+	{
+		return Parent;
+	}
+	Material->SetVectorParameterValue(TEXT("Tint"), Tint);
 	Materials.Add(Key, Material);
 	return Material;
 }

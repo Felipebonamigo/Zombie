@@ -244,7 +244,7 @@ void AZMBWorldBuilder::BuildGround()
 	const float CenterX = Origin.X + Width * 0.5f;
 	// asfalto (a terra toda; calçadas e prédios ficam por cima)
 	Block(TEXT("Asphalt"), FVector(CenterX, Origin.Y + LandDepth * 0.5f, -50.0f), FVector(Width, LandDepth, 100.0f),
-		Data->ColorMaterial(FLinearColor(0.035f, 0.035f, 0.038f), 0.85f), true, false);
+		Data->SurfaceMaterial(TEXT("Asfalto"), FLinearColor::White, FLinearColor(0.035f, 0.035f, 0.038f), 0.85f), true, false);
 	// arredores (vistos da câmera alta): terra escura além da cidade
 	Block(TEXT("Outskirts"), FVector(CenterX, Origin.Y + LandDepth * 0.5f, -55.0f), FVector(Width * 3.0f, LandDepth * 3.0f, 100.0f),
 		Data->ColorMaterial(FLinearColor(0.07f, 0.065f, 0.05f), 0.95f), false, false);
@@ -276,7 +276,7 @@ void AZMBWorldBuilder::BuildBlocks()
 	UStaticMesh* Sphere = UZMBGameData::Shape(EZMBShape::Sphere);
 	FRandomStream Rng(static_cast<int32>(CitySeed & 0x7FFFFFFF) ^ 0x5EED);
 
-	UInstancedStaticMeshComponent* Sidewalk = NewInstances(TEXT("Sidewalks"), Cube, Data->ColorMaterial(FLinearColor(0.30f, 0.29f, 0.27f), 0.9f), true);
+	UInstancedStaticMeshComponent* Sidewalk = NewInstances(TEXT("Sidewalks"), Cube, Data->SurfaceMaterial(TEXT("Calcada"), FLinearColor::White, FLinearColor(0.30f, 0.29f, 0.27f), 0.9f), true);
 	UInstancedStaticMeshComponent* Grass = NewInstances(TEXT("Grass"), Cube, Data->ColorMaterial(FLinearColor(0.05f, 0.11f, 0.03f), 0.95f), false);
 	UInstancedStaticMeshComponent* Trunks = NewInstances(TEXT("Trunks"), Cylinder, Data->ColorMaterial(FLinearColor(0.08f, 0.05f, 0.03f), 0.9f), true);
 	UInstancedStaticMeshComponent* Canopies = NewInstances(TEXT("Canopies"), Sphere, Data->ColorMaterial(FLinearColor(0.03f, 0.08f, 0.02f), 0.9f), false);
@@ -316,7 +316,7 @@ void AZMBWorldBuilder::BuildBlocks()
 	TArray<UInstancedStaticMeshComponent*> Facades;
 	for (int32 i = 0; i < static_cast<int32>(UE_ARRAY_COUNT(FacadeColors)); ++i)
 	{
-		Facades.Add(NewInstances(*FString::Printf(TEXT("Facade%d"), i), Cube, Data->ColorMaterial(FacadeColors[i], 0.85f), true));
+		Facades.Add(NewInstances(*FString::Printf(TEXT("Facade%d"), i), Cube, Data->SurfaceMaterial(TEXT("Fachada"), FacadeColors[i] * 2.6f, FacadeColors[i], 0.85f), true));
 	}
 
 	TArray<FTransform> SidewalkT, GrassT, TrunkT, CanopyT, GlassT, LitT, TankT, UnitT, LineT;
@@ -758,7 +758,7 @@ void AZMBWorldBuilder::UpdateSky()
 	// hora dourada: do sol a 35 graus para baixo a luz esquenta (branco quente -> laranja) e a neblina ganha o brilho
 	// do sol (espalhamento direcional), que vira o halo dourado do fim de tarde
 	const float Golden = (Elevation > 0.0f) ? 1.0f - FMath::SmoothStep(8.0f, 35.0f, Elevation) : 0.0f;
-	Sun->SetLightColor(FMath::Lerp(FLinearColor(1.0f, 0.95f, 0.88f), FLinearColor(1.0f, 0.62f, 0.32f), Golden));
+	Sun->SetLightColor(FMath::Lerp(FLinearColor(1.0f, 0.95f, 0.88f), FLinearColor(1.0f, 0.74f, 0.5f), Golden));
 	Fog->SetDirectionalInscatteringColor(FLinearColor(1.0f, 0.55f, 0.25f) * (0.25f * Golden));
 	Fog->SetDirectionalInscatteringExponent(12.0f);
 

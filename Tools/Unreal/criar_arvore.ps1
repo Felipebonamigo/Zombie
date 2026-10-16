@@ -3,9 +3,9 @@
     Importa a island_tree_02 (Poly Haven, CC0) em /Game/Externo/PolyHaven e cria M_ZMBFolha e M_ZMBTronco (Tools/Unreal/criar_arvore.py).
     Roda com -ExecutePythonScript (sem -nullrhi): o gerador de LODs precisa dos subsistemas do editor.
 .EXAMPLE
-    .\Tools\Unreal\criar_materiais.ps1
+    .\Tools\Unreal\criar_arvore.ps1
 .NOTES
-    Código de saída: 0 deu certo; 1 erro. Feche o editor antes (ele segura os pacotes). Os .uasset criados vão no Git LFS.
+    Código de saída: 0 deu certo; 1 erro. Feche o editor antes (ele segura os pacotes). Árvore e instâncias ficam em Content/Externo/ (fora do git); só os dois materiais-pai vão no Git LFS.
 #>
 param(
     [string]$Uproject = 'Zombie.uproject',

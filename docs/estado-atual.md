@@ -59,6 +59,16 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
   (nossos, no git/LFS), sem Nanite e com 4 LODs. Entrou como `arvore` em `Data/Cidade_Malhas.csv` (escala 2). Captura
   `2a-arvore-depois-praca` (semente 7): folhagem à luz da hora dourada. Medição na praça: média 6,5 ms (antes ~4 ms, ~+2,4 ms
   pelas árvores), pior quadro 173 ms (shader no primeiro uso). Sem a malha no disco, volta ao tronco e copa de bloco.
+- **Passo 2b, o que ficou (16 out 2026):** os prédios do City Sample **não servem**: são composições procedurais de Packed Level
+  Instance (`Kit_Hero_Bldg`, `Kit_Ref_Bldg`, centenas de malhas cada, 40 a 90 m de lado) em arquitetura de Chicago, Nova York e
+  São Francisco, contra as nossas células de 20 m. Em vez deles, **superfícies PBR**: asfalto, calçada e fachada de reboco
+  com textura do Poly Haven (CC0; as mesmas do Detonauto) por `Tools\Unreal\criar_superficies.ps1`
+  (`M_ZMBSuperficie` no git, texturas e instâncias em `Content/Externo/PolyHaven/Superficies`, fora do git), projetadas pelo mundo
+  com `Tile` e `Tint`. `UZMBGameData::SurfaceMaterial` cai na cor lisa sem as texturas. Capturas `2b-superficies-depois-*`:
+  o asfalto lê como asfalto de dia e de noite; as fachadas continuam sem relevo e **as janelas seguem faixas lisas**.
+  Também: o laranja da hora dourada abrandou (sol de 0,62/0,32 para 0,74/0,5 em verde/azul) porque, com textura, o chão
+  parecia areia. Medição: média de 4,1 a 4,9 ms na maior parte dos ângulos, mas **9,3 ms no leste e 8,2 ms na rua à noite** (sem
+  causa confirmada; repetir). Próximo: janelas com vidro e interior falso (o `Detonauto` já tem o material), térreo com portão e toldo.
 - Cena de aparência: ângulos 5 (poste), 6 (praça) e 7 (telhado) em `-ZMBLookdev` e `capturar_lookdev.ps1 -Angulos 5,6 -Seed 7`.
 - Medição do 2a (rua vazia, 1600x900): média de 3,8 a 4,9 ms, pior quadro 7 a 9 ms (112 ms no primeiro ângulo, compilação
   de shader). Mesma faixa do passo 1, **sem horda ainda**.

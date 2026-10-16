@@ -80,6 +80,12 @@ public:
 	/** Material de cor lisa, compartilhado (um por combinação de cor e aspereza). */
 	UMaterialInterface* ColorMaterial(const FLinearColor& Color, float Roughness = 0.7f, float Metallic = 0.0f);
 
+	/**
+	 * SuperfÃ­cie com textura PBR projetada pelo mundo (asfalto, calÃ§ada, fachada: Tools/Unreal/criar_superficies.ps1), com um tom
+	 * (Tint) que multiplica a cor da textura. Sem a textura no disco (ela fica fora do git), volta Ã  cor lisa Fallback.
+	 */
+	UMaterialInterface* SurfaceMaterial(const TCHAR* Name, const FLinearColor& Tint, const FLinearColor& Fallback, float FallbackRoughness);
+
 	/** Material que brilha (bola de fogo, rastro de tiro, janela acesa). Intensity é o multiplicador da cor emitida. */
 	UMaterialInstanceDynamic* GlowMaterial(const FLinearColor& Color, float Intensity);
 
@@ -125,4 +131,9 @@ private:
 	/** Malhas carregadas por caminho (a referência forte segura contra a coleta de lixo). */
 	UPROPERTY(Transient)
 	TMap<FString, TObjectPtr<UStaticMesh>> CityMeshCache;
+
+	/** InstÃ¢ncias de superfÃ­cie carregadas por caminho; o que falhou aparece uma vez no log e nÃ£o Ã© tentado de novo. */
+	UPROPERTY(Transient)
+	TMap<FString, TObjectPtr<UMaterialInterface>> SurfaceCache;
+	TSet<FString> MissingSurfaces;
 };
