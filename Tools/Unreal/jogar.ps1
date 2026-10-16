@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Abre o Zombie (AO VIVO) em modo jogo (sem o editor), com as opções do protótipo; também tira print e fecha sozinho.
 .EXAMPLE
@@ -18,7 +18,7 @@ param(
     [double]$Hour = -1,
     [ValidateRange(-1, 3)][int]$Cam = -1,
     [switch]$Horde,
-    [ValidateRange(0, 4)][int]$Lookdev = 0,   # cena de aparência: ângulo fixo 1 a 4, 17,5 h, relógio parado, sem horda
+    [ValidateRange(0, 7)][int]$Lookdev = 0,   # cena de aparência: ângulo fixo 1 a 7 (5 poste, 6 praça, 7 telhado), 17,5 h, relógio parado, sem horda
     [double]$Shot = 0,
     [string]$Twitch,
     [int]$ResX = 1600,

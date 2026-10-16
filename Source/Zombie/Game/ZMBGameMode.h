@@ -7,7 +7,7 @@
 //   -ZMBCam=0..3       câmera inicial (0 perto, 1 média, 2 longe e alta, 3 primeira pessoa)
 //   -ZMBHorde          começa com uma horda
 //   -ZMBShot=S         tira um print aos S segundos e fecha o jogo (zmb-shot.png em Saved/Screenshots)
-//   -ZMBLookdev=1..4   cena de aparência: ângulo fixo (1 rua, 2 orla, 3 mar, 4 leste), 17,5 h, relógio parado, sem horda
+//   -ZMBLookdev=1..7   cena de aparência: ângulo fixo (1 rua, 2 orla, 3 mar, 4 leste, 5 poste, 6 praça, 7 telhado), 17,5 h, relógio parado, sem horda
 //   -ZMBTwitch=canal   lê o chat de um canal da Twitch (Stream/ZMBTwitchChat)
 
 #pragma once

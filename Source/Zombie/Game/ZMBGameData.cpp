@@ -116,6 +116,12 @@ void UZMBGameData::Reload()
 	{
 		ZR::LoadLootItems(Text, LoadedLootSpots, LoadedLootItems, RuleErrors);
 	}
+	if (LoadText(TEXT("Cidade_Malhas.csv"), Text))
+	{
+		ZR::LoadCityMeshes(Text, LoadedCityMeshes, RuleErrors);
+	}
+	CityMeshCache.Reset();
+	MissingCityMeshes.Reset();
 	if (LoadText(TEXT("Sons.csv"), Text))
 	{
 		ZR::LoadSounds(Text, LoadedSounds, RuleErrors);
@@ -189,6 +195,42 @@ void UZMBGameData::Reload()
 const ZR::FZombieType* UZMBGameData::FindZombie(const char* Id) const
 {
 	return ZR::FindById(LoadedZombies, std::string(Id));
+}
+
+TArray<UZMBGameData::FCityMesh> UZMBGameData::CityMeshes(const char* Id)
+{
+	TArray<FCityMesh> Found;
+	for (const ZR::FCityMeshDef* Def : ZR::CityMeshesFor(LoadedCityMeshes, Id))
+	{
+		const FString Path = ToFString(Def->MeshPath);
+		UStaticMesh* Mesh = nullptr;
+		if (const TObjectPtr<UStaticMesh>* Cached = CityMeshCache.Find(Path))
+		{
+			Mesh = Cached->Get();
+		}
+		else if (!MissingCityMeshes.Contains(Path))
+		{
+			Mesh = LoadObject<UStaticMesh>(nullptr, *Path, nullptr, LOAD_NoWarn | LOAD_Quiet);
+			if (Mesh)
+			{
+				CityMeshCache.Add(Path, Mesh);
+			}
+			else
+			{
+				// atalho: aviso uma vez por caminho; quem clonou sem o City Sample vê os blocos do protótipo
+				MissingCityMeshes.Add(Path);
+				UE_LOG(LogZombie, Warning, TEXT("Cidade_Malhas.csv: malha %s ausente (conteúdo da Epic fora do git); vale o bloco do protótipo"), *Path);
+			}
+		}
+		if (Mesh)
+		{
+			FCityMesh Entry;
+			Entry.Mesh = Mesh;
+			Entry.Scale = Def->Scale;
+			Found.Add(Entry);
+		}
+	}
+	return Found;
 }
 
 const ZR::FExplosiveType* UZMBGameData::FindExplosive(const char* Id) const

@@ -33,6 +33,25 @@ namespace
 		FLinearColor(0.58f, 0.30f, 0.32f),  // rosa colonial
 	};
 
+	/** Variantes de uma malha da cidade (Data/Cidade_Malhas.csv), um componente instanciado por variante. */
+	struct FMeshSet
+	{
+		TArray<UZMBGameData::FCityMesh> Meshes;
+		TArray<UInstancedStaticMeshComponent*> Comps;
+		TArray<TArray<FTransform>> Transforms;
+
+		bool IsActive() const { return Meshes.Num() > 0; }
+		int32 Count() const { return Meshes.Num(); }
+		void Add(int32 Variant, const FTransform& Where) { Transforms[Variant].Add(Where); }
+		void Flush()
+		{
+			for (int32 i = 0; i < Comps.Num(); ++i)
+			{
+				Comps[i]->AddInstances(Transforms[i], false);
+			}
+		}
+	};
+
 	const FLinearColor CarColors[] = {
 		FLinearColor(0.6f, 0.6f, 0.62f), FLinearColor(0.02f, 0.02f, 0.025f), FLinearColor(0.5f, 0.04f, 0.03f),
 		FLinearColor(0.05f, 0.12f, 0.35f), FLinearColor(0.8f, 0.78f, 0.75f), FLinearColor(0.15f, 0.25f, 0.12f),
@@ -89,7 +108,7 @@ AZMBWorldBuilder::AZMBWorldBuilder()
 	Post.AutoExposureMinBrightness = -1.5f;
 	Post.bOverride_AutoExposureMaxBrightness = true;
 	Post.AutoExposureMaxBrightness = 15.0f;
-	// cÃ¢mera de celular: o olho do celular se adapta rÃ¡pido ao entrar e sair da sombra
+	// câmera de celular: o olho do celular se adapta rápido ao entrar e sair da sombra
 	Post.bOverride_AutoExposureSpeedUp = true;
 	Post.AutoExposureSpeedUp = 4.0f;
 	Post.bOverride_AutoExposureSpeedDown = true;
@@ -134,7 +153,10 @@ UInstancedStaticMeshComponent* AZMBWorldBuilder::NewInstances(const TCHAR* Name,
 	Instances->SetupAttachment(GetRootComponent());
 	Instances->SetMobility(EComponentMobility::Static);
 	Instances->SetStaticMesh(Mesh);
-	Instances->SetMaterial(0, Material);
+	if (Material)
+	{
+		Instances->SetMaterial(0, Material);
+	}
 	if (bCollision)
 	{
 		Instances->SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
@@ -266,6 +288,31 @@ void AZMBWorldBuilder::BuildBlocks()
 	UInstancedStaticMeshComponent* Units = NewInstances(TEXT("RoofUnits"), Cube, Data->ColorMaterial(FLinearColor(0.35f, 0.35f, 0.34f), 0.6f, 0.5f), true);
 	UInstancedStaticMeshComponent* Lines = NewInstances(TEXT("LaneLines"), Cube, Data->ColorMaterial(FLinearColor(0.7f, 0.6f, 0.2f), 0.6f), false);
 
+	// malhas do City Sample no lugar dos blocos (Data/Cidade_Malhas.csv); sem o asset no disco, ficam os blocos
+	auto MakeSet = [this, Data](const char* Id, const TCHAR* Prefix)
+	{
+		FMeshSet Set;
+		Set.Meshes = Data->CityMeshes(Id);
+		for (int32 i = 0; i < Set.Meshes.Num(); ++i)
+		{
+			UInstancedStaticMeshComponent* Comp = NewInstances(*FString::Printf(TEXT("%s%d"), Prefix, i), Set.Meshes[i].Mesh, nullptr, false);
+			Comp->SetCastShadow(true);
+			Set.Comps.Add(Comp);
+		}
+		Set.Transforms.SetNum(Set.Meshes.Num());
+		return Set;
+	};
+	FMeshSet TreeSet = MakeSet("arvore", TEXT("TreeMesh"));
+	FMeshSet TankSet = MakeSet("caixa_dagua", TEXT("TankMesh"));
+	FMeshSet UnitSet = MakeSet("ar_condicionado", TEXT("UnitMesh"));
+	FRandomStream MeshRng(static_cast<int32>(CitySeed & 0x7FFFFFFF) ^ 0x7BEE);
+	if (TreeSet.IsActive())
+	{
+		// o cilindro do tronco fica só como colisão: a malha da árvore não tem colisão simples
+		Trunks->SetVisibility(false);
+		Trunks->SetCastShadow(false);
+	}
+
 	TArray<UInstancedStaticMeshComponent*> Facades;
 	for (int32 i = 0; i < static_cast<int32>(UE_ARRAY_COUNT(FacadeColors)); ++i)
 	{
@@ -316,8 +363,18 @@ void AZMBWorldBuilder::BuildBlocks()
 					const float Height = Rng.FRandRange(450.0f, 750.0f);
 					TrunkT.Add(FTransform(FRotator::ZeroRotator, Spot + FVector(0.0f, 0.0f, Height * 0.5f), FVector(0.35f, 0.35f, Height / 100.0f)));
 					const float Crown = Rng.FRandRange(4.0f, 6.5f);
-					CanopyT.Add(FTransform(FRotator(0.0f, Rng.FRandRange(0.0f, 360.0f), 0.0f), Spot + FVector(0.0f, 0.0f, Height + Crown * 25.0f),
-						FVector(Crown, Crown * Rng.FRandRange(0.8f, 1.0f), Crown * 0.75f)));
+					const FRotator CanopyYaw(0.0f, Rng.FRandRange(0.0f, 360.0f), 0.0f);
+					const FVector CanopyScale(Crown, Crown * Rng.FRandRange(0.8f, 1.0f), Crown * 0.75f);
+					if (TreeSet.IsActive())
+					{
+						const int32 Variant = MeshRng.RandRange(0, TreeSet.Count() - 1);
+						TreeSet.Add(Variant, FTransform(FRotator(0.0f, MeshRng.FRandRange(0.0f, 360.0f), 0.0f), Spot,
+							FVector(TreeSet.Meshes[Variant].Scale * MeshRng.FRandRange(0.85f, 1.2f))));
+					}
+					else
+					{
+						CanopyT.Add(FTransform(CanopyYaw, Spot + FVector(0.0f, 0.0f, Height + Crown * 25.0f), CanopyScale));
+					}
 				}
 				continue;
 			}
@@ -355,13 +412,31 @@ void AZMBWorldBuilder::BuildBlocks()
 			if (Rng.FRand() < 0.45f)
 			{
 				const FVector Spot = Center + FVector(Rng.FRandRange(-0.25f, 0.25f) * Side, Rng.FRandRange(-0.25f, 0.25f) * Side, Roof + 70.0f);
-				TankT.Add(FTransform(FRotator::ZeroRotator, Spot, FVector(1.6f, 1.6f, 1.4f)));
+				if (TankSet.IsActive())
+				{
+					const int32 Variant = MeshRng.RandRange(0, TankSet.Count() - 1);
+					TankSet.Add(Variant, FTransform(FRotator(0.0f, MeshRng.FRandRange(0.0f, 360.0f), 0.0f), Spot - FVector(0.0f, 0.0f, 70.0f),
+						FVector(TankSet.Meshes[Variant].Scale)));
+				}
+				else
+				{
+					TankT.Add(FTransform(FRotator::ZeroRotator, Spot, FVector(1.6f, 1.6f, 1.4f)));
+				}
 			}
 			const int32 UnitCount = Rng.RandRange(0, 3);
 			for (int32 u = 0; u < UnitCount; ++u)
 			{
 				const FVector Spot = Center + FVector(Rng.FRandRange(-0.35f, 0.35f) * Side, Rng.FRandRange(-0.35f, 0.35f) * Side, Roof + 40.0f);
-				UnitT.Add(FTransform(FRotator(0.0f, Rng.FRandRange(0.0f, 90.0f), 0.0f), Spot, FVector(1.2f, 0.9f, 0.8f)));
+				const FRotator UnitYaw(0.0f, Rng.FRandRange(0.0f, 90.0f), 0.0f);
+				if (UnitSet.IsActive())
+				{
+					const int32 Variant = MeshRng.RandRange(0, UnitSet.Count() - 1);
+					UnitSet.Add(Variant, FTransform(UnitYaw, Spot - FVector(0.0f, 0.0f, 40.0f), FVector(UnitSet.Meshes[Variant].Scale)));
+				}
+				else
+				{
+					UnitT.Add(FTransform(UnitYaw, Spot, FVector(1.2f, 0.9f, 0.8f)));
+				}
 			}
 		}
 	}
@@ -379,6 +454,9 @@ void AZMBWorldBuilder::BuildBlocks()
 	{
 		Facades[i]->AddInstances(FacadeT[i], false);
 	}
+	TreeSet.Flush();
+	TankSet.Flush();
+	UnitSet.Flush();
 	UE_LOG(LogZombie, Display, TEXT("Porto Brasa: %d janelas (%d acesas), %d árvores"), GlassT.Num() + LitT.Num(), LitT.Num(), TrunkT.Num());
 }
 
@@ -391,6 +469,23 @@ void AZMBWorldBuilder::BuildStreetFurniture()
 	UInstancedStaticMeshComponent* Heads = NewInstances(TEXT("LampHeads"), Cube, Data->GlowMaterial(FLinearColor(1.0f, 0.62f, 0.3f), 4.0f), false);
 	const int32 Period = FMath::Max(1, Data->Tuning().City.BlockCells) + 1;
 	TArray<FTransform> PoleT, HeadT;
+	// poste do City Sample: o braço da malha aponta para +Y; girado 135 graus ele aponta para o cruzamento (-X, -Y). O cilindro
+	// vira só colisão e a lâmpada de bloco some (a malha traz a sua)
+	const TArray<UZMBGameData::FCityMesh> LampMeshes = Data->CityMeshes("poste");
+	TArray<UInstancedStaticMeshComponent*> LampComps;
+	TArray<TArray<FTransform>> LampT;
+	for (int32 i = 0; i < LampMeshes.Num(); ++i)
+	{
+		UInstancedStaticMeshComponent* Comp = NewInstances(*FString::Printf(TEXT("LampMesh%d"), i), LampMeshes[i].Mesh, nullptr, false);
+		Comp->SetCastShadow(true);
+		LampComps.Add(Comp);
+	}
+	LampT.SetNum(LampMeshes.Num());
+	if (LampMeshes.Num() > 0)
+	{
+		Poles->SetVisibility(false);
+		Poles->SetCastShadow(false);
+	}
 	int32 LightCount = 0;
 	constexpr int32 MaxLights = 64;
 	for (int32 Y = 0; Y < Plan.LandHeight; Y += Period)
@@ -406,7 +501,14 @@ void AZMBWorldBuilder::BuildStreetFurniture()
 			const float Height = 850.0f;
 			PoleT.Add(FTransform(FRotator::ZeroRotator, Corner + FVector(0.0f, 0.0f, SidewalkHeight + Height * 0.5f), FVector(0.18f, 0.18f, Height / 100.0f)));
 			const FVector Lamp = Corner + FVector(-120.0f, -120.0f, SidewalkHeight + Height);
-			HeadT.Add(FTransform(FRotator(0.0f, 45.0f, 0.0f), Lamp, FVector(1.0f, 0.35f, 0.15f)));
+			if (LampMeshes.Num() > 0)
+			{
+				LampT[0].Add(FTransform(FRotator(0.0f, 135.0f, 0.0f), Corner + FVector(0.0f, 0.0f, SidewalkHeight), FVector(LampMeshes[0].Scale)));
+			}
+			else
+			{
+				HeadT.Add(FTransform(FRotator(0.0f, 45.0f, 0.0f), Lamp, FVector(1.0f, 0.35f, 0.15f)));
+			}
 			if (LightCount < MaxLights)
 			{
 				UPointLightComponent* Light = NewObject<UPointLightComponent>(this, *FString::Printf(TEXT("StreetLight%d"), LightCount));
@@ -429,6 +531,10 @@ void AZMBWorldBuilder::BuildStreetFurniture()
 	}
 	Poles->AddInstances(PoleT, false);
 	Heads->AddInstances(HeadT, false);
+	for (int32 i = 0; i < LampComps.Num(); ++i)
+	{
+		LampComps[i]->AddInstances(LampT[i], false);
+	}
 }
 
 void AZMBWorldBuilder::SpawnProps(std::uint64_t Seed)
@@ -541,6 +647,62 @@ void AZMBWorldBuilder::SpawnLoot(std::uint64_t Seed)
 		}
 	}
 	UE_LOG(LogZombie, Display, TEXT("Porto Brasa: %d lugares de saque (%d pulados por cair em cima de carro ou bujão)"), Spawned, Skipped);
+}
+
+bool AZMBWorldBuilder::GetLookdevView(int32 Angle, FVector& OutWhere, float& OutYaw) const
+{
+	int32 StartX = 0;
+	int32 StartY = 0;
+	WorldToCell(StartLocation, StartX, StartY);
+	if (Angle == 5)
+	{
+		// o poste do cruzamento mais perto do começo (mesma regra de BuildStreetFurniture); a câmera olha para ele da rua, na diagonal
+		const int32 Period = FMath::Max(1, UZMBGameData::Get(this)->Tuning().City.BlockCells) + 1;
+		const int32 PoleX = FMath::RoundToInt(static_cast<float>(StartX) / Period) * Period;
+		const int32 PoleY = FMath::Max(0, (Plan.LandHeight - 1) / Period - 1) * Period;
+		const FVector Corner = CellCenter(PoleX, PoleY) + FVector(CellSize * 0.5f + 150.0f, CellSize * 0.5f + 150.0f, 0.0f);
+		OutWhere = Corner + FVector(-1200.0f, -1200.0f, 130.0f);
+		OutYaw = 45.0f;
+		return true;
+	}
+	if (Angle == 7)
+	{
+		// em cima do telhado do prédio mais perto do começo, olhando a cidade: caixas d'água e aparelhos de ar
+		float BestDistance = TNumericLimits<float>::Max();
+		for (int32 Y = 0; Y < Plan.Height; ++Y)
+		{
+			for (int32 X = 0; X < Plan.Width; ++X)
+			{
+				const float Distance = FVector::DistSquared(CellCenter(X, Y), StartLocation);
+				if (Plan.At(X, Y) == ZR::ECell::Building && Distance < BestDistance)
+				{
+					BestDistance = Distance;
+					OutWhere = CellCenter(X, Y) + FVector(0.0f, 0.0f, SidewalkHeight + Plan.FloorsAt(X, Y) * FloorHeight + 130.0f);
+					OutYaw = -90.0f;
+				}
+			}
+		}
+		return BestDistance < TNumericLimits<float>::Max();
+	}
+	if (Angle == 6)
+	{
+		float BestDistance = TNumericLimits<float>::Max();
+		for (int32 Y = 0; Y < Plan.Height; ++Y)
+		{
+			for (int32 X = 0; X < Plan.Width; ++X)
+			{
+				const float Distance = FVector::DistSquared(CellCenter(X, Y), StartLocation);
+				if (Plan.At(X, Y) == ZR::ECell::Plaza && Distance < BestDistance)
+				{
+					BestDistance = Distance;
+					OutWhere = CellCenter(X, Y) + FVector(-CellSize * 0.5f - 300.0f, 0.0f, 130.0f);
+					OutYaw = 0.0f;
+				}
+			}
+		}
+		return BestDistance < TNumericLimits<float>::Max();
+	}
+	return false;
 }
 
 float AZMBWorldBuilder::GetHour() const

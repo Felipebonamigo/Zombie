@@ -92,8 +92,14 @@ void AZMBGameMode::Tick(float DeltaSeconds)
 		{
 			// quatro ângulos fixos a partir do começo: rua (norte), orla (oeste), mar (sul) e leste
 			static const float Yaws[] = {-90.0f, 180.0f, 90.0f, 0.0f};
-			PlayerController->GetPawn()->SetActorLocation(Builder->GetStartLocation());
-			PlayerController->SetControlRotation(FRotator(0.0f, Yaws[(LookdevAngle - 1) & 3], 0.0f));
+			FVector Where = Builder->GetStartLocation();
+			float Yaw = Yaws[(LookdevAngle - 1) & 3];
+			if (LookdevAngle >= 5 && LookdevAngle <= 7)
+			{
+				Builder->GetLookdevView(LookdevAngle, Where, Yaw);
+			}
+			PlayerController->GetPawn()->SetActorLocation(Where);
+			PlayerController->SetControlRotation(FRotator(0.0f, Yaw, 0.0f));
 			bLookdevPlaced = true;
 		}
 	}

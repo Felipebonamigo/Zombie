@@ -55,6 +55,8 @@ public:
 	/** Avança o relógio (tecla de teste T, opção -ZMBHour). */
 	void SkipHours(float Hours);
 	void SetHour(float Hour);
+	/** Pontos de vista fixos de perto da cena de aparência: 5 = um poste de rua, 6 = a praça mais perto do começo, 7 = o telhado do prédio mais perto do começo. */
+	bool GetLookdevView(int32 Angle, FVector& OutWhere, float& OutYaw) const;
 	/** Para o relógio (cena de aparência: a mesma luz em todas as capturas). */
 	void SetFrozen(bool bInFrozen) { bFrozen = bInFrozen; }
 

@@ -167,8 +167,8 @@ os arquivos, o jogo roda com os padrões do código e avisa no HUD.
 
 ## `Cidade_Malhas.csv`: malhas que trocam os blocos da cidade
 
-`id,malha,escala,descricao`. O id é o que o código sabe trocar: `arvore`, `poste`, `caixa_dagua`, `ar_condicionado`, `lixeira`.
+`id,malha,escala,descricao`. O id é o que o código sabe trocar: `arvore`, `poste`, `caixa_dagua`, `ar_condicionado`.
 Várias linhas do mesmo id são variantes (sorteadas pela semente da cidade). `malha` é o caminho do asset e tem que começar
 com `/Game/Externo/`: conteúdo da Epic (City Sample) fica só em `Content/Externo/`, fora do git. **Sem o asset no disco, o
-jogo volta ao bloco do protótipo e avisa no log.** `escala` vai de 0,01 a 100. Linha com erro sai inteira e o teste de deriva
+jogo volta ao bloco do protótipo e avisa no log.** `escala` vai de 0,01 a 100. `arvore` está sem linhas de propósito: as árvores do City Sample são de inverno, sem folha. Linha com erro sai inteira e o teste de deriva
 (`Deriva.CidadeMalhas...`) cobra.

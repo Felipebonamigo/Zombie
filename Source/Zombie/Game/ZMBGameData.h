@@ -59,6 +59,18 @@ public:
 	const std::vector<ZR::FLootSpotType>& LootSpots() const { return LoadedLootSpots; }
 	const std::vector<ZR::FLootItemDef>& LootItems() const { return LoadedLootItems; }
 
+	/** Uma malha da cidade já carregada (Data/Cidade_Malhas.csv). */
+	struct FCityMesh
+	{
+		UStaticMesh* Mesh = nullptr;
+		float Scale = 1.0f;
+	};
+	/**
+	 * As variantes carregadas de um id da tabela de malhas (arvore, poste...). Vazio quando a tabela não tem o id ou o asset
+	 * não existe no disco (conteúdo da Epic fica fora do git): quem chama volta ao bloco do protótipo.
+	 */
+	TArray<FCityMesh> CityMeshes(const char* Id);
+
 	const ZR::FZombieType* FindZombie(const char* Id) const;
 	const ZR::FExplosiveType* FindExplosive(const char* Id) const;
 
@@ -95,6 +107,8 @@ private:
 	std::vector<ZR::FMilestoneDef> LoadedMilestones;
 	std::vector<ZR::FLootSpotType> LoadedLootSpots;
 	std::vector<ZR::FLootItemDef> LoadedLootItems;
+	std::vector<ZR::FCityMeshDef> LoadedCityMeshes;
+	TSet<FString> MissingCityMeshes;
 	ZR::FWordFilter LoadedWordFilter;
 	TArray<FString> Errors;
 	int32 ReloadCount = 0;
@@ -107,4 +121,8 @@ private:
 
 	UPROPERTY(Transient)
 	TMap<FString, TObjectPtr<UMaterialInstanceDynamic>> Materials;
+
+	/** Malhas carregadas por caminho (a referência forte segura contra a coleta de lixo). */
+	UPROPERTY(Transient)
+	TMap<FString, TObjectPtr<UStaticMesh>> CityMeshCache;
 };

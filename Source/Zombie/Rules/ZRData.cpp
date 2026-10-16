@@ -711,7 +711,7 @@ namespace ZR
 
 	const std::vector<std::string>& CityMeshIds()
 	{
-		static const std::vector<std::string> Ids = {"arvore", "poste", "caixa_dagua", "ar_condicionado", "lixeira"};
+		static const std::vector<std::string> Ids = {"arvore", "poste", "caixa_dagua", "ar_condicionado"};
 		return Ids;
 	}
 

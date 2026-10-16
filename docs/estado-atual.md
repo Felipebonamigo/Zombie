@@ -3,7 +3,7 @@
 Documento de passagem. Uma sessão nova do Claude (nuvem ou PC) lê este arquivo e o `CLAUDE.md` e consegue continuar sem
 o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
 
-Última revisão: 15 out 2026 (primeira sessão, na nuvem; blocos 1 a 9).
+Última revisão: 16 out 2026 (sessão do PC: realismo, passos 0, 1 e 2a; antes, blocos 1 a 9 na nuvem).
 
 ## Como o trabalho está dividido
 
@@ -44,6 +44,22 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
   horda de 80** e em resolução maior; sem isso o orçamento do passo 1 não está provado para a hora do combate.
 - **Diversão e visual:** o fim de tarde agora tem cara de filmado (luz laranja, sombras longas, céu quente) e a noite ficou
   legível e azulada; a diversão não mudou, só o clima.
+- **Passo 2a, malhas do City Sample (16 out 2026):** o City Sample (UE 5.8) foi baixado pelo Launcher (`...\OneDrive\Documents\Unreal Projects\CitySample`, 96 GB;
+  o OneDrive pode sincronizar isso: pausar ou mover). Migrado só o que o 2a usa (81 pacotes, 522 MB) por um projeto de
+  staging fora do repositório (`C:\Users\Felip\UE\StagingCitySample`), renomeado lá para `/Game/Externo/CitySample/` (o editor
+  atualiza as referências; 0 referências fora de Externo) e copiado para `Content/Externo/CitySample/`, ignorado pelo git.
+  Nova tabela `Data/Cidade_Malhas.csv` (`docs/dados.md`) e `UZMBGameData::CityMeshes(id)`: **sem o asset, o jogo volta ao
+  bloco do protótipo** e avisa no log, uma vez por caminho. Trocados por malha: **poste de rua** (visto de perto e de longe),
+  **caixa d'água** e **ar-condicionado de telhado** (estes dois **não conferidos em captura**: nenhum ângulo de teste
+  enxergou um telhado com eles). **Árvores:** o código está pronto (`arvore`), mas as árvores do City Sample são de inverno,
+  sem folha (captura `2a-props-seed7-depois-praca`), então a tabela não tem nenhuma; falta uma árvore folhuda (Megascans pela
+  Fab ou CC0). A semente padrão 2026 não tem praça (0 praças; a 7 tem 36).
+- Cena de aparência: ângulos 5 (poste), 6 (praça) e 7 (telhado) em `-ZMBLookdev` e `capturar_lookdev.ps1 -Angulos 5,6 -Seed 7`.
+- Medição do 2a (rua vazia, 1600x900): média de 3,8 a 4,9 ms, pior quadro 7 a 9 ms (112 ms no primeiro ângulo, compilação
+  de shader). Mesma faixa do passo 1, **sem horda ainda**.
+- **Diversão e visual:** o poste agora tem braço e cabeça de verdade e a rua perde um pouco do ar de maquete; o resto
+  (prédios, calçada, carros) segue em bloco. Os prédios do City Sample são arquitetura de arranha-céu americano e vêm
+  montados por regras procedurais: o 2b depende de uma decisão do Felipe (volumes empilháveis ou fachadas brasileiras).
 - Pendências vistas nas capturas: o mar mal aparece (a praia é larga e a água, uma faixa fina no horizonte); o céu do
   meio-dia ainda não foi olhado; neblina por zona (orla úmida, centro com fumaça) e luz de poste mais forte ficam para
   quando a cidade tiver as malhas do City Sample.
