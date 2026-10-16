@@ -159,6 +159,15 @@ namespace ZR
 		float RunOverMinKmh = 18.0f;
 	};
 
+	/** Uma malha da cidade (Data/Cidade_Malhas.csv): o id é o que o código pede (arvore, poste...) e várias linhas do mesmo id são variantes. */
+	struct FCityMeshDef
+	{
+		std::string Id;
+		/** Caminho do asset no Unreal; só /Game/Externo/ (conteúdo da Epic fica fora do git). */
+		std::string MeshPath;
+		float Scale = 1.0f;
+	};
+
 	struct FTuning
 	{
 		FHypeConfig Hype;
@@ -216,6 +225,13 @@ namespace ZR
 	/** Data/SaqueItens.csv: o local tem que ser um id de Spots (Saque.csv) e o item, um de LootItemId. */
 	void LoadLootItems(const std::string& Csv, const std::vector<FLootSpotType>& Spots, std::vector<FLootItemDef>& Out,
 		std::vector<std::string>& Errors);
+	/** Data/Cidade_Malhas.csv: id conhecido (CityMeshIds), malha em /Game/Externo/ e escala maior que zero. Linha com erro sai inteira. */
+	void LoadCityMeshes(const std::string& Csv, std::vector<FCityMeshDef>& Out, std::vector<std::string>& Errors);
+	/** Os ids que o código sabe trocar por malha, na ordem em que aparecem. */
+	const std::vector<std::string>& CityMeshIds();
+	/** As variantes de um id (vazio = o código volta ao bloco do protótipo). */
+	std::vector<const FCityMeshDef*> CityMeshesFor(const std::vector<FCityMeshDef>& All, const std::string& Id);
+
 	/** Data/Construcoes.csv: o explosivo da armadilha tem que ser um id de Explosives (Explosivos.csv). */
 	void LoadBuildPieces(const std::string& Csv, const std::vector<FExplosiveType>& Explosives, std::vector<FBuildPieceType>& Out,
 		std::vector<std::string>& Errors);

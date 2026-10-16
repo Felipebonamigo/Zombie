@@ -709,6 +709,65 @@ namespace ZR
 		}
 	}
 
+	const std::vector<std::string>& CityMeshIds()
+	{
+		static const std::vector<std::string> Ids = {"arvore", "poste", "caixa_dagua", "ar_condicionado", "lixeira"};
+		return Ids;
+	}
+
+	std::vector<const FCityMeshDef*> CityMeshesFor(const std::vector<FCityMeshDef>& All, const std::string& Id)
+	{
+		std::vector<const FCityMeshDef*> Found;
+		for (const FCityMeshDef& Def : All)
+		{
+			if (Def.Id == Id)
+			{
+				Found.push_back(&Def);
+			}
+		}
+		return Found;
+	}
+
+	void LoadCityMeshes(const std::string& Csv, std::vector<FCityMeshDef>& Out, std::vector<std::string>& Errors)
+	{
+		Out.clear();
+		FCsvTable Table;
+		if (!ParseOrReport(Csv, "Cidade_Malhas.csv", Table, Errors))
+		{
+			return;
+		}
+		FRowReader Reader(Table, "Cidade_Malhas.csv", Errors);
+		if (!Reader.Require({"id", "malha", "escala"}))
+		{
+			return;
+		}
+		const std::string Required = "/Game/Externo/";
+		for (std::size_t Row = 0; Row < Table.Rows.size(); ++Row)
+		{
+			const std::size_t ErrorsBefore = Errors.size();
+			FCityMeshDef Def;
+			Def.Id = Reader.Text(Row, "id");
+			const std::vector<std::string>& Known = CityMeshIds();
+			if (std::find(Known.begin(), Known.end(), Def.Id) == Known.end())
+			{
+				Reader.Report(Row, "id", "'" + Def.Id + "' não é um id que o código troca por malha");
+				continue;
+			}
+			Def.MeshPath = Reader.Text(Row, "malha");
+			if (Def.MeshPath.compare(0, Required.size(), Required) != 0)
+			{
+				Reader.Report(Row, "malha", "'" + Def.MeshPath + "' fora de " + Required + " (conteúdo da Epic não entra em outro lugar)");
+				continue;
+			}
+			Def.Scale = Reader.Float(Row, "escala", 0.01f, 100.0f, 1.0f);
+			if (Errors.size() != ErrorsBefore)
+			{
+				continue;
+			}
+			Out.push_back(Def);
+		}
+	}
+
 	void LoadBuildPieces(const std::string& Csv, const std::vector<FExplosiveType>& Explosives, std::vector<FBuildPieceType>& Out,
 		std::vector<std::string>& Errors)
 	{

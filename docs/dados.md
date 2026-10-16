@@ -164,3 +164,11 @@ pelo menos 2 falas cada. Sem emoji: o HUD de protótipo não desenha emoji.
 `Data/` fica na raiz do projeto e o jogo lê de `FPaths::ProjectDir()/Data`. No pacote, os `Data/*.csv` vão soltos, fora
 do `.pak`, pelo `RuntimeDependencies` do `Zombie.Build.cs` (14/10/2026; falta conferir num pacote de verdade no PC). Sem
 os arquivos, o jogo roda com os padrões do código e avisa no HUD.
+
+## `Cidade_Malhas.csv`: malhas que trocam os blocos da cidade
+
+`id,malha,escala,descricao`. O id é o que o código sabe trocar: `arvore`, `poste`, `caixa_dagua`, `ar_condicionado`, `lixeira`.
+Várias linhas do mesmo id são variantes (sorteadas pela semente da cidade). `malha` é o caminho do asset e tem que começar
+com `/Game/Externo/`: conteúdo da Epic (City Sample) fica só em `Content/Externo/`, fora do git. **Sem o asset no disco, o
+jogo volta ao bloco do protótipo e avisa no log.** `escala` vai de 0,01 a 100. Linha com erro sai inteira e o teste de deriva
+(`Deriva.CidadeMalhas...`) cobra.
