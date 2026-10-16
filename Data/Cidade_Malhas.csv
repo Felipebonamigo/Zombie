@@ -2,3 +2,4 @@ id,malha,escala,descricao
 poste,/Game/Externo/CitySample/Prop/Kit_StreetLamp_B/Mesh/SM_StreetLamp_B,1.1,"Poste de 7,7 m com braço de 1,3 m para o lado; a escala leva a 8,5 m, como o poste de bloco"
 caixa_dagua,/Game/Externo/CitySample/Prop/Kit_roof_tank_B_RR/Mesh/SM_roof_tank_b,0.6,"Reservatório de telhado de 3,6 m; escala leva a 2,2 m"
 ar_condicionado,/Game/Externo/CitySample/Prop/Kit_roof_AC_Unit_B/Mesh/SM_roof_AC_Unit_B_01_N1,1,"Aparelho de ar de telhado de 1 m"
+arvore,/Game/Externo/PolyHaven/island_tree_02/island_tree_02/StaticMeshes/island_tree_02,2,"Árvore de ilha folhuda do Poly Haven (CC0): 4 m de copa; a escala leva a 8 m, como a árvore de bloco"

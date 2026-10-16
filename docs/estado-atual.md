@@ -51,9 +51,14 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
   Nova tabela `Data/Cidade_Malhas.csv` (`docs/dados.md`) e `UZMBGameData::CityMeshes(id)`: **sem o asset, o jogo volta ao
   bloco do protótipo** e avisa no log, uma vez por caminho. Trocados por malha: **poste de rua** (visto de perto e de longe),
   **caixa d'água** e **ar-condicionado de telhado** (estes dois **não conferidos em captura**: nenhum ângulo de teste
-  enxergou um telhado com eles). **Árvores:** o código está pronto (`arvore`), mas as árvores do City Sample são de inverno,
-  sem folha (captura `2a-props-seed7-depois-praca`), então a tabela não tem nenhuma; falta uma árvore folhuda (Megascans pela
-  Fab ou CC0). A semente padrão 2026 não tem praça (0 praças; a 7 tem 36).
+  enxergou um telhado com eles). **Árvores:** as do City Sample são de inverno, sem folha (captura
+  `2a-props-seed7-depois-praca`) e foram trocadas pela árvore do Poly Haven (item seguinte). A semente padrão 2026 não tem
+  praça (0 praças; a 7 tem 36), então só a semente 7 mostra árvores.
+- **Árvore folhuda (16 out 2026):** `island_tree_02` do Poly Haven (CC0), a mesma do Age of Earth, importada por
+  `Tools\Unreal\criar_arvore.ps1` em `Content/Externo/PolyHaven/` (fora do git) com os materiais `M_ZMBFolha` e `M_ZMBTronco`
+  (nossos, no git/LFS), sem Nanite e com 4 LODs. Entrou como `arvore` em `Data/Cidade_Malhas.csv` (escala 2). Captura
+  `2a-arvore-depois-praca` (semente 7): folhagem à luz da hora dourada. Medição na praça: média 6,5 ms (antes ~4 ms, ~+2,4 ms
+  pelas árvores), pior quadro 173 ms (shader no primeiro uso). Sem a malha no disco, volta ao tronco e copa de bloco.
 - Cena de aparência: ângulos 5 (poste), 6 (praça) e 7 (telhado) em `-ZMBLookdev` e `capturar_lookdev.ps1 -Angulos 5,6 -Seed 7`.
 - Medição do 2a (rua vazia, 1600x900): média de 3,8 a 4,9 ms, pior quadro 7 a 9 ms (112 ms no primeiro ângulo, compilação
   de shader). Mesma faixa do passo 1, **sem horda ainda**.
