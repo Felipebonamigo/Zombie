@@ -19,6 +19,8 @@ já é a realista, herdada do Detonauto e medida lá a 60 fps:
 
 ## Passos
 
+O roteiro de execução, passo a passo e com o que fica fora do git, está em `docs/realismo-roteiro.md`.
+
 1. **Cena de aparência (`L_Lookdev`)**, criada por script Python no PC:
    - uma esquina de Porto Brasa no fim de tarde;
    - asfalto e calçada com texturas CC0 (Poly Haven);

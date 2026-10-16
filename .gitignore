@@ -72,3 +72,7 @@ Plugins/Streamline*/
 Plugins/NIS/
 Plugins/FSR*/
 Plugins/XeSS*/
+
+# Conteúdo da Epic (City Sample, Game Animation Sample, MetaHuman) e do Mixamo: só no PC, nunca no git (repositório público).
+# Roteiro: docs/realismo-roteiro.md.
+Content/Externo/

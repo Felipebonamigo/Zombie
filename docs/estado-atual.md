@@ -69,6 +69,15 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
   pelo vão? Sem vão, ela vem e bate? O zumbi segue o campo fino sem andar em zigue-zague? Carro a 60 km/h arromba a
   barricada de madeira e segue; no muro de sucata, para.
 
+## Realismo (a próxima fase grande)
+
+Primeiro playtest do Felipe (16/10/2026): compilou sem erro, câmera, horda, explosões e a live estão ok; **falta realismo e
+qualidade gráfica**. O roteiro está em `docs/realismo-roteiro.md`: luz e céu, rua (City Sample), personagem e zumbis, explosão
+em Niagara e modo celular, cada passo com captura e medição. Conteúdo da Epic fica em `Content/Externo/` (ignorado pelo git:
+o repositório é público). A sessão local executa; a nuvem adianta as tabelas e o código que não dependem do download.
+
+Sem som no primeiro playtest: faltava rodar `Tools\Unreal\importar_sons.ps1` (editor fechado).
+
 ## Decisões pendentes do Felipe
 
 Estão em `docs/roadmap.md`, "Decisões que são do Felipe": nome, repositório público ou privado, horas por semana, preço e
