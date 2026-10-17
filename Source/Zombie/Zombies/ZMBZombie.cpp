@@ -72,8 +72,14 @@ AZMBZombie::AZMBZombie()
 	Move->bUseRVOAvoidance = true;
 	Move->AvoidanceConsiderationRadius = 220.0f;
 	Move->MaxWalkSpeed = 150.0f;
+	// Piso mais barato: a base achatada e sem "perch" (borda de degrau) tira ~2 ms com 140 zumbis (A/B alternado, 17/10).
+	Move->bUseFlatBaseForFloorChecks = true;
+	Move->PerchRadiusThreshold = 0.0f;
 
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	// O CharacterMesh0 herdado não tem malha (o corpo são os membros de bloco): sem tick e sem atualizar esqueleto, ~2 ms.
+	GetMesh()->PrimaryComponentTick.bCanEverTick = false;
+	GetMesh()->bNoSkeletonUpdate = true;
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> SphereMesh(TEXT("/Engine/BasicShapes/Sphere.Sphere"));

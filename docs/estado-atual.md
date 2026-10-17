@@ -108,6 +108,19 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
   compilação e travou o Editor dos meus testes por ~20 min), por isso o "antes" saiu pior que as medições de manhã (12 a 16 ms);
   só a comparação lado a lado vale. Insights: `Phys SetBodyTransform` de 1.360 para 135 chamadas por quadro.
   **Não verificado em jogo:** tiro no bujão pelas costas, no rastejante e onde um membro já saiu (só por leitura do código).
+- **Outros candidatos de desempenho medidos (17 out 2026):** A/B alternado (flags temporárias, removidas), noite, 140 zumbis,
+  1920x1080, dois lotes. O Editor do CitySample do Felipe ficou aberto e disputou a GPU: **metade das rodadas saiu suja**
+  (GPU de 7 a 97 ms contra 3 a 5 normal) e foi descartada pelo tempo de GPU (> 7 ms). Rodadas limpas, tempo do fio do jogo:
+  **base 12,7 ms** (13,9, 11,7, 12,4); **piso barato** (`bUseFlatBaseForFloorChecks` + `PerchRadiusThreshold = 0`) 10,4 (1 rodada limpa
+  neste lote e 10,6 no outro, ~−2 ms); **CharacterMesh0 quieto** (sem tick e sem esqueleto: a malha herdada está vazia) 9,6 mais
+  10,1 em média do lote anterior (~−2,5 ms); **os dois juntos 9,5 ms** (8,8, 10,1, 9,7: **−3 ms**). Os dois ficaram no código.
+  Conferido depois, sem flag: 143 testes, teste de tiro 6 de 6 e **jogo 10,2 e 9,6 ms** com 140 zumbis (render 5 a 6, GPU 4 a 5).
+  **Tick do zumbi a 20 Hz** deu 4,8 a 5,6 ms, mas **não vale como ganho**: o `AddMovementInput` sai desse tick, e o movimento do
+  `CharacterMovementComponent` só anda nos quadros com entrada; os zumbis andariam a ~1/3 da velocidade. O tick do zumbi em si custa
+  ~1,3 ms por quadro (Insights); o grosso é `Char PerformMovement` (~6,4 ms). Próximo candidato, não medido: mover zumbis longe do
+  jogador com custo menor (menos checagens ou menos frequência com a velocidade guardada).
+  Não verificado em jogo: o comportamento do zumbi em degraus e meio-fio com o piso barato (a calçada tem 15 cm, o degrau
+  máximo padrão é 45).
 - Cena de aparência: ângulos 5 (poste), 6 (praça) e 7 (telhado) em `-ZMBLookdev` e `capturar_lookdev.ps1 -Angulos 5,6 -Seed 7`.
 - Medição do 2a (rua vazia, 1600x900): média de 3,8 a 4,9 ms, pior quadro 7 a 9 ms (112 ms no primeiro ângulo, compilação
   de shader). Mesma faixa do passo 1, **sem horda ainda**.
