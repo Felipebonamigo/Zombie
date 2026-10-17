@@ -8,6 +8,8 @@
 #include "GameFramework/PlayerController.h"
 #include "GameFramework/PlayerStart.h"
 #include "Misc/App.h"
+#include "RHI.h"
+#include "RenderTimer.h"
 #include "Misc/CommandLine.h"
 #include "Misc/Parse.h"
 #include "UnrealClient.h"
@@ -114,6 +116,9 @@ void AZMBGameMode::Tick(float DeltaSeconds)
 		const double FrameMs = FApp::GetDeltaTime() * 1000.0;
 		PerfSumMs += FrameMs;
 		PerfWorstMs = FMath::Max(PerfWorstMs, FrameMs);
+		PerfGameMs += FPlatformTime::ToMilliseconds(GGameThreadTime);
+		PerfRenderMs += FPlatformTime::ToMilliseconds(GRenderThreadTime);
+		PerfGpuMs += FPlatformTime::ToMilliseconds(RHIGetGPUFrameCycles());
 		++PerfFrames;
 	}
 	if (!bShotTaken && Elapsed >= ShotAt)
@@ -123,6 +128,8 @@ void AZMBGameMode::Tick(float DeltaSeconds)
 		{
 			UE_LOG(LogZombie, Display, TEXT("ZMBPerf: %lld quadros, média %.2f ms (%.0f fps), pior %.2f ms"), PerfFrames, PerfSumMs / PerfFrames,
 				1000.0 * PerfFrames / PerfSumMs, PerfWorstMs);
+			UE_LOG(LogZombie, Display, TEXT("ZMBPerf: por fio, média: jogo %.2f ms, render %.2f ms, GPU %.2f ms; zumbis vivos no fim: %d"), PerfGameMs / PerfFrames,
+				PerfRenderMs / PerfFrames, PerfGpuMs / PerfFrames, Director ? Director->AliveCount() : 0);
 		}
 		FScreenshotRequest::RequestScreenshot(TEXT("zmb-shot"), true, false);
 		UE_LOG(LogZombie, Display, TEXT("ZMBShot: captura pedida aos %.1f s"), Elapsed);

@@ -53,6 +53,9 @@ private:
 
 	double PerfSumMs = 0.0;
 	double PerfWorstMs = 0.0;
+	double PerfGameMs = 0.0;
+	double PerfRenderMs = 0.0;
+	double PerfGpuMs = 0.0;
 	int64 PerfFrames = 0;
 	int32 LookdevAngle = 0;
 	bool bLookdevPlaced = false;

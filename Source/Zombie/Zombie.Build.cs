@@ -12,7 +12,7 @@ public class Zombie : ModuleRules
 
 		// Rules/ é C++ puro (std), sem Unreal: compila aqui e também na nuvem com g++ (Tools/Regras/testar.sh).
 		// EnhancedInput: controles criados em código (sem asset). WebSockets: leitura do chat da Twitch (Stream/ZMBTwitchChat).
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "WebSockets" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "WebSockets", "RenderCore", "RHI" });
 
 		// Um módulo só, com subpastas (Rules, Game, Player...): os includes são "Rules/ZRHype.h", "Player/ZMBCharacter.h" etc.
 		PublicIncludePaths.Add(ModuleDirectory);

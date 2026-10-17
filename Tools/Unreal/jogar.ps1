@@ -72,8 +72,8 @@ if (-not $found) {
     exit 1
 }
 Write-Host "PRINT: $($found.FullName)"
-$perf = Select-String -LiteralPath $log -Pattern 'ZMBPerf:' -SimpleMatch | Select-Object -Last 1
-if ($perf) { Write-Host $perf.Line }
+$perf = Select-String -LiteralPath $log -Pattern 'ZMBPerf:' -SimpleMatch | Select-Object -Last 2
+$perf | ForEach-Object { Write-Host $_.Line }
 $errors = Select-String -LiteralPath $log -Pattern 'Error:|Fatal' -SimpleMatch:$false | Where-Object { $_.Line -notmatch 'LogPython|GameFeatures|LoadErrors' } | Select-Object -First 10
 if ($errors) {
     Write-Host '--- erros no log ---'

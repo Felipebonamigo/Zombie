@@ -79,6 +79,23 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
   captura os pega de frente). A aberração cromática do pós-processo (0,2) fica forte nas janelas claras: reduzir.
   Medição: 4,5 a 5,9 ms, com um quadro de 19 ms (53 fps) que não repetiu; nesse momento o `OneDrive.Sync.Service` estava
   usando muita CPU (a pasta do City Sample, 96 GB, está dentro do OneDrive): **pausar a sincronização ou mover o projeto**.
+- **Medição com horda e onde pesa (17 out 2026, RTX 4070 Ti, semente 2026, `-Horde`, câmera média, 40 s, sem vsync):**
+  `ZMBPerf` agora separa os fios (jogo, render, GPU) e conta os zumbis vivos. Dia, 1920x1080, 80 zumbis: **jogo 7,7 ms**,
+  render 3,9, GPU 3,9. **Noite, 1920x1080, 140 zumbis: jogo 12 a 16 ms** (quatro rodadas: 15,9, 12,7, 12,1 e 12,4), render 5 a 6,
+  GPU 4. Ou seja, **o gargalo é a lógica (fio do jogo), não o visual**: a GPU está em ~4 ms. 4K não foi remedido depois que o
+  `ZMBPerf` passou a separar os fios. Medição anterior sem separar (média de quadro): 4K de dia 68 ms e 4K à noite 11,5 ms,
+  incoerentes entre si, **não confiáveis**. O alvo é um PC nível PS5, com CPU mais fraca que a deste PC: **12 a 16 ms de jogo aqui
+  não dão folga**.
+  Unreal Insights (`-trace=cpu,frame,bookmark -statnamedevents`; export por `UnrealInsights.exe -OpenTraceFile=... -ExecOnAnalysisCompleteCmd="TimingInsights.ExportTimerStatistics <csv> -threads=GameThread" -AutoQuit -NoUI`, que funciona):
+  `Char PerformMovement` inclui ~8,5 ms por quadro (140 zumbis, uma vez cada), `Phys SetBodyTransform` ~1.365 chamadas por
+  quadro (~3 ms) e `WaitForTasks` 3,5 ms por quadro. Os 1.365 vêm dos **6 membros de cada zumbi** (`QueryOnly`, bloqueiam só
+  a Visibility para o tiro por membro), que são corpos físicos movidos junto com a cápsula a cada passo.
+  Teste A/B (flags temporárias, já removidas): sem corpo físico nos membros, **jogo 9 a 10 ms (−3 ms)**; sem o desvio RVO, sem
+  mudança (13,8, dentro do ruído de ±2 ms entre rodadas).
+  **Decisão do Felipe pendente:** tirar o corpo físico dos membros e acertar a parte do corpo por uma só cápsula (`ZRBody` não muda;
+  muda como o tiro descobre o membro: pela altura e pelo lado do ponto de impacto), −3 ms estimados, em troca de um tiro por
+  parte menos exato (cabeça como faixa do cilindro, não esfera). Outros candidatos ainda não medidos: `ComputeFloorDist`
+  (234 mil chamadas), o tick de cada zumbi (233 mil) e o componente `CharacterMesh0` vazio.
 - Cena de aparência: ângulos 5 (poste), 6 (praça) e 7 (telhado) em `-ZMBLookdev` e `capturar_lookdev.ps1 -Angulos 5,6 -Seed 7`.
 - Medição do 2a (rua vazia, 1600x900): média de 3,8 a 4,9 ms, pior quadro 7 a 9 ms (112 ms no primeiro ângulo, compilação
   de shader). Mesma faixa do passo 1, **sem horda ainda**.
