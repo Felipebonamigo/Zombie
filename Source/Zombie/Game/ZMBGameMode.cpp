@@ -2,6 +2,9 @@
 #include "Zombie.h"
 #include "Game/ZMBWorldBuilder.h"
 #include "Player/ZMBCharacter.h"
+#include "Zombies/ZMBZombie.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Game/ZMBGameData.h"
 #include "UI/ZMBHUD.h"
 #include "Zombies/ZMBHordeDirector.h"
 #include "Engine/World.h"
@@ -59,6 +62,48 @@ void AZMBGameMode::InitGame(const FString& MapName, const FString& Options, FStr
 	UE_LOG(LogZombie, Display, TEXT("AZMBGameMode: Porto Brasa montada no mapa '%s' (semente %d)"), *MapName, Seed);
 }
 
+void AZMBGameMode::RunShotTest()
+{
+	const UZMBGameData* Data = UZMBGameData::Get(this);
+	const ZR::FZombieType* Type = Data ? Data->FindZombie("comum") : nullptr;
+	if (!Type)
+	{
+		UE_LOG(LogZombie, Error, TEXT("ZMBTesteTiro: sem o tipo comum"));
+		return;
+	}
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AZMBZombie* Zombie = GetWorld()->SpawnActorDeferred<AZMBZombie>(AZMBZombie::StaticClass(), FTransform(FRotator::ZeroRotator, Builder->GetStartLocation() + FVector(0.0f, -900.0f, 40.0f)), nullptr, nullptr,
+		ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+	if (!Zombie)
+	{
+		return;
+	}
+	Zombie->InitZombie(*Type, FString(), false);
+	Zombie->FinishSpawning(Zombie->GetActorTransform());
+	Zombie->GetCharacterMovement()->DisableMovement();
+	// linhas de visão de frente, no corpo em pé: nome, y, z locais, membro esperado (a ordem de ZR::ELimb)
+	struct FProbe { const TCHAR* Name; float Y; float Z; int32 Expected; };
+	const FProbe Probes[] = {
+		{TEXT("cabeca"), 0.0f, 70.0f, 0}, {TEXT("tronco"), 0.0f, 24.0f, 1}, {TEXT("braco_esq"), -27.0f, 40.0f, 2},
+		{TEXT("braco_dir"), 27.0f, 40.0f, 3}, {TEXT("perna_esq"), -11.0f, -50.0f, 4}, {TEXT("perna_dir"), 11.0f, -50.0f, 5},
+	};
+	int32 Right = 0;
+	for (const FProbe& Probe : Probes)
+	{
+		const FVector From = Zombie->GetActorTransform().TransformPosition(FVector(300.0f, Probe.Y, Probe.Z));
+		const FVector To = Zombie->GetActorTransform().TransformPosition(FVector(0.0f, Probe.Y, Probe.Z));
+		FHitResult Hit;
+		FCollisionQueryParams QueryParams(SCENE_QUERY_STAT(ZMBShotTest), false);
+		const bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, From, To, ECC_Visibility, QueryParams);
+		const bool bOnZombie = bHit && Hit.GetActor() == Zombie;
+		const int32 Limb = bOnZombie ? Zombie->LimbForHit(Hit.GetComponent(), Hit.ImpactPoint) : -1;
+		Right += Limb == Probe.Expected ? 1 : 0;
+		UE_LOG(LogZombie, Display, TEXT("ZMBTesteTiro: %s acertou o zumbi=%d membro=%d esperado=%d"), Probe.Name, bOnZombie ? 1 : 0, Limb, Probe.Expected);
+	}
+	UE_LOG(LogZombie, Display, TEXT("ZMBTesteTiro: %d de %d pontos deram o membro certo"), Right, static_cast<int32>(UE_ARRAY_COUNT(Probes)));
+}
+
 AActor* AZMBGameMode::ChoosePlayerStart_Implementation(AController* Player)
 {
 	if (!Builder)
@@ -104,6 +149,11 @@ void AZMBGameMode::Tick(float DeltaSeconds)
 			PlayerController->SetControlRotation(FRotator(0.0f, Yaw, 0.0f));
 			bLookdevPlaced = true;
 		}
+	}
+	if (!bShotTestDone && Builder && FParse::Param(FCommandLine::Get(), TEXT("ZMBTesteTiro")) && GetWorld()->GetTimeSeconds() > 5.0f)
+	{
+		bShotTestDone = true;
+		RunShotTest();
 	}
 	if (ShotAt <= 0.0f)
 	{

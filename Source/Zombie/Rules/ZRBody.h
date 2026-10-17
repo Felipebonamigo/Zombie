@@ -66,6 +66,14 @@ namespace ZR
 		bool bBecameCrawler = false;
 	};
 
+	/**
+	 * Qual membro um tiro acertou, pelo ponto de impacto na cÃ¡psula do zumbi em pÃ© (os membros nÃ£o tÃªm corpo fÃ­sico: custavam ~3 ms
+	 * com 140 zumbis). Coordenadas no corpo na escala 1, em cm, com origem no centro da cÃ¡psula (34 de raio, 88 de meia altura):
+	 * x para a frente, y para a direita, z para cima. CabeÃ§a acima de 56; pernas abaixo de -6 (esquerda com y negativo);
+	 * entre os dois, braÃ§o onde o ponto estÃ¡ fora da largura do tronco (|y| >= 21) na altura do ombro (30 a 50); o resto Ã© tronco.
+	 */
+	ELimb LimbAtPoint(float X, float Y, float Z);
+
 	FHitOutcome ApplyHit(const FBodyConfig& Config, FBodyState& State, ELimb Limb, float Damage);
 	FHitOutcome ApplyBlast(const FBodyConfig& Config, FBodyState& State, float Damage);
 

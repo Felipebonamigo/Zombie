@@ -48,11 +48,19 @@ Testes: `Sorteio.*`.
 | Perna (cada) | 70 | sai; a primeira perna faz virar **rastejante** (30% da velocidade) |
 
 - Tiro em braço, perna ou cabeça manda 25% do dano também para o tronco (`TorsoTransfer`).
+- **Qual membro o tiro acerta** (`LimbAtPoint`): os membros de um zumbi vivo **não têm corpo físico** (cada um era movido junto
+  com a cápsula a cada passo: ~3 ms com 140 zumbis). O tiro acerta a cápsula e o membro sai do ponto de impacto, no corpo em
+  pé na escala 1 (x para a frente, y para a direita, z para cima, em cm, origem no centro da cápsula): cabeça acima de 56;
+  pernas abaixo de -6 (esquerda com y negativo); entre os dois, braço onde o ponto está fora da largura do tronco (|y| >= 21)
+  na altura do ombro (30 a 50); o resto é tronco. Onde o membro já saiu, o tiro entra no tronco. O bujão nas costas é
+  reconhecido por posição (por trás a cápsula é atingida primeiro). Rastejante e cadáver voltam a ter corpo por membro (a
+  cápsula em pé não acompanha o corpo deitado). Custo: a cabeça é uma faixa do cilindro, não uma esfera, e o braço de frente
+  fica só nas bordas do tronco.
 - Tiro em membro que já saiu não faz nada no corpo (o pedaço solto só é empurrado). Cadáver ainda desmembra, sem contar abate.
 - Explosão: dano maior ou igual a `GibDamage` (220 no comum) **despedaça** o corpo todo. Abaixo disso, cada membro leva
   `dano x BlastShare` (cabeça 0,6; o resto 0,8; tronco 1,0).
 - Queda pela distância: dano cheio até o raio interno, linear até zero no externo. Raios iguais viram degrau.
-- Testes: `Corpo.*` e `Explosao.*`.
+- Testes: `Corpo.*` (inclui `Corpo.MembroPeloPontoDoTiroNaCapsula`) e `Explosao.*`.
 
 ## 5. Hype da live (`ZRHype.h`)
 

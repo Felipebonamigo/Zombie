@@ -8,6 +8,7 @@
 //   -ZMBHorde          começa com uma horda
 //   -ZMBShot=S         tira um print aos S segundos e fecha o jogo (zmb-shot.png em Saved/Screenshots)
 //   -ZMBLookdev=1..7   cena de aparência: ângulo fixo (1 rua, 2 orla, 3 mar, 4 leste, 5 poste, 6 praça, 7 telhado), 17,5 h, relógio parado, sem horda
+//   -ZMBTesteTiro      (com -ZMBLookdev) planta um zumbi parado, atira linhas de visão em cada parte do corpo e registra qual membro cada uma acerta
 //   -ZMBTwitch=canal   lê o chat de um canal da Twitch (Stream/ZMBTwitchChat)
 
 #pragma once
@@ -58,6 +59,8 @@ private:
 	double PerfGpuMs = 0.0;
 	int64 PerfFrames = 0;
 	int32 LookdevAngle = 0;
+	bool bShotTestDone = false;
+	void RunShotTest();
 	bool bLookdevPlaced = false;
 	float ShotAt = -1.0f;
 	float Elapsed = 0.0f;

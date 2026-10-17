@@ -31,9 +31,14 @@ namespace
 	constexpr int32 ArmRIndex = static_cast<int32>(ZR::ELimb::ArmR);
 
 	/** Peça do corpo: só o tiro (Visibility) acerta; não empurra nada nem atrapalha o movimento. */
+	/**
+	 * Membro de zumbi vivo: sem corpo físico (cada um era movido junto com a cápsula a cada passo: ~3 ms com 140 zumbis).
+	 * O tiro acerta a cápsula e o membro sai do ponto de impacto (ZR::LimbAtPoint). Só volta a ter colisão quando solta do corpo
+	 * (SeverLimb) ou quando o zumbi vira rastejante (BecomeCrawler), porque aí a cápsula não acompanha o corpo deitado.
+	 */
 	void SetupBodyPart(UStaticMeshComponent* Part)
 	{
-		Part->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		Part->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		Part->SetCollisionObjectType(ECC_WorldDynamic);
 		Part->SetCollisionResponseToAllChannels(ECR_Ignore);
 		Part->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
@@ -57,7 +62,7 @@ AZMBZombie::AZMBZombie()
 	UCapsuleComponent* Capsule = GetCapsuleComponent();
 	Capsule->InitCapsuleSize(34.0f, 88.0f);
 	Capsule->SetCollisionObjectType(ECC_ZMBZombie);
-	Capsule->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	Capsule->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);   // o tiro acerta a cápsula (ver SetupBodyPart)
 	Capsule->SetCollisionResponseToChannel(ECC_Camera, ECR_Ignore);
 
 	UCharacterMovementComponent* Move = GetCharacterMovement();
@@ -216,6 +221,21 @@ int32 AZMBZombie::LimbIndexOf(const UPrimitiveComponent* Component) const
 		}
 	}
 	return INDEX_NONE;
+}
+
+int32 AZMBZombie::LimbForHit(const UPrimitiveComponent* HitComponent, const FVector& HitLocation) const
+{
+	int32 Limb = LimbIndexOf(HitComponent);
+	if (Limb == INDEX_NONE && HitComponent && HitComponent == GetCapsuleComponent())
+	{
+		const FVector Local = GetActorTransform().InverseTransformPosition(HitLocation);
+		Limb = static_cast<int32>(ZR::LimbAtPoint(Local.X, Local.Y, Local.Z));
+		if (Body.Severed[Limb])
+		{
+			Limb = TorsoIndex;   // onde o membro já saiu o tiro entra no tronco
+		}
+	}
+	return Limb == INDEX_NONE ? TorsoIndex : Limb;
 }
 
 void AZMBZombie::Tick(float DeltaSeconds)
@@ -496,17 +516,21 @@ ZR::FHitOutcome AZMBZombie::TakeLimbHit(UPrimitiveComponent* HitComponent, float
 	{
 		return None;
 	}
+	// o tiro acertou a cápsula: descobre o que foi pelo ponto de impacto, no corpo em pé na escala 1
+	const bool bCapsuleHit = HitComponent && HitComponent == GetCapsuleComponent();
+	const FVector Local = GetActorTransform().InverseTransformPosition(HitLocation);
+	if (bCapsuleHit && Tank->IsVisible() && !Tank->IsSimulatingPhysics() && Local.X < -8.0f && FMath::Abs(Local.Y) < 16.0f && Local.Z > 0.0f
+		&& Local.Z < 52.0f)
+	{
+		HitComponent = Tank;   // o bujão nas costas sai um pouco da cápsula, mas por trás a cápsula é atingida primeiro
+	}
 	if (HitComponent && HitComponent == Tank && Tank->IsVisible() && !Tank->IsSimulatingPhysics())
 	{
 		ArmTank(Context);
 		AZMBFx::ImpactDust(GetWorld(), HitLocation, -Impulse.GetSafeNormal());
 		return None;
 	}
-	int32 Limb = LimbIndexOf(HitComponent);
-	if (Limb == INDEX_NONE)
-	{
-		Limb = TorsoIndex;
-	}
+	const int32 Limb = LimbForHit(HitComponent, HitLocation);
 	if (Body.Severed[Limb] && Limbs[Limb]->IsSimulatingPhysics())
 	{
 		// pedaço solto: o tiro só empurra (dá para "fazer embaixadinha" com uma cabeça)
@@ -638,6 +662,15 @@ void AZMBZombie::SeverLimb(int32 Limb, const FVector& Impulse, bool bPop)
 void AZMBZombie::BecomeCrawler()
 {
 	bCrawler = true;
+	// deitado, a cápsula em pé não acompanha o corpo: o tiro volta a achar os membros (poucos rastejantes, custo pequeno)
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Ignore);
+	for (UStaticMeshComponent* Limb : Limbs)
+	{
+		if (Limb && !Limb->IsSimulatingPhysics() && Limb->IsVisible())
+		{
+			Limb->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		}
+	}
 	if (RestTransforms.Num() != Limbs.Num())
 	{
 		return;

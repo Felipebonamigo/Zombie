@@ -293,3 +293,23 @@ ZR_TEST(HypeDoacaoUmaVezPorSubida, "Hype.DoacaoUmaVezPorSubidaERearma")
 	ZR_EQ(static_cast<int>(Donations.size()), 1);
 	ZR_EXPECT(State.TotalDonations > 0.0);
 }
+
+ZR_TEST(CorpoMembroPeloPonto, "Corpo.MembroPeloPontoDoTiroNaCapsula")
+{
+	// corpo em pé na escala 1 (cápsula de 34 de raio e 88 de meia altura): x para a frente, y para a direita, z para cima
+	ZR_EQ(static_cast<int>(ZR::LimbAtPoint(4.0f, 0.0f, 70.0f)), static_cast<int>(ZR::ELimb::Head));
+	ZR_EQ(static_cast<int>(ZR::LimbAtPoint(30.0f, -20.0f, 60.0f)), static_cast<int>(ZR::ELimb::Head));
+	ZR_EQ(static_cast<int>(ZR::LimbAtPoint(0.0f, 0.0f, 55.0f)), static_cast<int>(ZR::ELimb::Torso));
+	ZR_EQ(static_cast<int>(ZR::LimbAtPoint(13.0f, 0.0f, 24.0f)), static_cast<int>(ZR::ELimb::Torso));
+	ZR_EQ(static_cast<int>(ZR::LimbAtPoint(0.0f, 10.0f, 0.0f)), static_cast<int>(ZR::ELimb::Torso));
+	// braços esticados para a frente, fora da largura do tronco, na altura do ombro; de lado também
+	ZR_EQ(static_cast<int>(ZR::LimbAtPoint(30.0f, -27.0f, 40.0f)), static_cast<int>(ZR::ELimb::ArmL));
+	ZR_EQ(static_cast<int>(ZR::LimbAtPoint(30.0f, 27.0f, 40.0f)), static_cast<int>(ZR::ELimb::ArmR));
+	ZR_EQ(static_cast<int>(ZR::LimbAtPoint(0.0f, -34.0f, 40.0f)), static_cast<int>(ZR::ELimb::ArmL));
+	// no centro do peito, na mesma altura, é tronco
+	ZR_EQ(static_cast<int>(ZR::LimbAtPoint(34.0f, 0.0f, 40.0f)), static_cast<int>(ZR::ELimb::Torso));
+	// abaixo do tronco são as pernas, pelo lado do ponto
+	ZR_EQ(static_cast<int>(ZR::LimbAtPoint(0.0f, -11.0f, -50.0f)), static_cast<int>(ZR::ELimb::LegL));
+	ZR_EQ(static_cast<int>(ZR::LimbAtPoint(0.0f, 11.0f, -50.0f)), static_cast<int>(ZR::ELimb::LegR));
+	ZR_EQ(static_cast<int>(ZR::LimbAtPoint(34.0f, -1.0f, -40.0f)), static_cast<int>(ZR::ELimb::LegL));
+}

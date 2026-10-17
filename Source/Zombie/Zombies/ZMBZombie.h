@@ -40,6 +40,9 @@ public:
 	ZR::FHitOutcome TakeLimbHit(UPrimitiveComponent* HitComponent, float Damage, const FVector& HitLocation, const FVector& Impulse,
 		const FZMBHitContext& Context);
 
+	/** Qual membro um tiro em HitComponent, no ponto HitLocation, acerta (a cápsula vira membro pelo ponto: ZR::LimbAtPoint). */
+	int32 LimbForHit(const UPrimitiveComponent* HitComponent, const FVector& HitLocation) const;
+
 	/** Explosão: Damage já com a queda pela distância; ImpulseStrength empurra os pedaços para longe de Origin. */
 	ZR::FHitOutcome TakeBlast(float Damage, const FVector& Origin, float ImpulseStrength, const FZMBHitContext& Context);
 

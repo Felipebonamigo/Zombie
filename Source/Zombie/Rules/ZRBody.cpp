@@ -57,6 +57,29 @@ namespace ZR
 		return (Severed[static_cast<int>(ELimb::ArmL)] ? 0 : 1) + (Severed[static_cast<int>(ELimb::ArmR)] ? 0 : 1);
 	}
 
+	ELimb LimbAtPoint(float /*X*/, float Y, float Z)
+	{
+		constexpr float HeadMinZ = 56.0f;
+		constexpr float TorsoMinZ = -6.0f;
+		constexpr float ArmMinZ = 30.0f;
+		constexpr float ArmMaxZ = 50.0f;
+		constexpr float ArmMinSide = 21.0f;
+		if (Z > HeadMinZ)
+		{
+			return ELimb::Head;
+		}
+		if (Z < TorsoMinZ)
+		{
+			return Y < 0.0f ? ELimb::LegL : ELimb::LegR;
+		}
+		const float Side = Y < 0.0f ? -Y : Y;
+		if (Z >= ArmMinZ && Z <= ArmMaxZ && Side >= ArmMinSide)
+		{
+			return Y < 0.0f ? ELimb::ArmL : ELimb::ArmR;
+		}
+		return ELimb::Torso;
+	}
+
 	FHitOutcome ApplyHit(const FBodyConfig& Config, FBodyState& State, ELimb Limb, float Damage)
 	{
 		FHitOutcome Out;

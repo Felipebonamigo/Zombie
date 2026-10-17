@@ -92,10 +92,22 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
   a Visibility para o tiro por membro), que são corpos físicos movidos junto com a cápsula a cada passo.
   Teste A/B (flags temporárias, já removidas): sem corpo físico nos membros, **jogo 9 a 10 ms (−3 ms)**; sem o desvio RVO, sem
   mudança (13,8, dentro do ruído de ±2 ms entre rodadas).
-  **Decisão do Felipe pendente:** tirar o corpo físico dos membros e acertar a parte do corpo por uma só cápsula (`ZRBody` não muda;
+  **Decisão do Felipe (aprovada e feita, item seguinte):** tirar o corpo físico dos membros e acertar a parte do corpo por uma só cápsula (`ZRBody` não muda;
   muda como o tiro descobre o membro: pela altura e pelo lado do ponto de impacto), −3 ms estimados, em troca de um tiro por
   parte menos exato (cabeça como faixa do cilindro, não esfera). Outros candidatos ainda não medidos: `ComputeFloorDist`
   (234 mil chamadas), o tick de cada zumbi (233 mil) e o componente `CharacterMesh0` vazio.
+- **Corpo físico dos membros removido (17 out 2026):** feito o que o Felipe aprovou. Os membros de um zumbi vivo ficam sem
+  colisão; o tiro acerta a cápsula e `ZR::LimbAtPoint` (teste `Corpo.MembroPeloPontoDoTiroNaCapsula`, escrito antes e visto
+  falhar por "não é um membro de ZR") descobre o membro pelo ponto de impacto (`docs/regras-de-jogo.md`, seção 4). Onde o
+  membro já saiu, o tiro entra no tronco; o bujão nas costas é achado por posição; rastejante volta a ter corpo por membro e
+  cadáver já era feito de peças físicas soltas. Verificação no jogo (`-ZMBLookdev=1 -ZMBTesteTiro`: um zumbi parado, seis linhas
+  de visão, uma por parte): **6 de 6 deram o membro certo**.
+  **Medição antes e depois, alternando na mesma sessão** (flag temporária `-ZMBMembrosComCorpo`, já removida), noite, 140 zumbis,
+  1920x1080, 4 rodadas de cada: **jogo 17,5 a 19,3 ms (média 18,5) antes, 8,6 a 12,3 ms (média 11,1) depois: −7 ms**; render 6 e
+  GPU 4 iguais. Este PC estava mais lento nessa hora (o `UnrealBuildTool` do `D:\CitySample` do Felipe segurou a trava de
+  compilação e travou o Editor dos meus testes por ~20 min), por isso o "antes" saiu pior que as medições de manhã (12 a 16 ms);
+  só a comparação lado a lado vale. Insights: `Phys SetBodyTransform` de 1.360 para 135 chamadas por quadro.
+  **Não verificado em jogo:** tiro no bujão pelas costas, no rastejante e onde um membro já saiu (só por leitura do código).
 - Cena de aparência: ângulos 5 (poste), 6 (praça) e 7 (telhado) em `-ZMBLookdev` e `capturar_lookdev.ps1 -Angulos 5,6 -Seed 7`.
 - Medição do 2a (rua vazia, 1600x900): média de 3,8 a 4,9 ms, pior quadro 7 a 9 ms (112 ms no primeiro ângulo, compilação
   de shader). Mesma faixa do passo 1, **sem horda ainda**.
