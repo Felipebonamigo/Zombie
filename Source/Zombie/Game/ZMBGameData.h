@@ -86,6 +86,9 @@ public:
 	 */
 	UMaterialInterface* SurfaceMaterial(const TCHAR* Name, const FLinearColor& Tint, const FLinearColor& Fallback, float FallbackRoughness);
 
+	/** Vidro com salas falsas (interior mapping; Tools/Unreal/criar_superficies.ps1). Nulo sem o material: o chamador usa vidro liso. */
+	UMaterialInstanceDynamic* WindowMaterial();
+
 	/** Material que brilha (bola de fogo, rastro de tiro, janela acesa). Intensity é o multiplicador da cor emitida. */
 	UMaterialInstanceDynamic* GlowMaterial(const FLinearColor& Color, float Intensity);
 
@@ -136,4 +139,7 @@ private:
 	UPROPERTY(Transient)
 	TMap<FString, TObjectPtr<UMaterialInterface>> SurfaceCache;
 	TSet<FString> MissingSurfaces;
+	UPROPERTY(Transient)
+	TObjectPtr<UMaterialInstanceDynamic> WindowMat;
+	bool bWindowMissing = false;
 };

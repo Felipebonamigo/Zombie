@@ -94,6 +94,9 @@ private:
 	UPROPERTY(Transient)
 	TObjectPtr<UMaterialInstanceDynamic> LitWindows;
 
+	/** As janelas usam o vidro com salas falsas: o brilho do interior segue a hora (UpdateSky). */
+	bool bRoomWindows = false;
+
 	ZR::FCityPlan Plan;
 	ZR::FDayConfig Day;
 	float CellSize = 2000.0f;

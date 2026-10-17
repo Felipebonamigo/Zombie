@@ -69,6 +69,16 @@ o histórico das conversas. Atualizar a cada bloco de trabalho fechado.
   Também: o laranja da hora dourada abrandou (sol de 0,62/0,32 para 0,74/0,5 em verde/azul) porque, com textura, o chão
   parecia areia. Medição: média de 4,1 a 4,9 ms na maior parte dos ângulos, mas **9,3 ms no leste e 8,2 ms na rua à noite** (sem
   causa confirmada; repetir). Próximo: janelas com vidro e interior falso (o `Detonauto` já tem o material), térreo com portão e toldo.
+- **Passo 2c, janelas e térreo (17 out 2026):** as faixas de janela agora usam o vidro com salas falsas do Detonauto
+  (`M_ZMBJanela`, interior mapping, no git, criado por `criar_superficies.ps1`): reflexo de vidro, caixilho a cada 1,5 m e uma
+  sala por célula de 4,5 m, acesa ou apagada por sorteio. O brilho do interior segue a hora (`BrilhoInterior`: 0,1 de dia e
+  0,3 à noite, em unidades do jogo; 250 e 1500 estouravam tudo, que é a unidade em nits do Detonauto). Térreo: portão de enrolar
+  de metal (55% das fachadas) e toldo inclinado de lona em quatro cores (45%), sem colisão e com sorteio à parte, então a
+  cidade não muda. Sem o material, volta ao vidro liso e às janelas acesas do protótipo. Capturas `2c-janelas-depois-*`: de
+  dia as janelas leem como vidro com caixilho; à noite dá para ver sala acesa e apagada. **Toldos não conferidos** (nenhuma
+  captura os pega de frente). A aberração cromática do pós-processo (0,2) fica forte nas janelas claras: reduzir.
+  Medição: 4,5 a 5,9 ms, com um quadro de 19 ms (53 fps) que não repetiu; nesse momento o `OneDrive.Sync.Service` estava
+  usando muita CPU (a pasta do City Sample, 96 GB, está dentro do OneDrive): **pausar a sincronização ou mover o projeto**.
 - Cena de aparência: ângulos 5 (poste), 6 (praça) e 7 (telhado) em `-ZMBLookdev` e `capturar_lookdev.ps1 -Angulos 5,6 -Seed 7`.
 - Medição do 2a (rua vazia, 1600x900): média de 3,8 a 4,9 ms, pior quadro 7 a 9 ms (112 ms no primeiro ângulo, compilação
   de shader). Mesma faixa do passo 1, **sem horda ainda**.

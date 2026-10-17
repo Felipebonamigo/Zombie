@@ -124,6 +124,8 @@ void UZMBGameData::Reload()
 	MissingCityMeshes.Reset();
 	SurfaceCache.Reset();
 	MissingSurfaces.Reset();
+	WindowMat = nullptr;
+	bWindowMissing = false;
 	if (LoadText(TEXT("Sons.csv"), Text))
 	{
 		ZR::LoadSounds(Text, LoadedSounds, RuleErrors);
@@ -297,6 +299,24 @@ UMaterialInterface* UZMBGameData::SurfaceMaterial(const TCHAR* Name, const FLine
 	Material->SetVectorParameterValue(TEXT("Tint"), Tint);
 	Materials.Add(Key, Material);
 	return Material;
+}
+
+UMaterialInstanceDynamic* UZMBGameData::WindowMaterial()
+{
+	if (!WindowMat && !bWindowMissing)
+	{
+		UMaterialInterface* Master = LoadObject<UMaterialInterface>(nullptr, TEXT("/Game/Zombie/Materials/M_ZMBJanela.M_ZMBJanela"), nullptr, LOAD_NoWarn | LOAD_Quiet);
+		if (Master)
+		{
+			WindowMat = UMaterialInstanceDynamic::Create(Master, this);
+		}
+		else
+		{
+			bWindowMissing = true;
+			UE_LOG(LogZombie, Warning, TEXT("M_ZMBJanela ausente (rode criar_superficies.ps1): janelas de vidro liso"));
+		}
+	}
+	return WindowMat.Get();
 }
 
 UMaterialInstanceDynamic* UZMBGameData::GlowMaterial(const FLinearColor& Color, float Intensity)

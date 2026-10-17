@@ -281,8 +281,11 @@ void AZMBWorldBuilder::BuildBlocks()
 	UInstancedStaticMeshComponent* Trunks = NewInstances(TEXT("Trunks"), Cylinder, Data->ColorMaterial(FLinearColor(0.08f, 0.05f, 0.03f), 0.9f), true);
 	UInstancedStaticMeshComponent* Canopies = NewInstances(TEXT("Canopies"), Sphere, Data->ColorMaterial(FLinearColor(0.03f, 0.08f, 0.02f), 0.9f), false);
 	Canopies->SetCastShadow(true);
-	UInstancedStaticMeshComponent* Glass = NewInstances(TEXT("Windows"), Cube, Data->ColorMaterial(FLinearColor(0.02f, 0.025f, 0.03f), 0.06f, 0.2f), false);
-	LitWindows = Data->GlowMaterial(FLinearColor(1.0f, 0.75f, 0.42f), 1.0f);
+	UMaterialInstanceDynamic* RoomGlass = Data->WindowMaterial();
+	bRoomWindows = RoomGlass != nullptr;
+	UInstancedStaticMeshComponent* Glass = NewInstances(TEXT("Windows"), Cube,
+		RoomGlass ? static_cast<UMaterialInterface*>(RoomGlass) : Data->ColorMaterial(FLinearColor(0.02f, 0.025f, 0.03f), 0.06f, 0.2f), false);
+	LitWindows = bRoomWindows ? RoomGlass : Data->GlowMaterial(FLinearColor(1.0f, 0.75f, 0.42f), 1.0f);
 	UInstancedStaticMeshComponent* Lit = NewInstances(TEXT("LitWindows"), Cube, LitWindows, false);
 	UInstancedStaticMeshComponent* Tanks = NewInstances(TEXT("WaterTanks"), Cylinder, Data->ColorMaterial(FLinearColor(0.03f, 0.14f, 0.38f), 0.5f), true);
 	UInstancedStaticMeshComponent* Units = NewInstances(TEXT("RoofUnits"), Cube, Data->ColorMaterial(FLinearColor(0.35f, 0.35f, 0.34f), 0.6f, 0.5f), true);
@@ -319,6 +322,20 @@ void AZMBWorldBuilder::BuildBlocks()
 		Facades.Add(NewInstances(*FString::Printf(TEXT("Facade%d"), i), Cube, Data->SurfaceMaterial(TEXT("Fachada"), FacadeColors[i] * 2.6f, FacadeColors[i], 0.85f), true));
 	}
 
+	// térreo: portão de enrolar (metal) e toldo de lona colorida por fachada, sem colisão. Sorteio à parte: não mexe na cidade
+	UInstancedStaticMeshComponent* Gates = NewInstances(TEXT("ShopGates"), Cube, Data->ColorMaterial(FLinearColor(0.22f, 0.24f, 0.25f), 0.4f, 0.7f), false);
+	Gates->SetCastShadow(true);
+	const FLinearColor AwningColors[] = {FLinearColor(0.55f, 0.04f, 0.03f), FLinearColor(0.04f, 0.32f, 0.1f), FLinearColor(0.7f, 0.52f, 0.04f), FLinearColor(0.05f, 0.14f, 0.45f)};
+	TArray<UInstancedStaticMeshComponent*> Awnings;
+	for (int32 i = 0; i < static_cast<int32>(UE_ARRAY_COUNT(AwningColors)); ++i)
+	{
+		Awnings.Add(NewInstances(*FString::Printf(TEXT("Awning%d"), i), Cube, Data->ColorMaterial(AwningColors[i], 0.8f), false));
+		Awnings.Last()->SetCastShadow(true);
+	}
+	FRandomStream ShopRng(static_cast<int32>(CitySeed & 0x7FFFFFFF) ^ 0x5E11);
+	TArray<FTransform> GateT;
+	TArray<TArray<FTransform>> AwningT;
+	AwningT.SetNum(Awnings.Num());
 	TArray<FTransform> SidewalkT, GrassT, TrunkT, CanopyT, GlassT, LitT, TankT, UnitT, LineT;
 	TArray<TArray<FTransform>> FacadeT;
 	FacadeT.SetNum(Facades.Num());
@@ -403,7 +420,31 @@ void AZMBWorldBuilder::BuildBlocks()
 					const FVector Offset = bAlongX ? FVector(0.0f, Sign * (Side * 0.5f + 3.0f), Z) : FVector(Sign * (Side * 0.5f + 3.0f), 0.0f, Z);
 					const FVector Size = bAlongX ? FVector(BandWidth / 100.0f, 0.06f, BandHeight / 100.0f) : FVector(0.06f, BandWidth / 100.0f, BandHeight / 100.0f);
 					const bool bLit = Floor > 0 && Rng.FRand() < 0.14f;
-					(bLit ? LitT : GlassT).Add(FTransform(FRotator::ZeroRotator, FVector(Center.X, Center.Y, 0.0f) + Offset, Size));
+					(bLit && !bRoomWindows ? LitT : GlassT).Add(FTransform(FRotator::ZeroRotator, FVector(Center.X, Center.Y, 0.0f) + Offset, Size));
+				}
+			}
+
+			// térreo: em cada fachada, às vezes um portão de enrolar (3 m x 2,6 m) e às vezes um toldo inclinado (3,6 m x 1,3 m)
+			for (int32 Face = 0; Face < 4; ++Face)
+			{
+				const bool bAlongX = Face < 2;
+				const float Sign = (Face % 2 == 0) ? 1.0f : -1.0f;
+				const FVector Normal = bAlongX ? FVector(0.0f, Sign, 0.0f) : FVector(Sign, 0.0f, 0.0f);
+				const FVector Tangent = bAlongX ? FVector(1.0f, 0.0f, 0.0f) : FVector(0.0f, 1.0f, 0.0f);
+				const FVector Wall = FVector(Center.X, Center.Y, 0.0f) + Normal * (Side * 0.5f);
+				if (ShopRng.FRand() < 0.55f)
+				{
+					const FVector Where = Wall + Normal * 5.0f + Tangent * ShopRng.FRandRange(-0.3f, 0.3f) * Side + FVector(0.0f, 0.0f, Base + 130.0f);
+					const FVector Size = bAlongX ? FVector(3.0f, 0.06f, 2.6f) : FVector(0.06f, 3.0f, 2.6f);
+					GateT.Add(FTransform(FRotator::ZeroRotator, Where, Size));
+				}
+				if (ShopRng.FRand() < 0.45f)
+				{
+					// inclina a borda de fora para baixo: gira em volta da tangente
+					const float Down = FVector::CrossProduct(Tangent, Normal).Z > 0.0f ? -12.0f : 12.0f;
+					const FVector Where = Wall + Normal * 65.0f + Tangent * ShopRng.FRandRange(-0.3f, 0.3f) * Side + FVector(0.0f, 0.0f, Base + 300.0f);
+					const FVector Size = bAlongX ? FVector(3.6f, 1.3f, 0.06f) : FVector(1.3f, 3.6f, 0.06f);
+					AwningT[ShopRng.RandRange(0, Awnings.Num() - 1)].Add(FTransform(FQuat(Tangent, FMath::DegreesToRadians(Down)), Where, Size));
 				}
 			}
 
@@ -453,6 +494,11 @@ void AZMBWorldBuilder::BuildBlocks()
 	for (int32 i = 0; i < Facades.Num(); ++i)
 	{
 		Facades[i]->AddInstances(FacadeT[i], false);
+	}
+	Gates->AddInstances(GateT, false);
+	for (int32 i = 0; i < Awnings.Num(); ++i)
+	{
+		Awnings[i]->AddInstances(AwningT[i], false);
 	}
 	TreeSet.Flush();
 	TankSet.Flush();
@@ -775,7 +821,14 @@ void AZMBWorldBuilder::UpdateSky()
 		}
 		if (LitWindows)
 		{
-			LitWindows->SetScalarParameterValue(TEXT("Intensity"), bNight ? 6.0f : 0.4f);
+			if (bRoomWindows)
+			{
+				LitWindows->SetScalarParameterValue(TEXT("BrilhoInterior"), bNight ? 0.3f : 0.1f);
+			}
+			else
+			{
+				LitWindows->SetScalarParameterValue(TEXT("Intensity"), bNight ? 6.0f : 0.4f);
+			}
 		}
 	}
 }
